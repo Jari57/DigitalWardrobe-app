@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(cuid())
+  username String @unique
+  passwordHash String
+  recoveryHash String
+  createdAt DateTime @default(now())
+  sessions Session[]
+  garments Garment[]
+  outfits Outfit[]
+  references Reference[]
+  images Image[]
+}
+
+model Session {
+  id String @id @default(cuid())
+  tokenHash String @unique
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Garment {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name String
+  brand String @default("")
+  category String
+  color String
+  price Decimal? @db.Decimal(12, 2)
+  imageId String
+  image Image @relation(fields: [imageId], references: [id])
+  wearCount Int @default(0)
+  createdAt DateTime @default(now())
+  pieces OutfitPiece[]
+  references ReferenceGarment[]
+  wearEntries WearGarment[]
+  @@index([userId, createdAt])
+}
+
+model Image {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data Bytes
+  mimeType String
+  width Int
+  height Int
+  createdAt DateTime @default(now())
+  garments Garment[]
+  references Reference[]
+  @@index([userId])
+}
+
+model Outfit {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name String
+  createdAt DateTime @default(now())
+  pieces OutfitPiece[]
+  wears WearEvent[]
+  @@index([userId, createdAt])
+}
+
+model OutfitPiece {
+  id String @id @default(cuid())
+  outfitId String
+  outfit Outfit @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+  garmentId String
+  garment Garment @relation(fields: [garmentId], references: [id], onDelete: Cascade)
+  x Float
+  y Float
+  scale Float
+  zIndex Int
+  @@index([outfitId])
+  @@index([garmentId])
+}
+
+model WearEvent {
+  id String @id @default(cuid())
+  outfitId String
+  outfit Outfit @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+  date String
+  createdAt DateTime @default(now())
+  garments WearGarment[]
+  @@unique([outfitId, date])
+}
+
+model WearGarment {
+  wearId String
+  wear WearEvent @relation(fields: [wearId], references: [id], onDelete: Cascade)
+  garmentId String
+  garment Garment @relation(fields: [garmentId], references: [id], onDelete: Cascade)
+  @@id([wearId, garmentId])
+}
+
+model Reference {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name String
+  imageId String
+  image Image @relation(fields: [imageId], references: [id])
+  createdAt DateTime @default(now())
+  garments ReferenceGarment[]
+  @@index([userId, createdAt])
+}
+
+model ReferenceGarment {
+  referenceId String
+  reference Reference @relation(fields: [referenceId], references: [id], onDelete: Cascade)
+  garmentId String
+  garment Garment @relation(fields: [garmentId], references: [id], onDelete: Cascade)
+  @@id([referenceId, garmentId])
+}
+
+model RateLimit {
+  key String @id
+  count Int
+  expiresAt DateTime
+  @@index([expiresAt])
+}
