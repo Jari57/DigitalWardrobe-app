@@ -6,6 +6,19 @@ Updated September 12, 2026. Owner: implementation in this task; product decision
 
 Deliver a reliable creator wardrobe studio: real photo → identified pieces → owned closet or sourced shopping options → an intentional outfit → an exportable creator asset. Release the app only when the complete journey, privacy boundaries, recovery behavior and mobile experience pass the acceptance checks. Growth features support sharing; viral reach is not an engineering guarantee.
 
+## Latest deployed evidence
+
+Runtime `6a87a09` is live at https://digital-wardrobe-app-vert.vercel.app, deployment `dpl_DnJnyrfthqemcPEnyUbpwJVGy6qG`. This includes trends, Creator, allowance/recovery, PWA and mobile touch-target improvements. Stripe remains off.
+
+- Production build, formatting and migration passed; the previous pooled migration lock is resolved through direct migration connections.
+- Local suite: 24 passed and 7 opt-in cases skipped; the remaining onboarding case initially hit the localhost-only authentication throttle after repeated runs, then passed with PWA update verification in a targeted rerun. No production limit was raised.
+- Separate live photo → detection → sourced shopping → save test passed. The initial empty-result run exposed an error-handling weakness: provider failures now throw instead of masquerading as empty results. A known editorial directory is excluded following live review.
+- Hosted: 23 HTTP checks plus recovery, ownership, persistence, geometry and wear-idempotency assertions passed. Temporary accounts/data were deleted.
+- Hosted Creator: real generation, edited caption, cached reuse, recovery endpoint and exactly one database receipt passed; recorded generation cost 327 microdollars ($0.000327). No second generation on reuse.
+- Hosted PWA cached exactly four public assets; no browser errors. Account, import, Blind Fit and Creator dark dialogs were inspected at 390px, plus trends in both themes. Actual-phone behavior remains unverified.
+
+This is a working version for controlled real-world testing, not certification of every open launch item. See RELEASE_AUDIT.md for remaining gates.
+
 ## Verified baseline
 
 - [x] Private accounts, recovery codes, password changes and account deletion.

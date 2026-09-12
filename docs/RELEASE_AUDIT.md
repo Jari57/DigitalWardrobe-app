@@ -1,5 +1,7 @@
 # Non-Stripe release audit — September 12, 2026
 
+Deployed runtime: `6a87a09`, deployment `dpl_DnJnyrfthqemcPEnyUbpwJVGy6qG`, https://digital-wardrobe-app-vert.vercel.app. Hosted verification passed 23 HTTP checks and a real Creator generation with one persisted receipt, cached reuse and no browser errors. Four public PWA assets were cached; private responses were excluded. Account/import/Blind Fit/Creator dark-dialog screenshots were inspected at 390px. Test accounts and uploads were deleted.
+
 ## Scope mapping
 
 | Requested capability | Implementation and evidence | Limit |
