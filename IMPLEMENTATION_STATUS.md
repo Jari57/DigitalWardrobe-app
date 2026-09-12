@@ -38,3 +38,21 @@ Agents hit account usage limits again. Their files compiled, but they did not fi
 - Removed legacy index.html and its embedded editor bootstrap material. Removed unused Vitest dependency; npm test now runs the browser regression. npm audit: zero known vulnerabilities.
 - Vercel protected preview deployed successfully: https://digital-wardrobe-ppbz9jj11-almonjs-projects.vercel.app . Authenticated `vercel curl /api/health` returned ok=true, database=ready, billing=off. Production domain is unchanged. Preview uploaded before this documentation update; product code matches the tested build.
 - Remaining release work: hosted account/upload smoke checks, actual phone OS sharing, user-facing account deletion/settings, broader review of concurrency/quotas and code formatting. Do not promote to production merely because preview build is healthy.
+
+## Account settings batch
+- Added signed-in Account settings with password change, sign-out, and explicitly confirmed permanent deletion. Password changes compare the verified password hash in a transaction and revoke other sessions.
+- Kept the signup dialog mounted while the user saves their one-time recovery code, even after session state changes to signed in.
+- Build passed. Creator regression passed. New account-settings browser regression passed: signup recovery acknowledgment, password change, old-session revocation, sign-out/in, wrong-password deletion rejection, confirmed deletion, and rejected sign-in after deletion. Test data cleaned up.
+- Added `scripts/check-hosted.mjs` for protected-preview checks using Vercel CLI authentication; no bypass tokens exposed or committed.
+- Updated protected preview READY: https://digital-wardrobe-nrz9ocj4c-almonjs-projects.vercel.app . Nine hosted checks passed: database readiness, signup/session, validated photo upload, zero-price garment persistence, sign-out/sign-in and restored wardrobe.
+
+## Release checklist (current)
+- [x] Real database, private accounts, upload validation and account isolation checks.
+- [x] Creator browser regression: Blind Fit locks, canvas, actual PNG download, saved looks and Spotter lifecycle.
+- [x] Account settings/password changes/deletion UI and regression checks.
+- [x] Protected hosted preview with real account/upload/persistence checks.
+- [ ] Real-phone OS share sheet verification (browser contract tested; no actual TikTok post performed).
+- [ ] Final concurrency/quota review, maintainable code formatting and hosted UI review.
+- [ ] Production promotion and production smoke test. Production is currently unchanged.
+- [ ] AI provider integration if retained in final launch scope; current tools are explicitly manual, not simulated AI.
+- [ ] Stripe setup (intentionally deferred).
