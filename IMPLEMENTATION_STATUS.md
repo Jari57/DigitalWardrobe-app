@@ -54,5 +54,13 @@ Agents hit account usage limits again. Their files compiled, but they did not fi
 - [ ] Real-phone OS share sheet verification (browser contract tested; no actual TikTok post performed).
 - [ ] Final concurrency/quota review, maintainable code formatting and hosted UI review.
 - [ ] Production promotion and production smoke test. Production is currently unchanged.
-- [ ] AI provider integration if retained in final launch scope; current tools are explicitly manual, not simulated AI.
+- [ ] REQUIRED FOR LAUNCH: real customer-facing agents per docs/AGENT_PRODUCT_SPEC.md. The user explicitly made agents and app IP core requirements; a manual-only launch is no longer the accepted scope.
 - [ ] Stripe setup (intentionally deferred).
+
+## Agent/IP specification batch
+- User made customer-facing agents and distinctive app IP core launch requirements. The manual studio alone no longer satisfies the launch objective.
+- Added docs/AGENT_PRODUCT_SPEC.md: Capture, Look Spotter, Gatekeeper stylist and Creator assistant; server-side single-specialist dispatch; permission boundaries; evaluation requirements; proposed cost limits and source/asset handling.
+- Implemented structured request/result contracts and owned-ID/locked-piece validation in src/server/agents/contracts.ts. Three targeted tests and TypeScript passed.
+- Limits in contracts/spec are declarations, NOT runtime budget enforcement. Provider integration, request ledger, global spending cap, consent UI and live evaluations remain unimplemented.
+- Next implementation: persisted generation ledger with atomic idempotency and budget reservation, then real Gatekeeper provider integration. Preserve deterministic manual tools as labeled fallbacks, never as fabricated AI.
+- Keep specialist prompts and confidential evaluation assets off the public remote. This batch does not change repository visibility or assert legal ownership/exclusivity.
