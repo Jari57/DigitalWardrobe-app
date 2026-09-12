@@ -72,5 +72,8 @@ Keep a provenance record for original code, prompts, evaluation cases, fonts, ic
 
 ## Status
 
-Defined: agent roles, contracts, differentiation goals, validation requirements and proposed cost policy.
-Not yet implemented: provider connection, generation ledger, budget enforcement, consent UI, customer-facing agent controls and live agent evaluations. This specification does not claim these capabilities are running.
+Implemented and exercised: Capture, Look Spotter, Gatekeeper stylist, sourced Shopping and Creator; authenticated Gateway calls, transactional budget ledger, cached results, consent copy, owned-ID validation and private feedback. Provider generation receipts now support reconciliation of completed results with known costs. Interrupted requests without complete evidence keep their reservations.
+
+The historical proposal above is superseded by these release choices: Gemini 2.5 Flash through the funded Vercel Gateway; up to 2,000 output tokens for Capture/Shopping, 1,200 for stylist, and 900 for Creator. Shopping has two bounded stages; other actions use one generation. No automatic paid retries. Initial shared cap is $1/day, with a $0.10 reservation per action and ten actions/account/day; reservations are not quoted provider prices.
+
+Monthly trends are implemented as dated, manually reviewed editorial editions in Git, with public caching and no per-visitor AI calls. They are not autonomous trend monitoring. Cutouts remain internal at the owner's request. Stripe is excluded from this release. See DELIVERY_PUNCH_LIST.md for deployed evidence and remaining release gates; implementation alone does not establish production readiness.

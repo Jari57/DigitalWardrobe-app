@@ -1,6 +1,6 @@
 # Digital Wardrobe — delivery plan and punch list
 
-Updated September 12, 2026. Owner: implementation in this task; product decisions follow the priorities below. Preserve the cream/charcoal/fuchsia design. Stripe is the only intentionally deferred launch integration. A checked item means verified work, not a promise of universal accuracy or virality.
+Updated September 12, 2026. Owner: implementation in this task; product decisions follow the priorities below. Preserve the cream/charcoal/muted-blush design. Stripe remains last; cutouts remain internal and domain naming is deferred by owner. A checked item means verified work, not a promise of universal accuracy or virality. See RELEASE_AUDIT.md for the current scope mapping and remaining gates; evidence below includes historical deployments.
 
 ## Objective
 
@@ -15,7 +15,7 @@ Deliver a reliable creator wardrobe studio: real photo → identified pieces →
 - [x] Random Blind Fit, locking, canvas placement, saved looks and PNG export.
 - [x] Transactional AI request ledger, result reuse, usage accounting and daily allowances.
 - [x] Protected hosted preview with 16 passing checks for the photo-to-shopping flow.
-- [ ] Full original-prototype/spec parity audit. Existing checkmarks do not establish complete product parity.
+- [x] Map requested capabilities to implementation, release choices and limitations in RELEASE_AUDIT.md; no claim of pixel-for-pixel prototype parity.
 
 ## Batch 1 — AI Blind Fit (verified preview)
 
@@ -89,13 +89,14 @@ Implemented creator-v1 for saved looks: editable caption/steps, copy and existin
 - [x] Avoid unsupported trend claims and automatic external posting.
 - [x] Carry user-approved content into existing preview/export controls.
 - [x] Capture helpful/not-helpful feedback tied to a generation and prompt version, with a deletion policy.
-- [ ] Version prompts, evaluation cases, lock rules and composition rules as the app's maintained product logic.
+- [x] Version prompts, evaluation cases, lock rules and composition rules in source control; inventory and current limits in AGENT_PRODUCT_SPEC.md and RELEASE_AUDIT.md.
 
 Acceptance: creator output references the real saved outfit; users edit and choose whether to share.
 
 ## Batch 7 — AI recovery and operating costs
 
 - [ ] Persist generation IDs and reconcile uncertain holds, including partial multi-stage search failures.
+- [x] Persist provider receipts and reconcile completed results only with all expected costs; tested ownership and repeat settlement. Partial/unknown dispatches retain holds. See AI_RECOVERY.md.
 - [ ] Support deliberate safe retry after transient failure without duplicate billing or forcing a wait until tomorrow.
 - [ ] Separate test/preview accounting from customer budgets while retaining an overall spend limit.
 - [x] Expose remaining allowance and useful error states; prevent repeated unproductive requests.
@@ -110,7 +111,7 @@ PWA implemented with network-only private data and static offline fallback. Auto
 
 - [x] Add manifest, appropriate app icons and install affordance.
 - [x] Choose an offline policy that never caches private API responses across accounts; explain unavailable AI/network actions.
-- [ ] Verify service-worker update behavior and storage cleanup on sign-out.
+- [x] Verify explicit waiting-worker activation/reload and public-only caches. Sign-out has no private worker cache to clear; physical deployed-version transition remains open.
 - [ ] Test iPhone Safari and Android Chrome uploads, install flow, keyboard layout and native sharing.
 - [ ] Check touch targets, contrast, keyboard focus, screen-reader labels and reduced motion.
 
@@ -133,7 +134,7 @@ Acceptance: supported journeys have no unresolved blocker/high-severity defects;
 
 ## Batch 10 — Launch audit and release
 
-- [ ] Map every original feature/spec item to implemented, intentionally changed, deferred or missing, with evidence.
+- [x] Map requested feature/spec areas to implemented, intentionally changed and deferred work with evidence in RELEASE_AUDIT.md.
 - [ ] Run the complete new-user journey and a returning-user journey on the candidate deployment.
 - [ ] Confirm authentication, cross-account isolation, deletion, AI limits, source attribution and native-device checks.
 - [ ] Record release commit, environment configuration, rollback target and remaining limitations.

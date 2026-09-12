@@ -1,20 +1,120 @@
 {
-  "month": "2026-09", "region": "US/UK", "reviewedAt": "2026-09-12",
+  "month": "2026-09",
+  "region": "US/UK",
+  "reviewedAt": "2026-09-12",
   "sources": [
-    {"id":"vogue-season","publisher":"Vogue","title":"Fall 2026 fashion trends","url":"https://www.vogue.com/article/fall-winter-2026-fashion-trends","publishedAt":"2026-08-19"},
-    {"id":"vogue-dresses","publisher":"Vogue","title":"Fall 2026 dress trends","url":"https://www.vogue.com/article/fall-2026-dress-trends","publishedAt":"2026-09-02"},
-    {"id":"www-tops","publisher":"Who What Wear","title":"Autumn top trends for 2026","url":"https://www.whowhatwear.com/fashion/trends/autumn-top-trends-2026","publishedAt":"2026-09-06"}
+    {
+      "id": "vogue-season",
+      "publisher": "Vogue",
+      "title": "Fall 2026 fashion trends",
+      "url": "https://www.vogue.com/article/fall-winter-2026-fashion-trends",
+      "publishedAt": "2026-08-19"
+    },
+    {
+      "id": "vogue-dresses",
+      "publisher": "Vogue",
+      "title": "Fall 2026 dress trends",
+      "url": "https://www.vogue.com/article/fall-2026-dress-trends",
+      "publishedAt": "2026-09-02"
+    },
+    {
+      "id": "www-tops",
+      "publisher": "Who What Wear",
+      "title": "Autumn top trends for 2026",
+      "url": "https://www.whowhatwear.com/fashion/trends/autumn-top-trends-2026",
+      "publishedAt": "2026-09-06"
+    }
   ],
   "picks": [
-    {"id":"layered-basics","name":"Layered basics","evidence":"Vogue highlights unexpected combinations of everyday layers.","idea":"Try a shirt under your favorite cardigan. Film the look one layer at a time.","aesthetic":"Layered everyday basics: shirt, cardigan, relaxed proportions","sourceId":"vogue-season","color":"#c7b9a8"},
-    {"id":"soft-tailoring","name":"Soft tailoring","evidence":"Vogue reports relaxed, sculptural takes on suiting.","idea":"Build around a blazer you already own and soften it with a simple tee.","aesthetic":"Soft relaxed tailoring with a blazer and simple basics","sourceId":"vogue-season","color":"#7c8380"},
-    {"id":"peplum","name":"Peplum tops","evidence":"Vogue includes peplum shapes in its seasonal edit.","idea":"Let a flared hem be the focal point; keep the rest of the outfit simple.","aesthetic":"Peplum silhouette with simple complementary pieces","sourceId":"vogue-season","color":"#b9909d"},
-    {"id":"deco","name":"Art Deco accents","evidence":"Vogue identifies a 1920s influence in eveningwear.","idea":"Start with one embellished piece and repeat its color in an accessory.","aesthetic":"Art Deco inspired evening style with one embellished focal piece","sourceId":"vogue-season","color":"#b8a478"},
-    {"id":"velvet","name":"Velvet dresses","evidence":"Vogue notes velvet across several fall dress collections.","idea":"Use side lighting in your outfit clip to show the fabric texture.","aesthetic":"Velvet dress with understated accompanying pieces","sourceId":"vogue-dresses","color":"#685a76"},
-    {"id":"lace","name":"Lace layers","evidence":"Vogue reports lace in fall dress collections.","idea":"Style a lace piece over an opaque base you feel comfortable wearing.","aesthetic":"Romantic lace layered over an opaque base","sourceId":"vogue-dresses","color":"#d3c7b9"},
-    {"id":"prints","name":"Expressive prints","evidence":"Vogue highlights abstract and colorful printed dresses.","idea":"Pick one color from the print for your shoes or bag.","aesthetic":"Expressive printed dress, accessories repeating one print color","sourceId":"vogue-dresses","color":"#8c939c"},
-    {"id":"sheer","name":"Sheer tops","evidence":"Who What Wear reports looser sheer layers over opaque pieces.","idea":"Try a transparent overshirt over a plain tank for a layered reveal.","aesthetic":"Loose sheer top over an opaque tank or vest","sourceId":"www-tops","color":"#b8c6c2"},
-    {"id":"waist","name":"Waist-tied shirts","evidence":"Who What Wear highlights waist emphasis in autumn tops.","idea":"Try your shirt with and without a belt in a quick outfit comparison.","aesthetic":"Waist-defined shirt or blouse with tailored bottoms","sourceId":"www-tops","color":"#b69b86"},
-    {"id":"collars","name":"Buttoned-up collars","evidence":"Who What Wear notes buttoned-up shirts and knits.","idea":"Start your outfit clip with the collar detail, then reveal the full look.","aesthetic":"Buttoned-up collared shirt or knit, polished everyday styling","sourceId":"www-tops","color":"#9dabbc"}
+    {
+      "id": "layered-basics",
+      "name": "Layered basics",
+      "evidence": "Vogue highlights unexpected combinations of everyday layers.",
+      "idea": "Try a shirt under your favorite cardigan. Film the look one layer at a time.",
+      "aesthetic": "Layered everyday basics: shirt, cardigan, relaxed proportions",
+      "sourceId": "vogue-season",
+      "color": "#c7b9a8"
+    },
+    {
+      "id": "soft-tailoring",
+      "name": "Soft tailoring",
+      "evidence": "Vogue reports relaxed, sculptural takes on suiting.",
+      "idea": "Build around a blazer you already own and soften it with a simple tee.",
+      "aesthetic": "Soft relaxed tailoring with a blazer and simple basics",
+      "sourceId": "vogue-season",
+      "color": "#7c8380"
+    },
+    {
+      "id": "peplum",
+      "name": "Peplum tops",
+      "evidence": "Vogue includes peplum shapes in its seasonal edit.",
+      "idea": "Let a flared hem be the focal point; keep the rest of the outfit simple.",
+      "aesthetic": "Peplum silhouette with simple complementary pieces",
+      "sourceId": "vogue-season",
+      "color": "#b9909d"
+    },
+    {
+      "id": "deco",
+      "name": "Art Deco accents",
+      "evidence": "Vogue identifies a 1920s influence in eveningwear.",
+      "idea": "Start with one embellished piece and repeat its color in an accessory.",
+      "aesthetic": "Art Deco inspired evening style with one embellished focal piece",
+      "sourceId": "vogue-season",
+      "color": "#b8a478"
+    },
+    {
+      "id": "velvet",
+      "name": "Velvet dresses",
+      "evidence": "Vogue notes velvet across several fall dress collections.",
+      "idea": "Use side lighting in your outfit clip to show the fabric texture.",
+      "aesthetic": "Velvet dress with understated accompanying pieces",
+      "sourceId": "vogue-dresses",
+      "color": "#685a76"
+    },
+    {
+      "id": "lace",
+      "name": "Lace layers",
+      "evidence": "Vogue reports lace in fall dress collections.",
+      "idea": "Style a lace piece over an opaque base you feel comfortable wearing.",
+      "aesthetic": "Romantic lace layered over an opaque base",
+      "sourceId": "vogue-dresses",
+      "color": "#d3c7b9"
+    },
+    {
+      "id": "prints",
+      "name": "Expressive prints",
+      "evidence": "Vogue highlights abstract and colorful printed dresses.",
+      "idea": "Pick one color from the print for your shoes or bag.",
+      "aesthetic": "Expressive printed dress, accessories repeating one print color",
+      "sourceId": "vogue-dresses",
+      "color": "#8c939c"
+    },
+    {
+      "id": "sheer",
+      "name": "Sheer tops",
+      "evidence": "Who What Wear reports looser sheer layers over opaque pieces.",
+      "idea": "Try a transparent overshirt over a plain tank for a layered reveal.",
+      "aesthetic": "Loose sheer top over an opaque tank or vest",
+      "sourceId": "www-tops",
+      "color": "#b8c6c2"
+    },
+    {
+      "id": "waist",
+      "name": "Waist-tied shirts",
+      "evidence": "Who What Wear highlights waist emphasis in autumn tops.",
+      "idea": "Try your shirt with and without a belt in a quick outfit comparison.",
+      "aesthetic": "Waist-defined shirt or blouse with tailored bottoms",
+      "sourceId": "www-tops",
+      "color": "#b69b86"
+    },
+    {
+      "id": "collars",
+      "name": "Buttoned-up collars",
+      "evidence": "Who What Wear notes buttoned-up shirts and knits.",
+      "idea": "Start your outfit clip with the collar detail, then reveal the full look.",
+      "aesthetic": "Buttoned-up collared shirt or knit, polished everyday styling",
+      "sourceId": "www-tops",
+      "color": "#9dabbc"
+    }
   ]
 }

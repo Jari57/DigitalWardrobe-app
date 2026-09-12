@@ -7,9 +7,11 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "format": "prettier --write src tests scripts public/*.js",
+    "format:check": "prettier --check src tests scripts public/*.js",
     "test": "playwright test",
     "test:flows": "node scripts/check-flows.mjs",
-    "db:migrate": "prisma migrate deploy",
+    "db:migrate": "node scripts/migrate.mjs",
     "db:generate": "prisma generate"
   },
   "dependencies": {
@@ -29,6 +31,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "prettier": "3.6.2",
     "prisma": "6.19.3",
     "typescript": "^5.9.3"
   },

@@ -1,17 +1,30 @@
 import { test, expect } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
 
-test('creator quick start is skippable and themes persist while system mode follows device', async ({ page, context }) => {
+test('creator quick start is skippable and themes persist while system mode follows device', async ({
+  page,
+  context,
+}) => {
   const password = randomBytes(20).toString('hex');
   const headers = { Origin: 'http://localhost:3100' };
-  expect((await context.request.post('/api/auth', { headers, data: { action: 'signup', username: `qa_${randomBytes(7).toString('hex')}`, password } })).status()).toBe(201);
+  expect(
+    (
+      await context.request.post('/api/auth', {
+        headers,
+        data: { action: 'signup', username: `qa_${randomBytes(7).toString('hex')}`, password },
+      })
+    ).status(),
+  ).toBe(201);
   try {
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await expect(page.getByRole('region', { name: 'Creator quick start' })).toBeVisible();
     await page.getByRole('button', { name: 'Streetwear', exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Streetwear', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Streetwear', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await page.getByRole('button', { name: 'Add my first photo', exact: true }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await page.getByRole('button', { name: 'Close dialog' }).click();
@@ -35,9 +48,13 @@ test('creator quick start is skippable and themes persist while system mode foll
     await page.getByRole('button', { name: 'Creator quick start', exact: true }).click();
     await expect(page.getByRole('region', { name: 'Creator quick start' })).toBeVisible();
     await page.setViewportSize({ width: 320, height: 700 });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
   } finally {
     test.setTimeout(test.info().timeout + 15_000);
-    expect((await context.request.delete('/api/account', { headers, data: { password } })).status()).toBe(200);
+    expect(
+      (await context.request.delete('/api/account', { headers, data: { password } })).status(),
+    ).toBe(200);
   }
 });

@@ -6,7 +6,10 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
     checkOrigin(request);
     const user = await requireUser();
     const { id } = await context.params;
-    if (!(await db.outfit.deleteMany({ where: { id, userId: user.id } })).count) throw new ApiError(404, 'Look not found.');
+    if (!(await db.outfit.deleteMany({ where: { id, userId: user.id } })).count)
+      throw new ApiError(404, 'Look not found.');
     return json({ ok: true });
-  } catch (error) { return handleError(error); }
+  } catch (error) {
+    return handleError(error);
+  }
 }

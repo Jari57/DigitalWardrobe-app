@@ -17,69 +17,144 @@ const payload = path.join(temp, 'payload.json');
 const output = path.join(temp, 'response.json');
 const username = `qa_${randomBytes(7).toString('hex')}`;
 const password = randomBytes(20).toString('hex');
-let created = false, checks = 0;
+let created = false,
+  checks = 0;
 async function call(route, method = 'GET', body, status = 200, form = false) {
-  const args = ['curl', route, '--deployment', base, '--', '--silent', '--show-error', '--request', method,
-    '--header', `Origin: ${base}`, '--cookie', cookie, '--cookie-jar', cookie, '--output', output, '--write-out', '%{http_code}'];
+  const args = [
+    'curl',
+    route,
+    '--deployment',
+    base,
+    '--',
+    '--silent',
+    '--show-error',
+    '--request',
+    method,
+    '--header',
+    `Origin: ${base}`,
+    '--cookie',
+    cookie,
+    '--cookie-jar',
+    cookie,
+    '--output',
+    output,
+    '--write-out',
+    '%{http_code}',
+  ];
   if (form) args.push('--form', `file=@${body};type=image/png`);
   else if (body) {
     await writeFile(payload, JSON.stringify(body));
     args.push('--header', 'Content-Type: application/json', '--data-binary', `@${payload}`);
   }
-  const result = await exec(process.execPath, [cli, ...args], { timeout: 120_000, maxBuffer: 1024 * 1024, windowsHide: true });
-  assert.equal(Number(result.stdout.trim().slice(-3)), status, `${method} ${route} status mismatch`);
+  const result = await exec(process.execPath, [cli, ...args], {
+    timeout: 120_000,
+    maxBuffer: 1024 * 1024,
+    windowsHide: true,
+  });
+  assert.equal(
+    Number(result.stdout.trim().slice(-3)),
+    status,
+    `${method} ${route} status mismatch`,
+  );
   checks++;
   const response = await readFile(output, 'utf8');
-  try { return JSON.parse(response); }
-  catch { throw new Error(`${method} ${route} returned a non-JSON response. Verify the deployment is ready before running this check.`); }
+  try {
+    return JSON.parse(response);
+  } catch {
+    throw new Error(
+      `${method} ${route} returned a non-JSON response. Verify the deployment is ready before running this check.`,
+    );
+  }
 }
 try {
   assert.equal((await call('/api/health')).database, 'ready');
-  const signed = await call('/api/auth', 'POST', {action:'signup',username,password}, 201);
+  const signed = await call('/api/auth', 'POST', { action: 'signup', username, password }, 201);
   created = true;
   assert.equal(signed.user.username, username);
   assert.equal((await call('/api/session')).user.username, username);
   const image = path.join(temp, 'photo.png');
-  await sharp({create:{width:32,height:48,channels:4,background:'#8f9779'}}).png().toFile(image);
-  const {imageUrl} = await call('/api/uploads', 'POST', image, 201, true);
-  await call('/api/garments', 'POST', {name:'Hosted QA piece',brand:'',category:'tops',color:'#8f9779',price:0,imageUrl}, 201);
+  await sharp({ create: { width: 32, height: 48, channels: 4, background: '#8f9779' } })
+    .png()
+    .toFile(image);
+  const { imageUrl } = await call('/api/uploads', 'POST', image, 201, true);
+  await call(
+    '/api/garments',
+    'POST',
+    { name: 'Hosted QA piece', brand: '', category: 'tops', color: '#8f9779', price: 0, imageUrl },
+    201,
+  );
   assert.equal((await call('/api/wardrobe')).garments[0].price, 0);
-  await call('/api/auth', 'POST', {action:'signout'});
-  await call('/api/auth', 'POST', {action:'signin',username,password});
+  await call('/api/auth', 'POST', { action: 'signout' });
+  await call('/api/auth', 'POST', { action: 'signin', username, password });
   assert.equal((await call('/api/wardrobe')).garments.length, 1);
   if (process.env.LIVE_STYLIST === 'true') {
     const { garments } = await call('/api/wardrobe');
-    const input = { agent: 'stylist', candidateIds: [garments[0].id], lockedIds: [garments[0].id], occasion: 'Everyday', aesthetic: 'Minimal' };
+    const input = {
+      agent: 'stylist',
+      candidateIds: [garments[0].id],
+      lockedIds: [garments[0].id],
+      occasion: 'Everyday',
+      aesthetic: 'Minimal',
+    };
     const styled = await call('/api/stylist', 'POST', input);
     assert.deepEqual(styled.garmentIds, input.lockedIds);
     assert.ok(styled.explanation.length > 0);
     assert.ok(styled.limitations.length > 0, 'A one-piece closet must disclose limitations.');
     assert.equal((await call('/api/stylist', 'POST', input)).id, styled.id);
-    console.log('Live hosted stylist: owned lock, partial-closet limitations and cached reuse passed.');
+    console.log(
+      'Live hosted stylist: owned lock, partial-closet limitations and cached reuse passed.',
+    );
   }
   if (process.env.LIVE_DISCOVERY_PHOTO) {
     await sharp(process.env.LIVE_DISCOVERY_PHOTO).png().toFile(image);
     const uploaded = await call('/api/uploads', 'POST', image, 201, true);
-    const detected = await call('/api/discovery', 'POST', { agent: 'detect', imageId: uploaded.imageUrl.split('/').pop() });
+    const detected = await call('/api/discovery', 'POST', {
+      agent: 'detect',
+      imageId: uploaded.imageUrl.split('/').pop(),
+    });
     assert.ok(detected.items.length > 0, 'The clothing photo must produce a detected piece.');
     const input = { agent: 'shop', detectionId: detected.id, itemIndex: 0, country: 'US' };
     const shopping = await call('/api/discovery', 'POST', input);
     assert.ok(shopping.listings.length > 0, 'Live shopping search must return sourced listings.');
-    assert.equal((await call('/api/discovery', 'POST', input)).id, shopping.id, 'Repeated search must reuse the saved result.');
+    assert.equal(
+      (await call('/api/discovery', 'POST', input)).id,
+      shopping.id,
+      'Repeated search must reuse the saved result.',
+    );
     const item = detected.items[0];
-    await call('/api/garments', 'POST', { name: item.name, brand: item.visibleBrand ?? '', category: item.category, color: item.color, price: null, imageUrl: detected.imageUrl }, 201);
+    await call(
+      '/api/garments',
+      'POST',
+      {
+        name: item.name,
+        brand: item.visibleBrand ?? '',
+        category: item.category,
+        color: item.color,
+        price: null,
+        imageUrl: detected.imageUrl,
+      },
+      201,
+    );
     assert.equal((await call('/api/wardrobe')).garments.length, 2);
     const history = await call('/api/discovery');
-    assert.ok(history.detections.some(scan => scan.id === detected.id));
-    console.log(JSON.stringify({ liveDiscovery: 'passed', garment: item.name, retailers: shopping.listings.map(listing => listing.retailer) }));
+    assert.ok(history.detections.some((scan) => scan.id === detected.id));
+    console.log(
+      JSON.stringify({
+        liveDiscovery: 'passed',
+        garment: item.name,
+        retailers: shopping.listings.map((listing) => listing.retailer),
+      }),
+    );
   }
-  console.log(`PASS: ${checks} hosted checks: account, private session, image upload, garment persistence and sign-in.`);
+  console.log(
+    `PASS: ${checks} hosted checks: account, private session, image upload, garment persistence and sign-in.`,
+  );
 } finally {
   try {
     if (created) {
       // Refresh authentication so cleanup also works after a failed sign-out/sign-in check.
-      await call('/api/auth', 'POST', {action:'signin',username,password});
-      await call('/api/account', 'DELETE', {password});
+      await call('/api/auth', 'POST', { action: 'signin', username, password });
+      await call('/api/account', 'DELETE', { password });
       console.log('Hosted QA account and uploaded data deleted.');
     }
   } finally {

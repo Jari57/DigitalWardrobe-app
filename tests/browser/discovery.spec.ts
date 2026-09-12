@@ -5,10 +5,21 @@ import sharp from 'sharp';
 import { readFile } from 'node:fs/promises';
 import { loadEnvConfig } from '@next/env';
 import { detectClothes } from '../../src/server/agents/discovery';
-import { normalizeRanking } from '../../src/lib/discovery';
+import { normalizeRanking, parseShoppingSources } from '../../src/lib/discovery';
+
+test('search service errors never masquerade as an empty successful search', () => {
+  expect(() =>
+    parseShoppingSources({ error: 'rate_limit', statusCode: 429, message: 'limited' }),
+  ).toThrow();
+  expect(() => parseShoppingSources({ unexpected: true })).toThrow();
+  expect(parseShoppingSources({ results: [], id: 'search' })).toEqual([]);
+});
 
 test('overlong model presentation text is bounded without losing source identities', () => {
-  const result = normalizeRanking({ note: 'n'.repeat(600), listings: [{ sourceIndex: 2, reason: 'r'.repeat(450), match: 'similar' }] });
+  const result = normalizeRanking({
+    note: 'n'.repeat(600),
+    listings: [{ sourceIndex: 2, reason: 'r'.repeat(450), match: 'similar' }],
+  });
   expect(result.note).toHaveLength(400);
   expect(result.listings[0].reason).toHaveLength(280);
   expect(result.listings[0].sourceIndex).toBe(2);
@@ -17,47 +28,130 @@ test('overlong model presentation text is bounded without losing source identiti
 test('live capture distinguishes a bomber jacket from a photo without clothing', async () => {
   test.skip(!process.env.LIVE_DISCOVERY_JACKET, 'Opt-in live provider evaluation.');
   loadEnvConfig(process.cwd());
-  const jacket = await detectClothes(await readFile(process.env.LIVE_DISCOVERY_JACKET!), 'image/jpeg');
-  expect(jacket.value.items.some(item => item.category === 'outerwear' && /jacket|bomber/i.test(item.name))).toBe(true);
-  const blank = await sharp({ create: { width: 300, height: 300, channels: 3, background: '#dadada' } }).png().toBuffer();
+  const jacket = await detectClothes(
+    await readFile(process.env.LIVE_DISCOVERY_JACKET!),
+    'image/jpeg',
+  );
+  expect(
+    jacket.value.items.some(
+      (item) => item.category === 'outerwear' && /jacket|bomber/i.test(item.name),
+    ),
+  ).toBe(true);
+  const blank = await sharp({
+    create: { width: 300, height: 300, channels: 3, background: '#dadada' },
+  })
+    .png()
+    .toBuffer();
   const empty = await detectClothes(blank, 'image/png');
   expect(empty.value.items).toHaveLength(0);
-  console.log(JSON.stringify({ jacket: jacket.value.items.map(item => item.name), empty: empty.value.items, costMicros: (jacket.cost ?? 0) + (empty.cost ?? 0) }));
+  console.log(
+    JSON.stringify({
+      jacket: jacket.value.items.map((item) => item.name),
+      empty: empty.value.items,
+      costMicros: (jacket.cost ?? 0) + (empty.cost ?? 0),
+    }),
+  );
 });
 
-test('discovery UI reviews sourced results, saves to the real closet, and shows provider limits', async ({ page, context }) => {
+test('discovery UI reviews sourced results, saves to the real closet, and shows provider limits', async ({
+  page,
+  context,
+}) => {
   const username = `qa_${randomBytes(7).toString('hex')}`;
   const password = randomBytes(20).toString('hex');
   const headers = { Origin: 'http://localhost:3100' };
-  expect((await context.request.post('/api/auth', { headers, data: { action: 'signup', username, password } })).status()).toBe(201);
+  expect(
+    (
+      await context.request.post('/api/auth', {
+        headers,
+        data: { action: 'signup', username, password },
+      })
+    ).status(),
+  ).toBe(201);
   try {
     // Provider fixtures are confined to browser tests; uploads and saving use the real API/database.
-    const photo = await sharp({ create: { width: 240, height: 320, channels: 3, background: '#6489a1' } }).png().toBuffer();
+    const photo = await sharp({
+      create: { width: 240, height: 320, channels: 3, background: '#6489a1' },
+    })
+      .png()
+      .toBuffer();
     let detection: Record<string, unknown> | null = null;
     let limited = false;
-    await page.route('**/api/discovery', async route => {
-      if (route.request().method() === 'GET') return route.fulfill({ json: { enabled: true, detections: detection ? [detection] : [] } });
+    await page.route('**/api/discovery', async (route) => {
+      if (route.request().method() === 'GET')
+        return route.fulfill({ json: { enabled: true, detections: detection ? [detection] : [] } });
       const body = route.request().postDataJSON();
-      if (limited) return route.fulfill({ status: 429, json: { error: 'The AI provider is at its usage limit.' } });
+      if (limited)
+        return route.fulfill({
+          status: 429,
+          json: { error: 'The AI provider is at its usage limit.' },
+        });
       if (body.agent === 'detect') {
-        detection = { id: 'fixture-scan', imageUrl: `/api/images/${body.imageId}`, items: [{ name: 'Blue denim shirt', category: 'tops', color: '#6489a1', visibleBrand: null, description: 'Blue button-up shirt.', uncertainty: 'Brand is not visible.' }], note: 'Review the detected details.' };
+        detection = {
+          id: 'fixture-scan',
+          imageUrl: `/api/images/${body.imageId}`,
+          items: [
+            {
+              name: 'Blue denim shirt',
+              category: 'tops',
+              color: '#6489a1',
+              visibleBrand: null,
+              description: 'Blue button-up shirt.',
+              uncertainty: 'Brand is not visible.',
+            },
+          ],
+          note: 'Review the detected details.',
+        };
         return route.fulfill({ json: detection });
       }
-      return route.fulfill({ json: { id: 'fixture-search', country: body.country, searchedAt: new Date().toISOString(), note: 'Exact identity is unverified.', listings: [{ title: 'Denim shirt', url: 'https://retailer.example/product/shirt', retailer: 'retailer.example', match: 'similar', reason: 'Similar color and collar.', evidence: { availability: 'out-of-stock', price: 49.95, currency: 'USD', sourceUrl: 'https://retailer.example/product/shirt', checkedAt: new Date().toISOString(), note: 'Retailer-reported offer; confirm size and color.' } }] } });
+      return route.fulfill({
+        json: {
+          id: 'fixture-search',
+          country: body.country,
+          searchedAt: new Date().toISOString(),
+          note: 'Exact identity is unverified.',
+          listings: [
+            {
+              title: 'Denim shirt',
+              url: 'https://retailer.example/product/shirt',
+              retailer: 'retailer.example',
+              match: 'similar',
+              reason: 'Similar color and collar.',
+              evidence: {
+                availability: 'out-of-stock',
+                price: 49.95,
+                currency: 'USD',
+                sourceUrl: 'https://retailer.example/product/shirt',
+                checkedAt: new Date().toISOString(),
+                note: 'Retailer-reported offer; confirm size and color.',
+              },
+            },
+          ],
+        },
+      });
     });
     await page.goto('/');
     await page.getByRole('button', { name: 'Spotter', exact: true }).click();
-    await page.getByLabel('Clothing or outfit photo', { exact: true }).setInputFiles({ name: 'fixture.png', mimeType: 'image/png', buffer: photo });
+    await page
+      .getByLabel('Clothing or outfit photo', { exact: true })
+      .setInputFiles({ name: 'fixture.png', mimeType: 'image/png', buffer: photo });
     await page.getByRole('button', { name: 'Identify clothes', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Blue denim shirt', exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Blue denim shirt', exact: true }),
+    ).toBeVisible();
     await page.getByRole('button', { name: 'Find where to buy', exact: true }).click();
-    await expect(page.locator('.shopping-link')).toHaveAttribute('href', 'https://retailer.example/product/shirt');
+    await expect(page.locator('.shopping-link')).toHaveAttribute(
+      'href',
+      'https://retailer.example/product/shirt',
+    );
     await expect(page.getByText('Similar alternative', { exact: true })).toBeVisible();
     await expect(page.getByText('Retailer reports: Unavailable', { exact: true })).toBeVisible();
     await expect(page.getByText('USD 49.95', { exact: false })).toBeVisible();
     await page.getByRole('checkbox', { name: 'Only retailer-reported in-stock results' }).check();
     await expect(page.locator('.shopping-link')).toHaveCount(0);
-    await expect(page.getByText('No retailer-confirmed in-stock offers', { exact: false })).toBeVisible();
+    await expect(
+      page.getByText('No retailer-confirmed in-stock offers', { exact: false }),
+    ).toBeVisible();
     await page.getByRole('checkbox', { name: 'Only retailer-reported in-stock results' }).uncheck();
     await expect(page.locator('.shopping-link')).toHaveCount(1);
     await page.screenshot({ path: '../shopping-evidence-mobile.png', fullPage: true });
@@ -65,75 +159,173 @@ test('discovery UI reviews sourced results, saves to the real closet, and shows 
     await page.getByRole('dialog').getByLabel('Piece name').fill('Reviewed blue shirt');
     await page.getByRole('dialog').getByRole('button', { name: 'Save piece', exact: true }).click();
     await expect(page.getByText('Piece saved to your closet.', { exact: true })).toBeVisible();
-    expect((await (await context.request.get('/api/wardrobe')).json()).garments[0].name).toBe('Reviewed blue shirt');
+    expect((await (await context.request.get('/api/wardrobe')).json()).garments[0].name).toBe(
+      'Reviewed blue shirt',
+    );
     await page.reload();
     await page.getByRole('button', { name: 'Spotter', exact: true }).click();
     await page.getByLabel('Recent scans').selectOption('fixture-scan');
     limited = true;
     await page.getByRole('button', { name: 'Find where to buy', exact: true }).click();
-    await expect(page.getByRole('region', { name: 'Clothing discovery' }).getByRole('alert')).toHaveText('The AI provider is at its usage limit.');
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await expect(
+      page.getByRole('region', { name: 'Clothing discovery' }).getByRole('alert'),
+    ).toHaveText('The AI provider is at its usage limit.');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
     await page.screenshot({ path: '../discovery-ui-fixture.png', fullPage: true });
     // These requests bypass browser fixtures and exercise server-side validation before any AI call.
-    expect((await context.request.post('/api/discovery', { headers, data: { agent: 'detect', imageId: 'not-owned' } })).status()).toBe(404);
-    expect((await context.request.post('/api/discovery', { headers, data: { agent: 'shop', detectionId: 'not-owned', itemIndex: 0, country: 'US' } })).status()).toBe(404);
-    expect((await context.request.post('/api/discovery', { data: { agent: 'detect', imageId: 'not-owned' } })).status()).toBe(403);
-  } finally { await context.request.delete('/api/account', { headers, data: { password } }); }
+    expect(
+      (
+        await context.request.post('/api/discovery', {
+          headers,
+          data: { agent: 'detect', imageId: 'not-owned' },
+        })
+      ).status(),
+    ).toBe(404);
+    expect(
+      (
+        await context.request.post('/api/discovery', {
+          headers,
+          data: { agent: 'shop', detectionId: 'not-owned', itemIndex: 0, country: 'US' },
+        })
+      ).status(),
+    ).toBe(404);
+    expect(
+      (
+        await context.request.post('/api/discovery', {
+          data: { agent: 'detect', imageId: 'not-owned' },
+        })
+      ).status(),
+    ).toBe(403);
+  } finally {
+    await context.request.delete('/api/account', { headers, data: { password } });
+  }
 });
 
 test('shopping results reject unsafe and fabricated links and unsupported exact claims', () => {
-  for (const url of ['javascript:alert(1)', 'http://shop.com/a', 'https://127.0.0.1/a', 'https://user:pass@shop.com/a', 'https://localhost/a', 'https://foo.internal/a']) expect(safeShoppingUrl(url)).toBeNull();
-  const ranking = rankingSchema.parse({ listings: [
-    { sourceIndex: 0, reason: 'Similar blue shirt', match: 'possible-exact' },
-    { sourceIndex: 0, reason: 'Duplicate', match: 'similar' },
-    { sourceIndex: 7, reason: 'Invented source', match: 'similar' },
-  ], note: '' });
-  const result = groundedListings(ranking, [{ title: 'Blue denim shirt', url: 'https://retailer.example/shirt' }], null);
+  for (const url of [
+    'javascript:alert(1)',
+    'http://shop.com/a',
+    'https://127.0.0.1/a',
+    'https://user:pass@shop.com/a',
+    'https://localhost/a',
+    'https://foo.internal/a',
+  ])
+    expect(safeShoppingUrl(url)).toBeNull();
+  const ranking = rankingSchema.parse({
+    listings: [
+      { sourceIndex: 0, reason: 'Similar blue shirt', match: 'possible-exact' },
+      { sourceIndex: 0, reason: 'Duplicate', match: 'similar' },
+      { sourceIndex: 7, reason: 'Invented source', match: 'similar' },
+    ],
+    note: '',
+  });
+  const result = groundedListings(
+    ranking,
+    [{ title: 'Blue denim shirt', url: 'https://retailer.example/shirt' }],
+    null,
+  );
   expect(result).toHaveLength(1);
   expect(result[0].match).toBe('similar');
   expect(result[0].url).toBe('https://retailer.example/shirt');
 });
 
-test('real photo → real detection → sourced shopping links → saved closet piece', async ({ page, context, browser }) => {
-  test.skip(!process.env.LIVE_DISCOVERY_PHOTO, 'Opt-in live provider test: requires a local clothing photo and credits.');
+test('real photo → real detection → sourced shopping links → saved closet piece', async ({
+  page,
+  context,
+  browser,
+}) => {
+  test.skip(
+    !process.env.LIVE_DISCOVERY_PHOTO,
+    'Opt-in live provider test: requires a local clothing photo and credits.',
+  );
   test.setTimeout(180_000);
   const username = `qa_${randomBytes(7).toString('hex')}`;
   const password = randomBytes(20).toString('hex');
   const headers = { Origin: 'http://localhost:3100' };
-  const signup = await context.request.post('/api/auth', { headers, data: { action: 'signup', username, password } });
+  const signup = await context.request.post('/api/auth', {
+    headers,
+    data: { action: 'signup', username, password },
+  });
   expect(signup.status()).toBe(201);
   try {
     await page.goto('/');
     await page.getByRole('button', { name: 'Spotter', exact: true }).click();
-    await page.getByLabel('Clothing or outfit photo', { exact: true }).setInputFiles(process.env.LIVE_DISCOVERY_PHOTO!);
-    const scanResponse = page.waitForResponse(response => response.url().endsWith('/api/discovery') && response.request().method() === 'POST');
+    await page
+      .getByLabel('Clothing or outfit photo', { exact: true })
+      .setInputFiles(process.env.LIVE_DISCOVERY_PHOTO!);
+    const scanResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/discovery') && response.request().method() === 'POST',
+    );
     await page.getByRole('button', { name: 'Identify clothes', exact: true }).click();
     const scan = await scanResponse;
     expect(scan.status(), await scan.text()).toBe(200);
     const detected = await scan.json();
     expect(detected.items.length).toBeGreaterThan(0);
     expect(detected.items[0].name).toMatch(/shirt|denim/i);
-    const searchResponse = page.waitForResponse(response => response.url().endsWith('/api/discovery') && response.request().method() === 'POST');
+    const searchResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/discovery') && response.request().method() === 'POST',
+    );
     await page.getByRole('button', { name: 'Find where to buy', exact: true }).first().click();
     const search = await searchResponse;
     expect(search.status(), await search.text()).toBe(200);
     const shopping = await search.json();
     expect(shopping.listings.length).toBeGreaterThan(0);
     await expect(page.locator('.shopping-link').first()).toBeVisible();
-    expect(shopping.listings.every((listing: {url: string}) => safeShoppingUrl(listing.url))).toBe(true);
-    console.log(JSON.stringify({ detected: detected.items.map((item: {name: string}) => item.name), listings: shopping.listings }));
+    expect(
+      shopping.listings.every((listing: { url: string }) => safeShoppingUrl(listing.url)),
+    ).toBe(true);
+    console.log(
+      JSON.stringify({
+        detected: detected.items.map((item: { name: string }) => item.name),
+        listings: shopping.listings,
+      }),
+    );
     // Retry identical actions: persisted responses, not another paid generation.
-    const repeat = await context.request.post('/api/discovery', { headers, data: { agent: 'shop', detectionId: detected.id, itemIndex: 0, country: 'US' } });
+    const repeat = await context.request.post('/api/discovery', {
+      headers,
+      data: { agent: 'shop', detectionId: detected.id, itemIndex: 0, country: 'US' },
+    });
     expect((await repeat.json()).id).toBe(shopping.id);
     const outsider = await browser.newContext();
     try {
-      expect((await outsider.request.get('http://localhost:3100/api/discovery')).status()).toBe(401);
-      await outsider.request.post('http://localhost:3100/api/auth', { headers, data: { action: 'signup', username: `${username}_b`, password } });
-      expect((await outsider.request.post('http://localhost:3100/api/discovery', { headers, data: { agent: 'shop', detectionId: detected.id, itemIndex: 0, country: 'US' } })).status()).toBe(404);
-      expect((await outsider.request.post('http://localhost:3100/api/discovery', { headers, data: { agent: 'detect', imageId: detected.imageUrl.split('/').pop() } })).status()).toBe(404);
-    } finally { await outsider.request.delete('http://localhost:3100/api/account', { headers, data: { password } }); await outsider.close(); }
+      expect((await outsider.request.get('http://localhost:3100/api/discovery')).status()).toBe(
+        401,
+      );
+      await outsider.request.post('http://localhost:3100/api/auth', {
+        headers,
+        data: { action: 'signup', username: `${username}_b`, password },
+      });
+      expect(
+        (
+          await outsider.request.post('http://localhost:3100/api/discovery', {
+            headers,
+            data: { agent: 'shop', detectionId: detected.id, itemIndex: 0, country: 'US' },
+          })
+        ).status(),
+      ).toBe(404);
+      expect(
+        (
+          await outsider.request.post('http://localhost:3100/api/discovery', {
+            headers,
+            data: { agent: 'detect', imageId: detected.imageUrl.split('/').pop() },
+          })
+        ).status(),
+      ).toBe(404);
+    } finally {
+      await outsider.request.delete('http://localhost:3100/api/account', {
+        headers,
+        data: { password },
+      });
+      await outsider.close();
+    }
     await page.screenshot({ path: '../discovery-flow.png', fullPage: true });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
     await page.getByRole('button', { name: 'I own this · save', exact: true }).first().click();
     await page.getByRole('dialog').getByRole('button', { name: 'Save piece', exact: true }).click();
     await expect(page.getByText('Piece saved to your closet.', { exact: true })).toBeVisible();
@@ -143,6 +335,7 @@ test('real photo → real detection → sourced shopping links → saved closet 
     await expect(page.locator('.discovery-item')).toHaveCount(detected.items.length);
     const wardrobe = await context.request.get('/api/wardrobe');
     expect((await wardrobe.json()).garments).toHaveLength(1);
-  } finally { await context.request.delete('/api/account', { headers, data: { password } }); }
+  } finally {
+    await context.request.delete('/api/account', { headers, data: { password } });
+  }
 });
-

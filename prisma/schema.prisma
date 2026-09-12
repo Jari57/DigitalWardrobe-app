@@ -153,6 +153,7 @@ model AgentRequest {
   result Json?
   feedback String?
   feedbackAt DateTime?
+  generations AgentGeneration[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@unique([userId, key])
@@ -167,4 +168,12 @@ model AgentBudget {
   heldMicros Int @default(0)
   spentMicros Int @default(0)
   @@id([scope, day])
+}
+
+model AgentGeneration {
+  id String @id
+  requestId String
+  request AgentRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  costMicros Int?
+  @@index([requestId])
 }

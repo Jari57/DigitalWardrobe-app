@@ -11,13 +11,16 @@ export async function PATCH(request: Request, context: Context) {
     await rateLimit(`garment-edit:${user.id}`, 200, 3600);
     const { id } = await context.params;
     const { imageUrl, ...input } = await readJson(request, garmentSchema.partial());
-    const garment = await db.$transaction(async tx => {
-      if (!await tx.garment.findFirst({ where: { id, userId: user.id } })) throw new ApiError(404, 'Garment not found.');
+    const garment = await db.$transaction(async (tx) => {
+      if (!(await tx.garment.findFirst({ where: { id, userId: user.id } })))
+        throw new ApiError(404, 'Garment not found.');
       const imageId = imageUrl ? await ownImage(user.id, imageUrl, tx) : undefined;
       return tx.garment.update({ where: { id, userId: user.id }, data: { ...input, imageId } });
     });
     return json({ garment: serializeGarment(garment) });
-  } catch (error) { return handleError(error); }
+  } catch (error) {
+    return handleError(error);
+  }
 }
 export async function DELETE(request: Request, context: Context) {
   try {
@@ -28,5 +31,7 @@ export async function DELETE(request: Request, context: Context) {
     if (!removed.count) throw new ApiError(404, 'Garment not found.');
     // Foreign-key cascades remove only the deleted piece from saved compositions.
     return json({ ok: true });
-  } catch (error) { return handleError(error); }
+  } catch (error) {
+    return handleError(error);
+  }
 }
