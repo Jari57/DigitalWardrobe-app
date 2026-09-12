@@ -1,3 +1,13 @@
+# Current checkpoint — September 12, 2026
+
+Current runtime commit: 3ac2d9d. Protected preview: https://digital-wardrobe-h3kix5wlp-almonjs-projects.vercel.app
+
+The current source of release scope and acceptance checks is [docs/DELIVERY_PUNCH_LIST.md](docs/DELIVERY_PUNCH_LIST.md). Photo detection and sourced shopping are live; this batch adds owned-metadata AI Blind Fit, skippable creator quick start, and light/dark/system themes. Local build, ownership/lock/cache/provider checks, onboarding/themes and creator regression passed. Hosted acceptance is being recorded in the punch list.
+
+Production is not promoted. Finish unchecked feature and reliability work, then PWA, then Stripe LAST. Stripe is not connected. Earlier entries below are historical checkpoints and do not describe current completeness.
+
+---
+
 # Implementation checkpoint — September 12, 2026
 
 User preference: minimize usage cost; no parallel agents unless newly requested. Use focused batches, targeted verification, and concise progress updates. Preserve original cream/neutral/fuchsia design; no simulated user data or AI results. Stripe remains excluded.

@@ -29,7 +29,9 @@ async function call(route, method = 'GET', body, status = 200, form = false) {
   const result = await exec(process.execPath, [cli, ...args], { timeout: 120_000, maxBuffer: 1024 * 1024, windowsHide: true });
   assert.equal(Number(result.stdout.trim().slice(-3)), status, `${method} ${route} status mismatch`);
   checks++;
-  return JSON.parse(await readFile(output, 'utf8'));
+  const response = await readFile(output, 'utf8');
+  try { return JSON.parse(response); }
+  catch { throw new Error(`${method} ${route} returned a non-JSON response. Verify the deployment is ready before running this check.`); }
 }
 try {
   assert.equal((await call('/api/health')).database, 'ready');

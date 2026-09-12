@@ -17,7 +17,7 @@ Deliver a reliable creator wardrobe studio: real photo → identified pieces →
 - [x] Protected hosted preview with 16 passing checks for the photo-to-shopping flow.
 - [ ] Full original-prototype/spec parity audit. Existing checkmarks do not establish complete product parity.
 
-## Batch 1 — AI Blind Fit (implemented; hosted verification pending)
+## Batch 1 — AI Blind Fit (verified preview)
 
 - [x] Keep Random Reveal available and clearly labeled; add a separate AI styling action.
 - [x] Add occasion and aesthetic controls with sensible defaults.
@@ -26,8 +26,8 @@ Deliver a reliable creator wardrobe studio: real photo → identified pieces →
 - [x] Handle incomplete closets honestly; never invent a missing piece or label randomness as an AI result.
 - [x] Return a short explanation and limitations; user accepts before canvas placement or saving.
 - [x] Reuse identical results for unchanged input; count AI actions against existing shared allowances.
-- [ ] Test real provider selection, lock preservation, empty closet, missing category, malformed result, cross-account access, budget exhaustion and canvas handoff.
-- [ ] Deploy and verify the hosted route before advertising it as available.
+- [x] Test real provider selection, lock preservation, empty closet, missing category, malformed result, cross-account access, budget exhaustion and canvas handoff. Budget exhaustion is covered by the ledger test and UI error substitution; hosted validation uses a real provider.
+- [x] Deploy and verify the hosted route before advertising it as available.
 
 Acceptance: a user locks a piece, chooses an occasion, receives an explanation and an outfit composed solely of owned IDs, and opens exactly those pieces on the canvas. Failed generation preserves the previous selection.
 
@@ -142,5 +142,5 @@ AI Blind Fit → owned-closet Look Spotter → shopping evidence → cutouts →
 - Agent contracts and transactional ledger checks: 5 passed. Existing creator journey regression: passed after UI changes.
 - Real Gemini stylist test: owned selection, lock preservation, server-side rejection of another account’s IDs, duplicate request reuse, failure preserving selection and canvas handoff passed.
 - Creator quick start / theme browser check passed, including empty-closet Blind Fit, import entry, skip/reopen, persisted light mode, dark mode, system changes and narrow viewport.
-- Hosted preview and partial-closet live acceptance: pending deployment.
+- Hosted preview: https://digital-wardrobe-h3kix5wlp-almonjs-projects.vercel.app (runtime 3ac2d9d). Twelve hosted checks passed, including live one-piece styling, preservation of its lock, missing-category limitations, cached reuse, private accounts and persistence.
 - PWA, Stripe and unchecked feature batches remain unfinished; this is not a production-readiness certification.
