@@ -1,3 +1,7 @@
+## Cutouts kept internal by owner direction
+
+Provider comparison and test-only contour renderer added; see docs/CUTOUT_EVALUATION.md. Rendering fixture passes. Two live Gateway attempts failed before a usable mask, so no quality claim or customer feature. No production source, route, controls or deployment added. Live runtime remains 1e34e44. Next roadmap feature: monthly trends; Stripe last.
+
 ## Layered outfit evaluation and fixes
 
 Added opt-in real group-photo evaluation and documented source/expectations in docs/PHOTO_EVALUATION.md. Found and fixed empty-closet Spotter returning no visible elements; now one Capture call returns missing pieces. Controlled scan summaries avoid claiming exhaustive coverage, including historical scan retrieval. Post-fix live evaluation and six other targeted tests pass; final TypeScript and Vercel production build passed. Runtime 1e34e44 is live at https://digital-wardrobe-app-vert.vercel.app (dpl_G1ZwRhqvddU2VoYQCqxv84RESbRB). Public health/version/database and homepage HTTP 200 pass. Rollback: dpl_Gk7Eab4JgjNSL19jwUWJ9quDwdX4. Broader difficult-image/near-identical match coverage remains unfinished. Stripe remains off.

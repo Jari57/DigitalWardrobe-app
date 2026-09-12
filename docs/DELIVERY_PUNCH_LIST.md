@@ -58,6 +58,8 @@ Acceptance: every identity, price or stock claim has attributable evidence and a
 
 ## Batch 4 — Garment cutouts
 
+Owner instruction September 12: keep cutouts internal; do not expose in the app. Provider comparison and test-only renderer recorded in CUTOUT_EVALUATION.md. Gemini live attempts returned provider errors, so visual quality is unverified. Customer-facing work below is deferred; continue to monthly trends without making cutouts a launch claim.
+
 - [ ] Evaluate a segmentation provider against quality, per-image price, privacy and commercial-use requirements.
 - [ ] Isolate selected garments in multi-piece photos; keep the original image.
 - [ ] Add preview, accept/reject and an original-photo fallback.
