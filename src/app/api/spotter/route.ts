@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     if (!image || candidates.length !== input.candidateIds.length) throw new ApiError(404, 'Photo or closet pieces unavailable. Refresh and try again.');
     if (process.env.AI_ENABLED !== 'true') throw new ApiError(503, 'AI matching is not enabled on this deployment.');
     const normalized = { ...input, candidateIds: candidates.map(c => c.id) };
-    const key = createHash('sha256').update(JSON.stringify({ version: 'spotter-v1', input: normalized, candidates, day: new Date().toISOString().slice(0, 10) })).digest('hex');
+    const key = createHash('sha256').update(JSON.stringify({ version: 'spotter-v2', input: normalized, candidates, day: new Date().toISOString().slice(0, 10) })).digest('hex');
     const ledger = new AgentLedger(db, configuredAgentBudget());
     const { request: record } = await ledger.reserve(user.id, key, normalized).catch(() => { throw new ApiError(429, 'Today’s AI allowance is used up. You can still pair pieces manually.'); });
     if (record.result) return json({ ...validateSpotterResult(record.result, normalized.candidateIds), id: record.id });

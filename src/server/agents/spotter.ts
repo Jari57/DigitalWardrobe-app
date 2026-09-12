@@ -1,10 +1,19 @@
 import { gateway, ToolLoopAgent, Output, isStepCount } from 'ai';
 import { z } from 'zod';
 import { validateSpotterResult } from './contracts';
-import { generationCost } from './discovery';
+import { detectClothes, generationCost } from './discovery';
 import type { StyleCandidate } from './stylist';
 
 export async function matchInspiration(image: Uint8Array, mimeType: string, candidates: StyleCandidate[]) {
+  // An empty closet is not an empty photo. Use Capture once and mark every
+  // detected garment missing, rather than asking a matcher with no candidates.
+  if (!candidates.length) {
+    const capture = await detectClothes(image, mimeType);
+    return { ...capture, value: {
+      elements: capture.value.items.map(item => ({ description: `${item.name}: ${item.description}`.slice(0, 500), garmentId: null, explanation: 'No owned pieces were supplied. Add this piece to your closet or find a shopping alternative.' })),
+      limitations: [capture.value.note, 'No owned garments were available for comparison.'],
+    } };
+  }
   const agent = new ToolLoopAgent({
     model: gateway('google/gemini-2.5-flash'), maxRetries: 0, maxOutputTokens: 2000, stopWhen: isStepCount(1),
     providerOptions: { google: { thinkingConfig: { thinkingBudget: 0 } }, vertex: { thinkingConfig: { thinkingBudget: 0 } } },

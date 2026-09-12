@@ -39,6 +39,7 @@ Acceptance: a user locks a piece, chooses an occasion, receives an explanation a
 - [x] Send missing pieces to shopping discovery without disclosing the full closet.
 - [x] Test sparse closets, real shirt matching, cached reuse, blank photo, ownership rejection, manual edits and canvas handoff; fixture-test the missing-piece shopping handoff.
 - [ ] Broaden real-photo evaluation to multi-piece outfits and difficult substitute choices.
+- [x] Add a repeatable layered group-photo case: three categories, no invented branding, appropriate sparse-closet substitutes, unrelated distractor rejection, empty closet and cached reuse. Fixed empty-closet omission and overconfident scan coverage; see PHOTO_EVALUATION.md. Near-identical substitute choices and broader photo coverage remain open.
 
 Acceptance: recreating inspiration produces traceable owned-piece pairings, never an invented similarity percentage.
 

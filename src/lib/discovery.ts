@@ -14,6 +14,10 @@ export const detectionSchema = z.object({
 }).strict();
 export type DetectedItem = z.infer<typeof detectedItemSchema>;
 export type Detection = z.infer<typeof detectionSchema> & { id: string; imageUrl: string };
+export function captureSummary(count: number) {
+  return count === 0 ? 'No clothing was identified. Try a clearer photo with the whole garment visible.' :
+    `${count} visible ${count === 1 ? 'piece' : 'pieces'} identified. Scans cover up to six pieces; hidden or unclear items may be missed. Review the details before saving.`;
+}
 export type ProductEvidence = { availability: 'in-stock' | 'out-of-stock' | 'unknown'; checkedAt: string; sourceUrl: string; productName?: string; price?: number; currency?: string; note: string };
 export type ShoppingResult = {
   id: string; searchedAt: string; country: string;

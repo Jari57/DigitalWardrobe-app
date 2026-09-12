@@ -6,7 +6,7 @@ import { db } from '@/server/db';
 import { ApiError, checkOrigin, handleError, json, readJson } from '@/server/http';
 import { AgentLedger, configuredAgentBudget } from '@/server/agents/ledger';
 import { detectClothes, findClothes } from '@/server/agents/discovery';
-import { detectionSchema } from '@/lib/discovery';
+import { captureSummary, detectionSchema } from '@/lib/discovery';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -19,7 +19,10 @@ export async function GET() {
   try {
     const user = await requireUser();
     const records = await db.agentRequest.findMany({ where: { userId: user.id, agent: 'detect' }, orderBy: { createdAt: 'desc' }, take: 12 });
-    return json({ enabled: process.env.AI_ENABLED === 'true', detections: records.filter(r => r.result).map(r => ({ ...(r.result as object), id: r.id })) });
+    return json({ enabled: process.env.AI_ENABLED === 'true', detections: records.filter(r => r.result).map(r => {
+      const value = r.result as Prisma.JsonObject;
+      return { ...value, note: captureSummary(Array.isArray(value.items) ? value.items.length : 0), id: r.id };
+    }) });
   } catch (error) { return handleError(error); }
 }
 
@@ -37,7 +40,7 @@ export async function POST(request: Request) {
     const parsed = detection?.result ? detectionSchema.parse(detection.result && { items: (detection.result as Prisma.JsonObject).items, note: (detection.result as Prisma.JsonObject).note }) : null;
     const item = input.agent === 'shop' ? parsed?.items[input.itemIndex] : null;
     if (input.agent === 'shop' && !item) throw new ApiError(404, 'Detected piece not found. Scan a photo first.');
-    const key = createHash('sha256').update((input.agent === 'shop' ? 'shopping-evidence-v2:' : '') + JSON.stringify(input) + ':' + new Date().toISOString().slice(0, 10)).digest('hex');
+    const key = createHash('sha256').update((input.agent === 'shop' ? 'shopping-evidence-v2:' : 'capture-v2:') + JSON.stringify(input) + ':' + new Date().toISOString().slice(0, 10)).digest('hex');
     const ledger = new AgentLedger(db, configuredAgentBudget());
     let reservation;
     try { reservation = await ledger.reserve(user.id, key, input); }

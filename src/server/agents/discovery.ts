@@ -1,6 +1,6 @@
 import { gateway, ToolLoopAgent, Output, isStepCount } from 'ai';
 import { z } from 'zod';
-import { detectionSchema, rankingProviderSchema, normalizeRanking, groundedListings, safeShoppingUrl, shoppingPageKind, prioritizeShoppingListings, type DetectedItem } from '@/lib/discovery';
+import { captureSummary, detectionSchema, rankingProviderSchema, normalizeRanking, groundedListings, safeShoppingUrl, shoppingPageKind, prioritizeShoppingListings, type DetectedItem } from '@/lib/discovery';
 import { productEvidence } from './product-evidence';
 
 // Explicit, cost-conscious model choice; live-tested through Gateway.
@@ -31,7 +31,9 @@ export async function detectClothes(image: Uint8Array, mimeType: string) {
     { type: 'text', text: 'Identify the visible garments in this photo.' },
     { type: 'file', data: image, mediaType: mimeType },
   ] }], abortSignal: AbortSignal.timeout(45_000) });
-  return { value: detectionSchema.parse(result.output), cost: await generationCost(result),
+  const value = detectionSchema.parse(result.output);
+  value.note = captureSummary(value.items.length);
+  return { value, cost: await generationCost(result),
     inputTokens: result.totalUsage.inputTokens ?? 0, outputTokens: result.totalUsage.outputTokens ?? 0 };
 }
 
