@@ -1,6 +1,6 @@
 ## Shopping ranking follow-up
 
-Added deterministic shopping-page exclusions and stable product-evidence prioritization, successful no-results handling, and an unrelated Product @id evidence fix. Build, nine targeted tests and a live shirt → retailer links → saved closet journey passed. One live Tommy Hilfiger offer reported USD 23.85 / out of stock; other retailers remained unknown. Exact identity, broad stock/region coverage and remaining roadmap are not complete. See docs/DELIVERY_PUNCH_LIST.md. Deployment verification follows below when published.
+Added deterministic shopping-page exclusions and stable product-evidence prioritization, successful no-results handling, and an unrelated Product @id evidence fix. Build, nine targeted tests and a live shirt → retailer links → saved closet journey passed. One live Tommy Hilfiger offer reported USD 23.85 / out of stock; other retailers remained unknown. Exact identity, broad stock/region coverage and remaining roadmap are not complete. See docs/DELIVERY_PUNCH_LIST.md. Runtime 22c5d55 is live at https://digital-wardrobe-app-vert.vercel.app (dpl_Gk7Eab4JgjNSL19jwUWJ9quDwdX4). Public homepage HTTP 200 and health/version/database checks pass; billing remains off. Prior rollback: dpl_CTQZRjYgWEwYnGYZ7uZyDhZkwKdg.
 
 ## Latest shopping evidence deployment
 
