@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const detectedItemSchema = z.object({
   name: z.string().min(1).max(100),
   category: z.enum(['tops', 'bottoms', 'outerwear', 'shoes', 'accessories', 'dresses']),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).describe('Dominant garment color as a six-digit hexadecimal RGB value, for example #729AB0. Never a color name.'),
   description: z.string().min(1).max(400),
   visibleBrand: z.string().max(80).nullable(),
   uncertainty: z.string().max(300),
@@ -41,6 +41,16 @@ export const rankingSchema = z.object({
   note: z.string().max(400),
 }).strict();
 
+// Models do not consistently honor JSON Schema string-length constraints.
+// Normalize presentation text; keep source indices and match enums strictly typed.
+export const rankingProviderSchema = rankingSchema.extend({
+  note: z.string(),
+  listings: z.array(z.object({ sourceIndex: z.number().int().min(0).max(7), reason: z.string(), match: z.enum(['similar', 'possible-exact']) }).strict()),
+});
+export function normalizeRanking(value: z.infer<typeof rankingProviderSchema>) {
+  return rankingSchema.parse({ note: value.note.slice(0, 400), listings: value.listings.slice(0, 5).map(item => ({ ...item, reason: item.reason.slice(0, 280) })) });
+}
+
 export function groundedListings(ranking: z.infer<typeof rankingSchema>, sources: { title: string; url: string }[], visibleBrand: string | null) {
   const seen = new Set<string>();
   return ranking.listings.flatMap(item => {
@@ -52,3 +62,4 @@ export function groundedListings(ranking: z.infer<typeof rankingSchema>, sources
       reason: item.reason, match: item.match === 'possible-exact' && visibleBrand ? 'possible-exact' as const : 'similar' as const }];
   });
 }
+

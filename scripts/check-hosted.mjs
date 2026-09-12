@@ -26,7 +26,7 @@ async function call(route, method = 'GET', body, status = 200, form = false) {
     await writeFile(payload, JSON.stringify(body));
     args.push('--header', 'Content-Type: application/json', '--data-binary', `@${payload}`);
   }
-  const result = await exec(process.execPath, [cli, ...args], { timeout: 60_000, maxBuffer: 1024 * 1024, windowsHide: true });
+  const result = await exec(process.execPath, [cli, ...args], { timeout: 120_000, maxBuffer: 1024 * 1024, windowsHide: true });
   assert.equal(Number(result.stdout.trim().slice(-3)), status, `${method} ${route} status mismatch`);
   checks++;
   return JSON.parse(await readFile(output, 'utf8'));
@@ -45,6 +45,22 @@ try {
   await call('/api/auth', 'POST', {action:'signout'});
   await call('/api/auth', 'POST', {action:'signin',username,password});
   assert.equal((await call('/api/wardrobe')).garments.length, 1);
+  if (process.env.LIVE_DISCOVERY_PHOTO) {
+    await sharp(process.env.LIVE_DISCOVERY_PHOTO).png().toFile(image);
+    const uploaded = await call('/api/uploads', 'POST', image, 201, true);
+    const detected = await call('/api/discovery', 'POST', { agent: 'detect', imageId: uploaded.imageUrl.split('/').pop() });
+    assert.ok(detected.items.length > 0, 'The clothing photo must produce a detected piece.');
+    const input = { agent: 'shop', detectionId: detected.id, itemIndex: 0, country: 'US' };
+    const shopping = await call('/api/discovery', 'POST', input);
+    assert.ok(shopping.listings.length > 0, 'Live shopping search must return sourced listings.');
+    assert.equal((await call('/api/discovery', 'POST', input)).id, shopping.id, 'Repeated search must reuse the saved result.');
+    const item = detected.items[0];
+    await call('/api/garments', 'POST', { name: item.name, brand: item.visibleBrand ?? '', category: item.category, color: item.color, price: null, imageUrl: detected.imageUrl }, 201);
+    assert.equal((await call('/api/wardrobe')).garments.length, 2);
+    const history = await call('/api/discovery');
+    assert.ok(history.detections.some(scan => scan.id === detected.id));
+    console.log(JSON.stringify({ liveDiscovery: 'passed', garment: item.name, retailers: shopping.listings.map(listing => listing.retailer) }));
+  }
   console.log(`PASS: ${checks} hosted checks: account, private session, image upload, garment persistence and sign-in.`);
 } finally {
   try {

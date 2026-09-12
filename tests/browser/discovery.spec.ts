@@ -2,6 +2,28 @@ import { test, expect } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
 import { groundedListings, rankingSchema, safeShoppingUrl } from '../../src/lib/discovery';
 import sharp from 'sharp';
+import { readFile } from 'node:fs/promises';
+import { loadEnvConfig } from '@next/env';
+import { detectClothes } from '../../src/server/agents/discovery';
+import { normalizeRanking } from '../../src/lib/discovery';
+
+test('overlong model presentation text is bounded without losing source identities', () => {
+  const result = normalizeRanking({ note: 'n'.repeat(600), listings: [{ sourceIndex: 2, reason: 'r'.repeat(450), match: 'similar' }] });
+  expect(result.note).toHaveLength(400);
+  expect(result.listings[0].reason).toHaveLength(280);
+  expect(result.listings[0].sourceIndex).toBe(2);
+});
+
+test('live capture distinguishes a bomber jacket from a photo without clothing', async () => {
+  test.skip(!process.env.LIVE_DISCOVERY_JACKET, 'Opt-in live provider evaluation.');
+  loadEnvConfig(process.cwd());
+  const jacket = await detectClothes(await readFile(process.env.LIVE_DISCOVERY_JACKET!), 'image/jpeg');
+  expect(jacket.value.items.some(item => item.category === 'outerwear' && /jacket|bomber/i.test(item.name))).toBe(true);
+  const blank = await sharp({ create: { width: 300, height: 300, channels: 3, background: '#dadada' } }).png().toBuffer();
+  const empty = await detectClothes(blank, 'image/png');
+  expect(empty.value.items).toHaveLength(0);
+  console.log(JSON.stringify({ jacket: jacket.value.items.map(item => item.name), empty: empty.value.items, costMicros: (jacket.cost ?? 0) + (empty.cost ?? 0) }));
+});
 
 test('discovery UI reviews sourced results, saves to the real closet, and shows provider limits', async ({ page, context }) => {
   const username = `qa_${randomBytes(7).toString('hex')}`;
