@@ -64,3 +64,10 @@ Agents hit account usage limits again. Their files compiled, but they did not fi
 - Limits in contracts/spec are declarations, NOT runtime budget enforcement. Provider integration, request ledger, global spending cap, consent UI and live evaluations remain unimplemented.
 - Next implementation: persisted generation ledger with atomic idempotency and budget reservation, then real Gatekeeper provider integration. Preserve deterministic manual tools as labeled fallbacks, never as fabricated AI.
 - Keep specialist prompts and confidential evaluation assets off the public remote. This batch does not change repository visibility or assert legal ownership/exclusivity.
+
+## Agent ledger batch
+- Added AgentRequest and AgentBudget tables; additive migration 202609120002_agent_ledger applied successfully.
+- Implemented internal ledger service with structured input fingerprints, user-scoped idempotency keys, serializable budget reservations, atomic dispatch claims, conservative timeout accounting and idempotent settlement. Expired-day reservations cannot be dispatched today.
+- Passed TypeScript and two targeted tests, including real-DB concurrent duplicate reservations, single dispatch, global cap races, per-user allowance, uncertainty retention, double settlement and cross-account rejection. Tests removed their own records and isolated budget rows.
+- AI_ENABLED stays false. No provider request, customer endpoint or paid AI call was introduced. Runtime policy fails closed without explicit enabled flag and positive configured budget values.
+- Next: verify available provider/model and pricing; implement server-only Gatekeeper coordinator, owned-candidate loading, worst-case cost bound, provider dispatch/result validation and user-facing proposal/acceptance. Set a global owner-approved daily cap before enabling paid generation. Capture/Spotter/Creator and photo consent remain later required work.

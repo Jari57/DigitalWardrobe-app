@@ -18,6 +18,7 @@ model User {
   outfits Outfit[]
   references Reference[]
   images Image[]
+  agentRequests AgentRequest[]
 }
 
 model Session {
@@ -132,4 +133,36 @@ model RateLimit {
   count Int
   expiresAt DateTime
   @@index([expiresAt])
+}
+
+model AgentRequest {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key String
+  fingerprint String
+  agent String
+  state String @default("reserved")
+  day String
+  globalScope String
+  userScope String
+  reservedMicros Int
+  actualMicros Int?
+  inputTokens Int?
+  outputTokens Int?
+  result Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([userId, key])
+  @@index([userId, createdAt])
+  @@index([state, updatedAt])
+}
+
+model AgentBudget {
+  scope String
+  day String
+  requests Int @default(0)
+  heldMicros Int @default(0)
+  spentMicros Int @default(0)
+  @@id([scope, day])
 }
