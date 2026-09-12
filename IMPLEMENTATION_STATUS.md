@@ -1,3 +1,7 @@
+## Latest shopping evidence deployment
+
+Runtime 8d92fa5 at https://digital-wardrobe-app-vert.vercel.app; deployment dpl_CTQZRjYgWEwYnGYZ7uZyDhZkwKdg. Added bounded public HTTPS product-page checks and retailer-reported single-offer metadata with source/time, unknown fallbacks and in-stock filtering. Build, three parser/retrieval tests, discovery UI and live local/production search passed. Live retailers lacked usable unambiguous offer data, correctly shown as unknown; do not claim universal stock or price verification. QA data deleted. Prior rollback dpl_8eaZvrLH7LeZ1FigFmj72GqSacXx.
+
 ## Latest deployed runtime
 
 66d0a39 at https://digital-wardrobe-app-vert.vercel.app (dpl_8eaZvrLH7LeZ1FigFmj72GqSacXx). Ten public production checks passed: correct version, account, AI enabled, upload, owned garment, reference creation, live Spotter match, reuse, pairing update and reload. Test data deleted. User deferred naming/domain purchase; next delivery work follows docs/DELIVERY_PUNCH_LIST.md. Prior validated production rollback: dpl_BsTtEaT51d68x3t6ehVLMC9Yrxzg.
