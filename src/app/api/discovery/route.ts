@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     const parsed = detection?.result ? detectionSchema.parse(detection.result && { items: (detection.result as Prisma.JsonObject).items, note: (detection.result as Prisma.JsonObject).note }) : null;
     const item = input.agent === 'shop' ? parsed?.items[input.itemIndex] : null;
     if (input.agent === 'shop' && !item) throw new ApiError(404, 'Detected piece not found. Scan a photo first.');
-    const key = createHash('sha256').update((input.agent === 'shop' ? 'shopping-evidence-v1:' : '') + JSON.stringify(input) + ':' + new Date().toISOString().slice(0, 10)).digest('hex');
+    const key = createHash('sha256').update((input.agent === 'shop' ? 'shopping-evidence-v2:' : '') + JSON.stringify(input) + ':' + new Date().toISOString().slice(0, 10)).digest('hex');
     const ledger = new AgentLedger(db, configuredAgentBudget());
     let reservation;
     try { reservation = await ledger.reserve(user.id, key, input); }

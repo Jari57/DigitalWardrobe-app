@@ -87,7 +87,7 @@ export function parseProductEvidence(html: string, sourceUrl: string, checkedAt 
     try { visit(JSON.parse(script[1])); } catch { /* Invalid metadata is not evidence. */ }
   }
   const matching = products.filter(p => samePage(p.url ?? p['@id'], sourceUrl));
-  const product = matching.length === 1 ? matching[0] : products.length === 1 && !products[0].url ? products[0] : null;
+  const product = matching.length === 1 ? matching[0] : products.length === 1 && !products[0].url && !products[0]['@id'] ? products[0] : null;
   if (!product || typeof product.name !== 'string') return unknown;
   const offers = Array.isArray(product.offers) ? product.offers : product.offers ? [product.offers] : [];
   if (offers.length !== 1 || !offers[0] || !typeIs(offers[0]['@type'], 'Offer')) return { ...unknown, productName: product.name.slice(0, 200), note: 'Multiple variants or no single offer. Check the retailer for your size and color.' };

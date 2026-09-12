@@ -44,7 +44,7 @@ Acceptance: recreating inspiration produces traceable owned-piece pairings, neve
 
 ## Batch 3 — Shopping quality and availability
 
-- [ ] Rank direct product pages above category, editorial and social pages.
+- [x] Prioritize selected listings with retailer Product metadata, then recognizable product paths; preserve relevance order within each tier. Exclude recognizable category/editorial/social URLs and redirects to those pages. Unrecognized paths remain eligible; URL patterns do not prove identity.
 - [x] Add bounded HTTPS retailer-page retrieval with DNS address pinning, private/reserved address rejection, redirect revalidation, 8-second total timeout and 1 MB body limit. Parse single Product/Offer JSON-LD; ambiguous variants remain unknown.
 - [ ] Distinguish possible exact identity from verified product identity. Require evidence such as a visible label/model identifier plus matching product details for stronger claims.
 - [x] Display retailer-reported stock/price with source and check time when unambiguous metadata supports it; use Unknown on blocked, missing, expired or ambiguous evidence. In-stock filter excludes unknown and sold-out listings.
@@ -155,3 +155,9 @@ Photo-to-owned-substitute matching implemented using one photo and at most 40 ow
 ## Shopping evidence batch
 
 Implemented retailer-reported Product/Offer evidence after source-grounded shopping, with no extra AI call. Three retrieval/parser tests pass; discovery UI and live shirt-to-search regression pass. Live results included Abercrombie (retrieval blocked, correctly unknown) and Atorie (product found, multiple/ambiguous offers, correctly unknown). This does not establish exact garment identity, variant availability or regional shipping. Deployed runtime 8d92fa5 to https://digital-wardrobe-app-vert.vercel.app. Production photo → shopping → evidence → cached reuse passed. Zara, The Kooples and Found returned search listings but no usable single-offer metadata, so availability correctly remained unknown. Test account and uploads deleted. Live positive price/stock coverage is not established; supported-offer extraction and filter behavior were fixture-tested.
+
+## Shopping ranking follow-up — September 12, 2026
+
+Added deterministic URL exclusions before AI ranking and after retailer redirects, stable product-evidence prioritization, and successful empty-result handling that avoids an unnecessary ranking call. Fixed unrelated Product @id metadata being accepted as a fallback. No extra provider calls or new dependency. Shopping cache version advanced; detection reuse unchanged.
+
+Production build, nine targeted tests and one real-photo browser journey passed locally. Live shirt search produced four sourced listings; Tommy Hilfiger supplied USD 23.85 and OutOfStock metadata, OZMOD had ambiguous variants, and Amazon/Bloomingdale's remained unknown. Cache reuse, ownership rejection, saved garment persistence and test-account cleanup passed. This establishes one live sold-out/price extraction, not in-stock, size-level or shipping coverage. Real multi-piece evaluation, exact identity and the remaining unchecked items stay open.

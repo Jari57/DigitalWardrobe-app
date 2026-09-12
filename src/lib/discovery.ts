@@ -21,6 +21,30 @@ export type ShoppingResult = {
   note: string;
 };
 
+// Conservative URL signals, not proof of product identity or availability.
+export function shoppingPageKind(value: string): 'excluded' | 'product-path' | 'unknown' {
+  const safe = safeShoppingUrl(value);
+  if (!safe) return 'excluded';
+  const url = new URL(safe);
+  const host = url.hostname.toLowerCase();
+  if (['tiktok.com', 'instagram.com', 'facebook.com', 'pinterest.com', 'pinterest.co.uk', 'youtube.com', 'youtu.be', 'reddit.com', 'x.com', 'twitter.com'].some(domain => host === domain || host.endsWith('.' + domain))) return 'excluded';
+  let path: string;
+  try { path = decodeURIComponent(url.pathname).toLowerCase(); } catch { return 'excluded'; }
+  // A collection may contain a direct product URL, so check that first.
+  if (/\/(?:products?|dp|pd|p)\/[^/]+/.test(path) || /\/[^/]+-p\d+\.html$/.test(path)) return 'product-path';
+  if (/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/?)?$/.test(path) || /\/(?:collections?|categor(?:y|ies)|search|blogs?|articles?|editorial|stories)(?:\/|$)/.test(path)) return 'excluded';
+  return 'unknown';
+}
+
+export function prioritizeShoppingListings(listings: ShoppingResult['listings']): ShoppingResult['listings'] {
+  // Preserve model relevance order within each evidence tier. Never promote an
+  // unselected search result just because it has structured product metadata.
+  const eligible = listings.filter(listing => shoppingPageKind(listing.url) !== 'excluded' &&
+    (!listing.evidence || shoppingPageKind(listing.evidence.sourceUrl) !== 'excluded'));
+  const priority = (listing: ShoppingResult['listings'][number]) => listing.evidence?.productName ? 2 : shoppingPageKind(listing.url) === 'product-path' ? 1 : 0;
+  return [...eligible].sort((a, b) => priority(b) - priority(a));
+}
+
 // Only public HTTPS links from search output are eligible. Never fetch model URLs.
 export function safeShoppingUrl(value: string): string | null {
   try {
@@ -57,7 +81,7 @@ export function groundedListings(ranking: z.infer<typeof rankingSchema>, sources
   return ranking.listings.flatMap(item => {
     const source = sources[item.sourceIndex];
     const url = source && safeShoppingUrl(source.url);
-    if (!source || !url || seen.has(url)) return [];
+    if (!source || !url || shoppingPageKind(url) === 'excluded' || seen.has(url)) return [];
     seen.add(url);
     return [{ title: source.title.slice(0, 200), url, retailer: new URL(url).hostname.replace(/^www\./, ''),
       reason: item.reason, match: item.match === 'possible-exact' && visibleBrand ? 'possible-exact' as const : 'similar' as const }];
