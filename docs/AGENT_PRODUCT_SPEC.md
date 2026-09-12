@@ -40,6 +40,14 @@ This is an engineering inventory of potentially distinctive work, not a legal de
 - Reserve budget before dispatch, record actual provider usage when available, and reconcile uncertain/time-out outcomes without silently assuming zero cost. No paid requests if provider pricing/budget configuration is missing.
 - Provider and model are allowlisted server configuration. The customer cannot choose arbitrary models, tools, URLs or token limits.
 
+## September 12 priority update
+
+Photo identification and sourced shopping discovery are the immediate release priority. Capture now has a real Gateway implementation and the shopping agent searches Perplexity, then selects product sources by index. The UI labels alternatives and possible exact matches separately; it never promises identity, price or stock based on snippets. Live evaluation and hosted verification remain required before calling this ready.
+
+Discovery uses at most one vision generation per scan and two bounded generations per shopping action (search, then source selection), with 2,000 output tokens per generation and no automatic SDK retries. This supersedes the earlier one-call/1,200-token rule for this flow. Gemini 2.5 Flash is the initial free-tier-compatible model; Gemini 3.x was rejected on this account. Free-tier provider rate limits may block real-world usability and must be resolved before launch.
+
+Next product addition: **Top 10 clothing trends of the month**. Use a shared monthly, region-specific result rather than a new paid search per visitor. Each card needs a named trend, dated supporting sources, clear selection criteria, links to shopping discovery, and an action to recreate it using owned garments. Call the section a curated selection unless a source supports an actual ranking. Do not fabricate TikTok views, growth figures or popularity. Show the month and last refresh; retain an honestly dated previous edition if the provider fails. This is planned, not implemented.
+
 ## Required implementation, in order
 
 1. Define typed request/result contracts and validation tests (this batch).

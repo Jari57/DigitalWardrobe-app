@@ -14,6 +14,8 @@ const uniqueIds = z.array(id).max(agentPolicy.maxCandidates).refine(
 );
 
 export const agentRequestSchema = z.discriminatedUnion('agent', [
+  z.object({ agent: z.literal('detect'), imageId: id }).strict(),
+  z.object({ agent: z.literal('shop'), detectionId: id, itemIndex: z.number().int().min(0).max(5), country: z.enum(['US', 'GB', 'CA', 'AU']) }).strict(),
   z.object({ agent: z.literal('capture'), imageId: id }).strict(),
   z.object({ agent: z.literal('spotter'), imageId: id, candidateIds: uniqueIds }).strict(),
   z.object({ agent: z.literal('stylist'), candidateIds: uniqueIds,
