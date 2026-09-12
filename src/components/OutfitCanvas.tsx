@@ -4,7 +4,9 @@ import { Layers, Plus, Save, Trash2 } from "lucide-react";
 import type { Garment, Piece } from "@/lib/types";
 import { api } from "./ui";
 import ExportActions from "./ExportActions";
-export const arrange = (garments: Garment[]): Piece[] => garments.map((g,i)=>({garmentId:g.id,x:15+(i%2)*42,y:15+Math.floor(i/2)*26,scale:1,zIndex:i}));
+export const arrange = (garments: Garment[]): Piece[] => garments.slice(0,12).map((g,i)=>garments.length>6
+ ?{garmentId:g.id,x:4+(i%3)*32,y:6+Math.floor(i/3)*23,scale:.85,zIndex:i}
+ :{garmentId:g.id,x:15+(i%2)*42,y:15+Math.floor(i/2)*26,scale:1,zIndex:i});
 export function Board({ garments, pieces, onChange, selected, onSelect }: {garments:Garment[];pieces:Piece[];onChange?:(pieces:Piece[])=>void;selected?:string;onSelect?:(id:string)=>void}) {
  const ref=useRef<HTMLDivElement>(null), drag=useRef<{id:string;x:number;y:number;px:number;py:number}|null>(null);
  function move(id:string,x:number,y:number){onChange?.(pieces.map(p=>p.garmentId===id?{...p,x:Math.max(0,Math.min(100-34*p.scale,x)),y:Math.max(0,Math.min(100-25*p.scale,y))}:p));}

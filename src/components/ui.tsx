@@ -2,8 +2,10 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { X, Shirt } from "lucide-react";
 export async function api<T>(path: string, method = "GET", body?: unknown): Promise<T> {
+  if(typeof navigator!=='undefined'&&!navigator.onLine)throw new Error('You’re offline. Reconnect before saving or using AI. Your current edits are still on this page.');
   const response = await fetch(path, { method, credentials: "same-origin", headers: body instanceof FormData ? undefined : { "Content-Type": "application/json" }, body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body) });
   const data = await response.json().catch(() => ({}));
+  if(method==='POST'&&['/api/creator','/api/stylist','/api/spotter','/api/discovery'].includes(path))window.dispatchEvent(new Event('wardrobe-ai-used'));
   if (!response.ok) throw new Error(data.error || `Request failed (${response.status}). Please try again.`);
   return data as T;
 }

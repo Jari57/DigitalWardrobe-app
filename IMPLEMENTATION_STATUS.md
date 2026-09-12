@@ -1,3 +1,7 @@
+## Trends, creator tools, allowance and PWA candidate
+
+Added ten sourced editorial trend picks (manual monthly publication), saved-look creator captions/filming steps/export/feedback, visible daily AI allowance, install manifest/icons and network-only private-data PWA policy. Fixed auto-layout of 7–12 pieces. Build and 23 non-paid tests passed; seven live tests skipped intentionally. Creator live generation/cache/feedback/ownership passed separately. Migration 202609120003_agent_feedback applied. Physical devices, worker update transition and AI recovery remain open; Stripe off.
+
 ## Cutouts kept internal by owner direction
 
 Provider comparison and test-only contour renderer added; see docs/CUTOUT_EVALUATION.md. Rendering fixture passes. Two live Gateway attempts failed before a usable mask, so no quality claim or customer feature. No production source, route, controls or deployment added. Live runtime remains 1e34e44. Next roadmap feature: monthly trends; Stripe last.
@@ -111,3 +115,4 @@ Agents hit account usage limits again. Their files compiled, but they did not fi
 - Passed TypeScript and two targeted tests, including real-DB concurrent duplicate reservations, single dispatch, global cap races, per-user allowance, uncertainty retention, double settlement and cross-account rejection. Tests removed their own records and isolated budget rows.
 - AI_ENABLED stays false. No provider request, customer endpoint or paid AI call was introduced. Runtime policy fails closed without explicit enabled flag and positive configured budget values.
 - Next: verify available provider/model and pricing; implement server-only Gatekeeper coordinator, owned-candidate loading, worst-case cost bound, provider dispatch/result validation and user-facing proposal/acceptance. Set a global owner-approved daily cap before enabling paid generation. Capture/Spotter/Creator and photo consent remain later required work.
+

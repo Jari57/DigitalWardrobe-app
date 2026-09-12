@@ -70,21 +70,25 @@ Acceptance: accepted transparent cutouts render correctly in the canvas and expo
 
 ## Batch 5 — Monthly Top 10 trends
 
+Release choice: reviewed US/UK editorial editions persisted in Git and cached publicly; zero AI calls on reads. Monthly publication is manual for now, not autonomous research. See TRENDS_OPERATIONS.md. Previous editions are labeled clearly.
+
 - [ ] Create a region-specific monthly edition with a shared persisted cache and a bounded refresh budget.
-- [ ] Research dated primary/credible fashion sources. Store sources, edition month and refresh time with every result.
-- [ ] Present a curated selection unless evidence supports a quantitative ranking; never invent TikTok metrics or growth percentages.
-- [ ] Add premium cards with trend name, why it matters, evidence, shopping action and recreate-with-my-closet action.
-- [ ] If fewer than ten trends have evidence, show the supported number rather than filling with fabricated content.
+- [x] Research dated primary/credible fashion sources. Store sources, edition month and refresh time with every result.
+- [x] Present a curated selection unless evidence supports a quantitative ranking; never invent TikTok metrics or growth percentages.
+- [x] Add premium cards with trend name, why it matters, evidence, shopping action and recreate-with-my-closet action.
+- [x] If fewer than ten trends have evidence, show the supported number rather than filling with fabricated content.
 - [ ] Keep a clearly dated previous edition during provider outages; prevent refresh stampedes.
 
 Acceptance: repeated visitors do not trigger repeated research charges; every displayed trend has dated supporting evidence.
 
 ## Batch 6 — Creator assistant and feedback
 
-- [ ] Generate editable captions and filming steps from a saved outfit and selected tone.
-- [ ] Avoid unsupported trend claims and automatic external posting.
-- [ ] Carry user-approved content into existing preview/export controls.
-- [ ] Capture helpful/not-helpful feedback tied to a generation and prompt version, with a deletion policy.
+Implemented creator-v1 for saved looks: editable caption/steps, copy and existing PNG/share preview, private feedback tied to the request. Original generation and feedback persist; manual text edits are not saved after closing (UI states this). One live generation, cache reuse, ownership and feedback checks passed.
+
+- [x] Generate editable captions and filming steps from a saved outfit and selected tone.
+- [x] Avoid unsupported trend claims and automatic external posting.
+- [x] Carry user-approved content into existing preview/export controls.
+- [x] Capture helpful/not-helpful feedback tied to a generation and prompt version, with a deletion policy.
 - [ ] Version prompts, evaluation cases, lock rules and composition rules as the app's maintained product logic.
 
 Acceptance: creator output references the real saved outfit; users edit and choose whether to share.
@@ -94,7 +98,7 @@ Acceptance: creator output references the real saved outfit; users edit and choo
 - [ ] Persist generation IDs and reconcile uncertain holds, including partial multi-stage search failures.
 - [ ] Support deliberate safe retry after transient failure without duplicate billing or forcing a wait until tomorrow.
 - [ ] Separate test/preview accounting from customer budgets while retaining an overall spend limit.
-- [ ] Expose remaining allowance and useful error states; prevent repeated unproductive requests.
+- [x] Expose remaining allowance and useful error states; prevent repeated unproductive requests.
 - [ ] Configure provider-level budgets and notifications alongside the app ledger.
 - [ ] Verify deletion during in-flight work, concurrent requests, expired sessions and account recreation abuse.
 
@@ -102,8 +106,10 @@ Acceptance: a timeout does not silently refund unknown spend, lose an available 
 
 ## Batch 8 — PWA and real devices (after feature and polish work)
 
-- [ ] Add manifest, appropriate app icons and install affordance.
-- [ ] Choose an offline policy that never caches private API responses across accounts; explain unavailable AI/network actions.
+PWA implemented with network-only private data and static offline fallback. Automated worker/cache/reconnect checks passed; physical device and deployed update transition checks remain open. See PWA_VERIFICATION.md.
+
+- [x] Add manifest, appropriate app icons and install affordance.
+- [x] Choose an offline policy that never caches private API responses across accounts; explain unavailable AI/network actions.
 - [ ] Verify service-worker update behavior and storage cleanup on sign-out.
 - [ ] Test iPhone Safari and Android Chrome uploads, install flow, keyboard layout and native sharing.
 - [ ] Check touch targets, contrast, keyboard focus, screen-reader labels and reduced motion.
@@ -164,3 +170,4 @@ Implemented retailer-reported Product/Offer evidence after source-grounded shopp
 Added deterministic URL exclusions before AI ranking and after retailer redirects, stable product-evidence prioritization, and successful empty-result handling that avoids an unnecessary ranking call. Fixed unrelated Product @id metadata being accepted as a fallback. No extra provider calls or new dependency. Shopping cache version advanced; detection reuse unchanged.
 
 Production build, nine targeted tests and one real-photo browser journey passed locally. Live shirt search produced four sourced listings; Tommy Hilfiger supplied USD 23.85 and OutOfStock metadata, OZMOD had ambiguous variants, and Amazon/Bloomingdale's remained unknown. Cache reuse, ownership rejection, saved garment persistence and test-account cleanup passed. This establishes one live sold-out/price extraction, not in-stock, size-level or shipping coverage. Real multi-piece evaluation, exact identity and the remaining unchecked items stay open.
+

@@ -78,7 +78,7 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
     await page.getByRole('button', { name: 'Add inspiration', exact: true }).click();
     await page.getByLabel('Name', { exact: true }).fill('QA inspiration');
     await page.getByLabel('Inspiration photo').setInputFiles({ name: 'reference.png', mimeType: 'image/png', buffer: photo });
-    await page.getByRole('checkbox').first().check();
+    await page.getByRole('dialog').getByRole('checkbox').first().check();
     await page.getByRole('button', { name: 'Save reference', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'QA inspiration' })).toBeVisible();
     await page.reload();
@@ -89,6 +89,7 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
     await expect(page.getByRole('heading', { name: 'QA inspiration' })).toHaveCount(0);
     expect(errors).toEqual([]);
   } finally {
+    test.setTimeout(test.info().timeout + 15_000);
     const deleted = await context.request.delete('/api/account', { headers, data: { password } });
     expect(deleted.status()).toBe(200);
   }

@@ -54,7 +54,7 @@ export default function BlindFit({ garments, onClose, onUse, initialAesthetic = 
       <button className="fuchsia" disabled={busy} onClick={shuffle}><Shuffle size={18}/>{chosen.length ? 'Shuffle unlocked pieces' : 'Reveal my fit'}</button>
       <fieldset className="stack"><legend>AI stylist</legend>
         <div className="form-grid"><label>Occasion<select value={occasion} disabled={busy} onChange={event => { setOccasion(event.target.value); setRecommendation(null); }}>{['Everyday', 'Work', 'Date night', 'Weekend brunch', 'Content shoot', 'Evening out'].map(value => <option key={value}>{value}</option>)}</select></label>
-        <label>Style<select value={aesthetic} disabled={busy} onChange={event => { setAesthetic(event.target.value); setRecommendation(null); }}>{['Minimal', 'Streetwear', 'Classic', 'Bold', 'Soft and relaxed'].map(value => <option key={value}>{value}</option>)}</select></label></div>
+        <label>Style<select value={aesthetic} disabled={busy} onChange={event => { setAesthetic(event.target.value); setRecommendation(null); }}>{[...new Set([initialAesthetic, 'Minimal', 'Streetwear', 'Classic', 'Bold', 'Soft and relaxed'])].map(value => <option key={value}>{value}</option>)}</select></label></div>
         <small>Uses saved names, categories and colors—not photo analysis. Up to 40 pieces per suggestion; locked pieces are always included. Uses your daily AI allowance.</small>
         <button className="fuchsia" disabled={busy} onClick={style}><Sparkles size={18}/>{busy ? 'Styling your pieces…' : 'Style with AI'}</button>
       </fieldset>
@@ -65,3 +65,4 @@ export default function BlindFit({ garments, onClose, onUse, initialAesthetic = 
     </>}
   </div></Modal>;
 }
+

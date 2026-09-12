@@ -151,6 +151,8 @@ model AgentRequest {
   inputTokens Int?
   outputTokens Int?
   result Json?
+  feedback String?
+  feedbackAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@unique([userId, key])
