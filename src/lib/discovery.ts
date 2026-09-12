@@ -14,9 +14,10 @@ export const detectionSchema = z.object({
 }).strict();
 export type DetectedItem = z.infer<typeof detectedItemSchema>;
 export type Detection = z.infer<typeof detectionSchema> & { id: string; imageUrl: string };
+export type ProductEvidence = { availability: 'in-stock' | 'out-of-stock' | 'unknown'; checkedAt: string; sourceUrl: string; productName?: string; price?: number; currency?: string; note: string };
 export type ShoppingResult = {
   id: string; searchedAt: string; country: string;
-  listings: { title: string; url: string; retailer: string; reason: string; match: 'similar' | 'possible-exact' }[];
+  listings: { title: string; url: string; retailer: string; reason: string; match: 'similar' | 'possible-exact'; evidence?: ProductEvidence }[];
   note: string;
 };
 

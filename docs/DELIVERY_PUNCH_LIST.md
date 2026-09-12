@@ -45,11 +45,13 @@ Acceptance: recreating inspiration produces traceable owned-piece pairings, neve
 ## Batch 3 — Shopping quality and availability
 
 - [ ] Rank direct product pages above category, editorial and social pages.
-- [ ] Add safe retrieval or a product-data provider for product identity, variants and stock; bound requests, redirects and timeouts and block private-network destinations.
+- [x] Add bounded HTTPS retailer-page retrieval with DNS address pinning, private/reserved address rejection, redirect revalidation, 8-second total timeout and 1 MB body limit. Parse single Product/Offer JSON-LD; ambiguous variants remain unknown.
 - [ ] Distinguish possible exact identity from verified product identity. Require evidence such as a visible label/model identifier plus matching product details for stronger claims.
-- [ ] Display verified availability with source and check time; use Unknown if retrieval fails. Exclude known sold-out results from available-only views.
-- [ ] Improve regional relevance and distinguish search region from confirmed shipping availability.
-- [ ] Test dead links, redirects, sold-out variants, changed prices, blocked retailers and stale results.
+- [x] Display retailer-reported stock/price with source and check time when unambiguous metadata supports it; use Unknown on blocked, missing, expired or ambiguous evidence. In-stock filter excludes unknown and sold-out listings.
+- [x] Distinguish requested search region from confirmed shipping coverage in the UI.
+- [ ] Verify delivery eligibility and improve region-specific ranking.
+- [x] Test unsafe destinations, DNS pinning, internal redirects, redirect loops, oversized responses, blocked pages, sold-out offers, ambiguous variants, malformed metadata, expired price validity and filter behavior.
+- [ ] Broaden live price/stock validation across retailers and verify variant-level availability.
 
 Acceptance: every identity, price or stock claim has attributable evidence and a freshness timestamp. Unknown data never becomes a confident claim.
 
@@ -149,3 +151,7 @@ AI Blind Fit → owned-closet Look Spotter → shopping evidence → cutouts →
 ## Look Spotter delivery evidence
 
 Photo-to-owned-substitute matching implemented using one photo and at most 40 owned metadata candidates, with explicit consent copy, shared budget ledger and no automatic retry. Owned photographs are not compared in this version. Pairings can be edited and saved; missing pieces open the original photo in discovery for user-initiated identification/search. Production deployment 66d0a39 is live at https://digital-wardrobe-app-vert.vercel.app. Ten public production checks passed, including live matching, cache reuse, pair persistence and cleanup. Five targeted tests passed (contracts, creator regression, live Spotter flow). Domain/name selection is deferred at the owner’s request.
+
+## Shopping evidence batch
+
+Implemented retailer-reported Product/Offer evidence after source-grounded shopping, with no extra AI call. Three retrieval/parser tests pass; discovery UI and live shirt-to-search regression pass. Live results included Abercrombie (retrieval blocked, correctly unknown) and Atorie (product found, multiple/ambiguous offers, correctly unknown). This does not establish exact garment identity, variant availability or regional shipping. Deployment verification pending.

@@ -1,6 +1,7 @@
 import { gateway, ToolLoopAgent, Output, isStepCount } from 'ai';
 import { z } from 'zod';
 import { detectionSchema, rankingProviderSchema, normalizeRanking, groundedListings, safeShoppingUrl, type DetectedItem } from '@/lib/discovery';
+import { productEvidence } from './product-evidence';
 
 // Explicit, cost-conscious model choice; live-tested through Gateway.
 const model = 'google/gemini-2.5-flash';
@@ -53,8 +54,11 @@ export async function findClothes(item: DetectedItem, country: 'US' | 'GB' | 'CA
   });
   const ranked = await rankingAgent.generate({ prompt: JSON.stringify({ garment: item, sources: sources.map((source, sourceIndex) => ({ sourceIndex, ...source })) }), abortSignal: AbortSignal.timeout(45_000) });
   const ranking = normalizeRanking(ranked.output);
+  const listings = groundedListings(ranking, sources, item.visibleBrand);
+  // Bounded to five source-derived pages; metadata failures preserve the search result.
+  const enriched = await Promise.all(listings.map(async listing => ({ ...listing, evidence: await productEvidence(listing.url) })));
   const costs = await Promise.all([generationCost(search), generationCost(ranked)]);
-  return { value: { listings: groundedListings(ranking, sources, item.visibleBrand), note: ranking.note, searchedAt: new Date().toISOString(), country },
+  return { value: { listings: enriched, note: ranking.note, searchedAt: new Date().toISOString(), country },
     cost: costs.every(cost => cost !== null) ? costs.reduce<number>((sum, cost) => sum + (cost ?? 0), 0) : null,
     inputTokens: (search.totalUsage.inputTokens ?? 0) + (ranked.totalUsage.inputTokens ?? 0),
     outputTokens: (search.totalUsage.outputTokens ?? 0) + (ranked.totalUsage.outputTokens ?? 0) };

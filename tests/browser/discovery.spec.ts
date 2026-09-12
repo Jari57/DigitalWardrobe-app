@@ -43,7 +43,7 @@ test('discovery UI reviews sourced results, saves to the real closet, and shows 
         detection = { id: 'fixture-scan', imageUrl: `/api/images/${body.imageId}`, items: [{ name: 'Blue denim shirt', category: 'tops', color: '#6489a1', visibleBrand: null, description: 'Blue button-up shirt.', uncertainty: 'Brand is not visible.' }], note: 'Review the detected details.' };
         return route.fulfill({ json: detection });
       }
-      return route.fulfill({ json: { id: 'fixture-search', country: body.country, searchedAt: new Date().toISOString(), note: 'Exact identity is unverified.', listings: [{ title: 'Denim shirt', url: 'https://retailer.example/product/shirt', retailer: 'retailer.example', match: 'similar', reason: 'Similar color and collar.' }] } });
+      return route.fulfill({ json: { id: 'fixture-search', country: body.country, searchedAt: new Date().toISOString(), note: 'Exact identity is unverified.', listings: [{ title: 'Denim shirt', url: 'https://retailer.example/product/shirt', retailer: 'retailer.example', match: 'similar', reason: 'Similar color and collar.', evidence: { availability: 'out-of-stock', price: 49.95, currency: 'USD', sourceUrl: 'https://retailer.example/product/shirt', checkedAt: new Date().toISOString(), note: 'Retailer-reported offer; confirm size and color.' } }] } });
     });
     await page.goto('/');
     await page.getByRole('button', { name: 'Spotter', exact: true }).click();
@@ -53,6 +53,14 @@ test('discovery UI reviews sourced results, saves to the real closet, and shows 
     await page.getByRole('button', { name: 'Find where to buy', exact: true }).click();
     await expect(page.locator('.shopping-link')).toHaveAttribute('href', 'https://retailer.example/product/shirt');
     await expect(page.getByText('Similar alternative', { exact: true })).toBeVisible();
+    await expect(page.getByText('Retailer reports: Unavailable', { exact: true })).toBeVisible();
+    await expect(page.getByText('USD 49.95', { exact: false })).toBeVisible();
+    await page.getByRole('checkbox', { name: 'Only retailer-reported in-stock results' }).check();
+    await expect(page.locator('.shopping-link')).toHaveCount(0);
+    await expect(page.getByText('No retailer-confirmed in-stock offers', { exact: false })).toBeVisible();
+    await page.getByRole('checkbox', { name: 'Only retailer-reported in-stock results' }).uncheck();
+    await expect(page.locator('.shopping-link')).toHaveCount(1);
+    await page.screenshot({ path: '../shopping-evidence-mobile.png', fullPage: true });
     await page.getByRole('button', { name: 'I own this · save', exact: true }).click();
     await page.getByRole('dialog').getByLabel('Piece name').fill('Reviewed blue shirt');
     await page.getByRole('dialog').getByRole('button', { name: 'Save piece', exact: true }).click();

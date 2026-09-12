@@ -11,6 +11,7 @@ export default function ClothingDiscovery({ authenticated, onAuth, onRefresh, in
   const [detection, setDetection] = useState<Detection | null>(null);
   const [shopping, setShopping] = useState<Record<string, ShoppingResult>>({});
   const [country, setCountry] = useState('US');
+  const [availableOnly, setAvailableOnly] = useState(false);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
@@ -64,6 +65,7 @@ export default function ClothingDiscovery({ authenticated, onAuth, onRefresh, in
     {error && <p className="error" role="alert">{error}</p>}
     {saved && <p role="status">{saved}</p>}
     {recent.length > 0 && <label>Recent scans<select value={detection?.id ?? ''} disabled={!!busy} onChange={event => { setDetection(recent.find(entry => entry.id === event.target.value) ?? null); setSaved(''); }}><option value="">Choose a scan</option>{recent.map(entry => <option key={entry.id} value={entry.id}>{entry.items.map(item => item.name).join(', ') || 'No clothing detected'}</option>)}</select></label>}
+    <label className="delete-confirmation"><input type="checkbox" checked={availableOnly} onChange={event => setAvailableOnly(event.target.checked)}/>Only retailer-reported in-stock results</label>
     {detection && <>
       <img className="discovery-photo" src={detection.imageUrl} alt="Your scanned clothing photo"/>
       <p>{detection.note}</p>
@@ -75,8 +77,9 @@ export default function ClothingDiscovery({ authenticated, onAuth, onRefresh, in
           <div><h3>{item.name}</h3><p>{item.description}</p>{item.uncertainty && <small>{item.uncertainty}</small>}</div>
           <div className="discovery-actions"><button className="primary" disabled={!!busy} onClick={() => search(index)}>Find where to buy</button><button disabled={!!busy} onClick={() => { setEdit(item); setError(''); }}>I own this · save</button></div>
           {result && <div className="stack" aria-label={`Shopping results for ${item.name}`}>
-            <small>Searched {new Date(result.searchedAt).toLocaleDateString()} · Check the retailer for price, sizes and availability.</small>
-            {result.listings.map(listing => <a className="shopping-link" href={listing.url} key={listing.url} target="_blank" rel="noopener noreferrer"><span className="eyebrow">{listing.match === 'possible-exact' ? 'Possible exact match · unverified' : 'Similar alternative'}</span><strong>{listing.title}<ArrowUpRight size={16}/></strong><span>{listing.retailer}</span><small>{listing.reason}</small></a>)}
+            <small>Searched {new Date(result.searchedAt).toLocaleDateString()} · Search region is a preference, not confirmed shipping coverage.</small>
+            {result.listings.filter(listing => !availableOnly || listing.evidence?.availability === 'in-stock').map(listing => <a className="shopping-link" href={listing.url} key={listing.url} target="_blank" rel="noopener noreferrer"><span className="eyebrow">{listing.match === 'possible-exact' ? 'Possible exact match · unverified' : 'Similar alternative'}</span><strong>{listing.title}<ArrowUpRight size={16}/></strong><span>{listing.retailer}</span><small>{listing.reason}</small><span>{listing.evidence?.availability === 'in-stock' ? 'Retailer reports: In stock' : listing.evidence?.availability === 'out-of-stock' ? 'Retailer reports: Unavailable' : 'Availability unknown'}</span>{listing.evidence && <><small>{listing.evidence.price !== undefined && listing.evidence.currency ? listing.evidence.currency + ' ' + listing.evidence.price.toFixed(2) + ' · ' : ''}Checked {new Date(listing.evidence.checkedAt).toLocaleString()}</small><small>{listing.evidence.productName && 'Retailer product: ' + listing.evidence.productName + '. '}{listing.evidence.note}</small><small>Evidence source: {new URL(listing.evidence.sourceUrl).hostname}</small></>}</a>)}
+            {availableOnly && result.listings.length > 0 && !result.listings.some(listing => listing.evidence?.availability === 'in-stock') && <p>No retailer-confirmed in-stock offers in these results. Turn off the filter to see unchecked alternatives.</p>}
             {!result.listings.length && <p>No supported product matches found for this piece. Try another region or a closer photo.</p>}
             {result.note && <small>{result.note}</small>}
           </div>}
