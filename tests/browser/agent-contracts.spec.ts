@@ -13,6 +13,9 @@ test('agent proposals cannot introduce unknown garments, duplicates or omit lock
 test('visual results allow missing matches but reject fabricated scores and prices', () => {
   const unmatched = { elements: [{ description: 'Blue trousers', garmentId: null, explanation: 'No suitable owned piece.' }], limitations: [] };
   expect(validateSpotterResult(unmatched, [])).toEqual(unmatched);
+  expect(validateSpotterResult({ elements: [], limitations: ['No clothing visible.'] }, [])).toMatchObject({ elements: [] });
+  const repeated = { description: 'Shirt', garmentId: 'shirt', explanation: 'Owned substitute.' };
+  expect(() => validateSpotterResult({ elements: [repeated, repeated], limitations: [] }, ['shirt'])).toThrow('Duplicate');
   expect(() => validateSpotterResult({ ...unmatched, elements: [{ ...unmatched.elements[0], garmentId: 'someone-elses-item' }] }, [])).toThrow('unavailable');
   expect(() => validateSpotterResult({ ...unmatched, matchScore: 98 }, [])).toThrow();
   expect(() => captureResultSchema.parse({ name: 'Tee', category: 'tops', color: '#FFFFFF', uncertaintyNotes: [], price: 100 })).toThrow();

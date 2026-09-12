@@ -1,3 +1,13 @@
+## Production AI restored and Look Spotter batch
+
+Production AI verification passed on https://digital-wardrobe-app-vert.vercel.app after retrying as dpl_BsTtEaT51d68x3t6ehVLMC9Yrxzg. Persistent Production settings: AI_ENABLED=true, AI_DAILY_CAP_MICROS=1000000, AI_MAX_REQUEST_MICROS=100000. The stuck earlier build dpl_M8nUmq1cgG8Um9tGobohUvazbrPj was canceled. Temporary public QA accounts and uploads were deleted.
+
+Look Spotter now has real photo-to-owned-metadata matching, editable persistent pairings, canvas handoff and missing-item discovery entry. No exact visual identity claims. Build and five targeted tests passed; additional multi-piece evaluation remains in the punch list. Naming/domain work deferred; retain muted rose buttons, light/dark/system themes, and Stripe last.
+
+## Production address update — September 12, 2026
+
+At the owner’s explicit request, promoted tested runtime 1bb929e to https://digital-wardrobe-app-vert.vercel.app. Vercel rebuilt the promoted snapshot as production deployment dpl_79jsGaeaqgK1NUWaC48HNzcPAZJM (https://digital-wardrobe-frfrlrhti-almonjs-projects.vercel.app). Public health confirms version 1bb929e, database ready, billing off. This replaces the old static app; it does not mark unfinished features complete. Stripe remains last. Prior production rollback target: dpl_GnzBP98C9ictMbxBHTeAm5UB6Qeq.
+
 # Current checkpoint — September 12, 2026
 
 Current runtime commit: 3ac2d9d. Protected preview: https://digital-wardrobe-h3kix5wlp-almonjs-projects.vercel.app

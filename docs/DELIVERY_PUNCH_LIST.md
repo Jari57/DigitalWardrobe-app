@@ -33,11 +33,12 @@ Acceptance: a user locks a piece, chooses an occasion, receives an explanation a
 
 ## Batch 2 — Complete Look Spotter
 
-- [ ] Match visible elements in an inspiration photo against owned garments using explicit candidate limits.
-- [ ] Distinguish owned matches, approximate substitutions and missing pieces.
-- [ ] Let the user accept/edit pairings and send the resulting look to canvas.
-- [ ] Send missing pieces to shopping discovery without disclosing the full closet.
-- [ ] Test multi-piece photos, sparse closets and no suitable owned match.
+- [x] Match visible elements in an inspiration photo against owned garments using explicit candidate limits.
+- [x] Distinguish owned matches, approximate substitutions and missing pieces.
+- [x] Let the user accept/edit pairings and send the resulting look to canvas.
+- [x] Send missing pieces to shopping discovery without disclosing the full closet.
+- [x] Test sparse closets, real shirt matching, cached reuse, blank photo, ownership rejection, manual edits and canvas handoff; fixture-test the missing-piece shopping handoff.
+- [ ] Broaden real-photo evaluation to multi-piece outfits and difficult substitute choices.
 
 Acceptance: recreating inspiration produces traceable owned-piece pairings, never an invented similarity percentage.
 
@@ -144,3 +145,7 @@ AI Blind Fit → owned-closet Look Spotter → shopping evidence → cutouts →
 - Creator quick start / theme browser check passed, including empty-closet Blind Fit, import entry, skip/reopen, persisted light mode, dark mode, system changes and narrow viewport.
 - Hosted preview: https://digital-wardrobe-h3kix5wlp-almonjs-projects.vercel.app (runtime 3ac2d9d). Twelve hosted checks passed, including live one-piece styling, preservation of its lock, missing-category limitations, cached reuse, private accounts and persistence.
 - PWA, Stripe and unchecked feature batches remain unfinished; this is not a production-readiness certification.
+
+## Look Spotter delivery evidence
+
+Photo-to-owned-substitute matching implemented using one photo and at most 40 owned metadata candidates, with explicit consent copy, shared budget ledger and no automatic retry. Owned photographs are not compared in this version. Pairings can be edited and saved; missing pieces open the original photo in discovery for user-initiated identification/search. Production deployment verification pending. Five targeted tests passed (contracts, creator regression, live Spotter flow). Domain/name selection is deferred at the owner’s request.

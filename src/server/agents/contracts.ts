@@ -38,7 +38,7 @@ export const stylistResultSchema = z.object({
 
 export const spotterResultSchema = z.object({
   elements: z.array(z.object({ description: note, garmentId: id.nullable(),
-    explanation: note }).strict()).min(1).max(12),
+    explanation: note }).strict()).max(12),
   limitations: z.array(note).max(4),
 }).strict();
 
@@ -61,6 +61,8 @@ export function validateStylistResult(value: unknown, ownedCandidateIds: readonl
 export function validateSpotterResult(value: unknown, ownedCandidateIds: readonly string[]) {
   const result = spotterResultSchema.parse(value);
   const owned = new Set(ownedCandidateIds);
+  const matched = result.elements.flatMap(element => element.garmentId ? [element.garmentId] : []);
+  if (new Set(matched).size !== matched.length) throw new Error('Duplicate garment in reference pairing.');
   if (result.elements.some(element => element.garmentId !== null && !owned.has(element.garmentId))) {
     throw new Error('Reference pairing contains an unavailable garment.');
   }

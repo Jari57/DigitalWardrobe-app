@@ -4,8 +4,8 @@ import { ScanLine, ArrowUpRight } from 'lucide-react';
 import type { Detection, DetectedItem, ShoppingResult } from '@/lib/discovery';
 import { api, categories, Modal, upload } from './ui';
 
-export default function ClothingDiscovery({ authenticated, onAuth, onRefresh }: {
-  authenticated: boolean; onAuth: () => void; onRefresh: () => Promise<void>;
+export default function ClothingDiscovery({ authenticated, onAuth, onRefresh, inspirationImage }: {
+  authenticated: boolean; onAuth: () => void; onRefresh: () => Promise<void>; inspirationImage?: string;
 }) {
   const [recent, setRecent] = useState<Detection[]>([]);
   const [detection, setDetection] = useState<Detection | null>(null);
@@ -19,6 +19,9 @@ export default function ClothingDiscovery({ authenticated, onAuth, onRefresh }: 
   const [saved, setSaved] = useState('');
   const [enabled, setEnabled] = useState<boolean | null>(null);
   useEffect(() => {
+    if (inspirationImage) { setUploaded(inspirationImage); setPhoto(null); setDetection(null); setError(''); }
+  }, [inspirationImage]);
+  useEffect(() => {
     let current = true;
     if (authenticated) api<{ detections: Detection[]; enabled: boolean }>('/api/discovery').then(data => {
       if (current) { setRecent(data.detections); setEnabled(data.enabled); }
@@ -28,10 +31,10 @@ export default function ClothingDiscovery({ authenticated, onAuth, onRefresh }: 
 
   async function scan() {
     if (!authenticated) { onAuth(); return; }
-    if (!photo) { setError('Choose a clothing or outfit photo first.'); return; }
+    if (!photo && !uploaded) { setError('Choose a clothing or outfit photo first.'); return; }
     setBusy('Reading your photo…'); setError(''); setSaved('');
     try {
-      const imageUrl = uploaded || await upload(photo);
+      const imageUrl = uploaded || await upload(photo!);
       setUploaded(imageUrl);
       const result = await api<Detection>('/api/discovery', 'POST', { agent: 'detect', imageId: imageUrl.split('/').pop() });
       setDetection(result);
@@ -54,6 +57,7 @@ export default function ClothingDiscovery({ authenticated, onAuth, onRefresh }: 
     <div className="section-heading"><div><span className="eyebrow">PHOTO TO FIND</span><h2>See it. Find your version.</h2><p>Identify the pieces. Discover where to shop.</p></div><ScanLine size={28}/></div>
     <label>Clothing or outfit photo<input type="file" accept="image/jpeg,image/png,image/webp" disabled={!!busy} onChange={event => { setPhoto(event.target.files?.[0] ?? null); setUploaded(''); setError(''); }}/></label>
     <small>JPG, PNG or WebP · up to 4 MB. Scanning sends your photo to our AI provider. Only garment descriptions are used for shopping searches.</small>
+    {uploaded && !photo && <><img className="discovery-photo" src={uploaded} alt="Selected inspiration for shopping"/><p>Your inspiration is ready. Identify the clothes, then choose a missing piece to search.</p></>}
     <button className="primary" disabled={!!busy || enabled === false} onClick={scan}><ScanLine size={18}/>Identify clothes</button>
     {enabled === false && <p role="status">Clothing discovery is awaiting service activation. Your saved closet and inspiration tools are available below.</p>}
     {busy && <p role="status" aria-live="polite">{busy}</p>}
