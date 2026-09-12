@@ -1,11 +1,11 @@
-:root{--brand-pink:#e82888;--brand-aqua:#25d9d0;--brand-ink:#151218;--brand-ivory:#faf7f2}
+:root{--brand-pink:#e82888;--brand-aqua:#25d9d0;--brand-ink:#151218;--brand-ivory:#faf7f2;--action-bg:#e7cbd4;--action-hover:#dcc0ca;--action-text:#442936;--action-border:#d7b8c4}
 .app-shell,.app-header,.modal,.discovery{background:var(--brand-ivory)}
 .bottom-nav{background:#faf7f2f5}
 .brand-dot,.brand-kicker>span{color:var(--brand-pink)}
 .brand-kicker>span{background:var(--brand-pink)}
 .brand-kicker,.discovery .eyebrow,.creator-start .eyebrow,.creator-start>svg{color:#a8155b}
-.primary,.fuchsia{background:var(--brand-pink);border-color:var(--brand-pink);color:#09070c}
-.primary:hover,.fuchsia:hover{background:#f24b9d}
+.primary,.fuchsia{background:var(--action-bg);border-color:var(--action-border);color:var(--action-text)}
+.primary:hover,.fuchsia:hover{background:var(--action-hover)}
 .challenge-banner,.dark-modal{background:var(--brand-ink)}
 .challenge-banner:hover{background:#242329}
 .challenge-banner .eyebrow,.challenge-banner svg,.blind-intro .eyebrow{color:var(--brand-aqua)}
@@ -17,7 +17,7 @@
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline-color:#a8155b}
 html[data-theme=dark] :is(button,input,select,textarea):focus-visible{outline-color:var(--brand-aqua)}
 /* Keep garment photos and the export composition independent of app theme. */
-html[data-theme=dark]{color-scheme:dark}
+html[data-theme=dark]{color-scheme:dark;--action-bg:#725563;--action-hover:#836373;--action-text:#fff7fa;--action-border:#967583}
 html[data-theme=dark] body{background:#151218;color:#f6f0f7}
 html[data-theme=dark] :is(.app-shell,.app-header,.modal,.discovery){background:#1d1a20;color:#f6f0f7;border-color:#4b414f}
 html[data-theme=dark] :where(button,input,select,textarea,.garment-card,.look-card,.stats-grid>div,.stat-piece,.discovery-item,.shopping-link){background:#29252c;color:#f6f0f7;border-color:#59525e}
@@ -31,8 +31,8 @@ html[data-theme=dark] .photo-badge{background:#151218ed;color:#f6f0f7}
 html[data-theme=dark] .bottom-nav{background:#1d1a20f5;border-color:#4b414f}
 html[data-theme=dark] .bottom-nav button{background:transparent;color:#c8c1cc}
 html[data-theme=dark] :is(.bottom-nav button[aria-current],.category-pills button[aria-pressed=true],.vibe-chip[aria-pressed=true]){background:#263b3c;color:#fff;border-color:#25d9d0}
-html[data-theme=dark] :is(.primary,.fuchsia){background:#e82888;color:#09070c;border-color:#e82888}
-html[data-theme=dark] :is(.primary,.fuchsia):hover{background:#f24b9d}
+html[data-theme=dark] :is(.primary,.fuchsia){background:var(--action-bg);color:var(--action-text);border-color:var(--action-border)}
+html[data-theme=dark] :is(.primary,.fuchsia):hover{background:var(--action-hover)}
 html[data-theme=dark] .challenge-banner{background:#242329;border:1px solid #456261}
 html[data-theme=dark] .creator-start{background:linear-gradient(145deg,#32202b,#1d292b);border-color:#63515e}
 html[data-theme=dark] .creator-steps span{background:#59505e}
