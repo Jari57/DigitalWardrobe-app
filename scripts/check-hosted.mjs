@@ -45,6 +45,16 @@ try {
   await call('/api/auth', 'POST', {action:'signout'});
   await call('/api/auth', 'POST', {action:'signin',username,password});
   assert.equal((await call('/api/wardrobe')).garments.length, 1);
+  if (process.env.LIVE_STYLIST === 'true') {
+    const { garments } = await call('/api/wardrobe');
+    const input = { agent: 'stylist', candidateIds: [garments[0].id], lockedIds: [garments[0].id], occasion: 'Everyday', aesthetic: 'Minimal' };
+    const styled = await call('/api/stylist', 'POST', input);
+    assert.deepEqual(styled.garmentIds, input.lockedIds);
+    assert.ok(styled.explanation.length > 0);
+    assert.ok(styled.limitations.length > 0, 'A one-piece closet must disclose limitations.');
+    assert.equal((await call('/api/stylist', 'POST', input)).id, styled.id);
+    console.log('Live hosted stylist: owned lock, partial-closet limitations and cached reuse passed.');
+  }
   if (process.env.LIVE_DISCOVERY_PHOTO) {
     await sharp(process.env.LIVE_DISCOVERY_PHOTO).png().toFile(image);
     const uploaded = await call('/api/uploads', 'POST', image, 201, true);
