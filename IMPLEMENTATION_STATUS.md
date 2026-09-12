@@ -1,3 +1,7 @@
+## Latest deployed runtime
+
+66d0a39 at https://digital-wardrobe-app-vert.vercel.app (dpl_8eaZvrLH7LeZ1FigFmj72GqSacXx). Ten public production checks passed: correct version, account, AI enabled, upload, owned garment, reference creation, live Spotter match, reuse, pairing update and reload. Test data deleted. User deferred naming/domain purchase; next delivery work follows docs/DELIVERY_PUNCH_LIST.md. Prior validated production rollback: dpl_BsTtEaT51d68x3t6ehVLMC9Yrxzg.
+
 ## Production AI restored and Look Spotter batch
 
 Production AI verification passed on https://digital-wardrobe-app-vert.vercel.app after retrying as dpl_BsTtEaT51d68x3t6ehVLMC9Yrxzg. Persistent Production settings: AI_ENABLED=true, AI_DAILY_CAP_MICROS=1000000, AI_MAX_REQUEST_MICROS=100000. The stuck earlier build dpl_M8nUmq1cgG8Um9tGobohUvazbrPj was canceled. Temporary public QA accounts and uploads were deleted.
