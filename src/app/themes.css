@@ -1,33 +1,51 @@
+:root{--brand-pink:#e82888;--brand-aqua:#25d9d0;--brand-ink:#151218;--brand-ivory:#faf7f2}
+.app-shell,.app-header,.modal,.discovery{background:var(--brand-ivory)}
+.bottom-nav{background:#faf7f2f5}
+.brand-dot,.brand-kicker>span{color:var(--brand-pink)}
+.brand-kicker>span{background:var(--brand-pink)}
+.brand-kicker,.discovery .eyebrow,.creator-start .eyebrow,.creator-start>svg{color:#a8155b}
+.primary,.fuchsia{background:var(--brand-pink);border-color:var(--brand-pink);color:var(--brand-ink)}
+.primary:hover,.fuchsia:hover{background:#f24b9d}
+.challenge-banner,.dark-modal{background:var(--brand-ink)}
+.challenge-banner:hover{background:#242329}
+.challenge-banner .eyebrow,.challenge-banner svg,.blind-intro .eyebrow{color:var(--brand-aqua)}
+.creator-start{background:linear-gradient(145deg,#fff0f6,#f1f7f4);border-color:#e8d2dc}
+.creator-steps .active{background:var(--brand-pink)}
+.vibe-chip[aria-pressed=true]{background:var(--brand-ink);border-color:var(--brand-ink)}
+.canvas-piece.selected{border-color:#b91765}
+.blind-grid .locked{border-color:var(--brand-aqua)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline-color:#a8155b}
+html[data-theme=dark] :is(button,input,select,textarea):focus-visible{outline-color:var(--brand-aqua)}
 /* Keep garment photos and the export composition independent of app theme. */
 html[data-theme=dark]{color-scheme:dark}
-html[data-theme=dark] body{background:#141216;color:#f6f0f7}
-html[data-theme=dark] :is(.app-shell,.app-header,.modal,.discovery){background:#201c23;color:#f6f0f7;border-color:#4b414f}
-html[data-theme=dark] :where(button,input,select,textarea,.garment-card,.look-card,.stats-grid>div,.stat-piece,.discovery-item,.shopping-link){background:#2b2530;color:#f6f0f7;border-color:#5a4d60}
-html[data-theme=dark] button:hover{background:#3b3041}
-html[data-theme=dark] :is(p,small,.wear-label,.account-line,.account-line span,.stats-grid span,.palette label,.shopping-link small){color:#c3b7c9}
-html[data-theme=dark] :is(.brand-kicker,.brand-dot,.discovery .eyebrow,.creator-start .eyebrow,.creator-start>svg){color:#ec9ef4}
-html[data-theme=dark] :is(.search-box,.note,.empty-icon,.count-badge,.modal-heading .icon-button,.card-info .icon-button){background:#342b39;color:#e4d8e9;border-color:#5a4d60}
+html[data-theme=dark] body{background:#151218;color:#f6f0f7}
+html[data-theme=dark] :is(.app-shell,.app-header,.modal,.discovery){background:#1d1a20;color:#f6f0f7;border-color:#4b414f}
+html[data-theme=dark] :where(button,input,select,textarea,.garment-card,.look-card,.stats-grid>div,.stat-piece,.discovery-item,.shopping-link){background:#29252c;color:#f6f0f7;border-color:#59525e}
+html[data-theme=dark] button:hover{background:#38323c}
+html[data-theme=dark] :is(p,small,.wear-label,.account-line,.account-line span,.stats-grid span,.palette label,.shopping-link small){color:#c8c1cc}
+html[data-theme=dark] :is(.brand-kicker,.brand-dot,.discovery .eyebrow,.creator-start .eyebrow,.creator-start>svg){color:#25d9d0}
+html[data-theme=dark] :is(.search-box,.note,.empty-icon,.count-badge,.modal-heading .icon-button,.card-info .icon-button){background:#312b35;color:#ede5ef;border-color:#59525e}
 html[data-theme=dark] .search-box input{background:transparent}
-html[data-theme=dark] :is(.garment-photo,.discovery-photo){background:#39313e}
-html[data-theme=dark] .photo-badge{background:#211c26ed;color:#f6f0f7}
-html[data-theme=dark] .bottom-nav{background:#201c23f5;border-color:#4b414f}
-html[data-theme=dark] .bottom-nav button{background:transparent;color:#c3b7c9}
-html[data-theme=dark] :is(.bottom-nav button[aria-current],.category-pills button[aria-pressed=true],.vibe-chip[aria-pressed=true]){background:#4d3455;color:#fff;border-color:#aa74b5}
-html[data-theme=dark] :is(.primary,.fuchsia){background:#a21caf;color:#fff;border-color:#c85bd4}
-html[data-theme=dark] :is(.primary,.fuchsia):hover{background:#86198f}
-html[data-theme=dark] .challenge-banner{background:#38263d;border:1px solid #795181}
-html[data-theme=dark] .creator-start{background:linear-gradient(145deg,#38263d,#262229);border-color:#6b4673}
-html[data-theme=dark] .creator-steps span{background:#68526f}
-html[data-theme=dark] .creator-steps .active{background:#e879f9}
+html[data-theme=dark] :is(.garment-photo,.discovery-photo){background:#343237}
+html[data-theme=dark] .photo-badge{background:#151218ed;color:#f6f0f7}
+html[data-theme=dark] .bottom-nav{background:#1d1a20f5;border-color:#4b414f}
+html[data-theme=dark] .bottom-nav button{background:transparent;color:#c8c1cc}
+html[data-theme=dark] :is(.bottom-nav button[aria-current],.category-pills button[aria-pressed=true],.vibe-chip[aria-pressed=true]){background:#263b3c;color:#fff;border-color:#25d9d0}
+html[data-theme=dark] :is(.primary,.fuchsia){background:#e82888;color:#151218;border-color:#e82888}
+html[data-theme=dark] :is(.primary,.fuchsia):hover{background:#f24b9d}
+html[data-theme=dark] .challenge-banner{background:#242329;border:1px solid #456261}
+html[data-theme=dark] .creator-start{background:linear-gradient(145deg,#32202b,#1d292b);border-color:#63515e}
+html[data-theme=dark] .creator-steps span{background:#59505e}
+html[data-theme=dark] .creator-steps .active{background:#25d9d0}
 html[data-theme=dark] fieldset{border-color:#69556f}
 html[data-theme=dark] .text-button{background:transparent}
 html[data-theme=dark] .danger{color:#ffa4b4}
 html[data-theme=dark] .error{background:#4c2431;color:#ffd0dc}
 html[data-theme=dark] .success{background:#203d31;color:#adf0cf}
 html[data-theme=dark] .canvas-piece{background:transparent;border-color:transparent}
-html[data-theme=dark] .canvas-piece.selected{border-color:#a855f7}
+html[data-theme=dark] .canvas-piece.selected{border-color:#b91765}
 html[data-theme=dark] .canvas-piece:hover{background:#ffffff30}
 html[data-theme=dark] .board-placeholder{color:#746b7a}
 html[data-theme=dark] .board-placeholder strong{color:#534b58}
-html[data-theme=dark] .blind-grid .locked{border-color:#e879f9}
+html[data-theme=dark] .blind-grid .locked{border-color:#25d9d0}
 @media(max-width:360px){.app-header>.row{gap:4px}.app-header .icon-button{width:36px}.app-header .compact{padding:8px}}
