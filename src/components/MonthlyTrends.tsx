@@ -94,12 +94,8 @@ export default function MonthlyTrends({ onStyle }: { onStyle: (aesthetic: string
                     <Sparkles size={15} />
                     Style with my closet
                   </button>
-                  <a
-                    href={`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(pick.name + ' clothing')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Search shops
+                  <a href={source.url} target="_blank" rel="noopener noreferrer">
+                    Read the source
                     <ArrowUpRight size={14} />
                   </a>
                 </div>
@@ -107,8 +103,8 @@ export default function MonthlyTrends({ onStyle }: { onStyle: (aesthetic: string
             );
           })}
           <small>
-            Search shops opens an external shopping search. Listings, prices and availability are
-            not verified here. Closet styling opens Blind Fit; AI runs only when you choose it.
+            Source links open fashion coverage. Closet styling opens Blind Fit; AI runs only when
+            you choose it.
           </small>
         </>
       )}

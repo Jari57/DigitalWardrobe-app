@@ -1,6 +1,12 @@
 # FitStalker launch review — September 13, 2026
 
-Decision: proceed with a controlled real-world beta after deployment verification. Do not describe the app as certified, bug-free, or proven at viral scale. Stripe remains excluded.
+Decision: hold broad public launch. A controlled owner trial can continue after deployment verification, but the new trust review below adds policy/contact and exact-match validation gates. Do not describe the app as certified, bug-free, or proven at viral scale. Stripe remains excluded.
+
+## Subsequent trust review
+
+The owner identified a misleading For You shopping CTA: its category-only Google search did not identify the pictured garment. Removed those generic shopping links. For You now offers Identify this look, carrying the persisted card's actual photo into Spotter preview through a bounded publisher-only fetch. AI remains explicit; shopping results remain evidence-qualified alternatives/possible exact matches, not guaranteed exact items. One real ELLE photo successfully returned normalized WebP locally without AI calls.
+
+The factual cookie notice is public. Privacy and Terms drafts are in docs/legal; the owner declined publication of their personal email and confirmed no support inbox is set up. Do not publish an invented contact. Final public policies and a working request channel remain launch gates. Exact pictured-product discovery must be evaluated before making it the product's guaranteed promise; this handoff correction alone does not establish exact matching.
 
 ## Changes from the team review
 

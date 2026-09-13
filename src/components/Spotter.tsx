@@ -12,6 +12,8 @@ export default function Spotter({
   onAuth,
   authenticated,
   onUse,
+  initialPhoto,
+  onPhotoReceived,
 }: {
   garments: Garment[];
   references: Reference[];
@@ -19,6 +21,8 @@ export default function Spotter({
   onAuth: () => void;
   authenticated: boolean;
   onUse: (pieces: Piece[]) => void;
+  initialPhoto?: File | null;
+  onPhotoReceived?: () => void;
 }) {
   const [matching, setMatching] = useState<Reference | null>(null),
     [inspirationImage, setInspirationImage] = useState<{ url: string; key: number }>();
@@ -28,6 +32,8 @@ export default function Spotter({
   return (
     <div className="stack">
       <ClothingDiscovery
+        initialPhoto={initialPhoto}
+        onPhotoReceived={onPhotoReceived}
         key={inspirationImage?.key}
         inspirationImage={inspirationImage?.url}
         authenticated={authenticated}

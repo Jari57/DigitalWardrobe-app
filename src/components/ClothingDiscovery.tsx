@@ -9,11 +9,15 @@ export default function ClothingDiscovery({
   onAuth,
   onRefresh,
   inspirationImage,
+  initialPhoto,
+  onPhotoReceived,
 }: {
   authenticated: boolean;
   onAuth: () => void;
   onRefresh: () => Promise<void>;
   inspirationImage?: string;
+  initialPhoto?: File | null;
+  onPhotoReceived?: () => void;
 }) {
   const [recent, setRecent] = useState<Detection[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -25,6 +29,14 @@ export default function ClothingDiscovery({
   const [error, setError] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState('');
+  useEffect(() => {
+    if (!initialPhoto) return;
+    setPhoto(initialPhoto);
+    setUploaded('');
+    setDetection(null);
+    setError('');
+    onPhotoReceived?.();
+  }, [initialPhoto, onPhotoReceived]);
   useEffect(() => {
     if (!photo) {
       setPreview('');

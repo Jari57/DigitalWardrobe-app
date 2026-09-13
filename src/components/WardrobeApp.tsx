@@ -57,6 +57,7 @@ export default function WardrobeApp({
     [pieces, setPieces] = useState<Piece[]>([]);
   const [creatorOutfit, setCreatorOutfit] = useState<Outfit | null>(null);
   const [spotterSession, setSpotterSession] = useState(0);
+  const [feedPhoto, setFeedPhoto] = useState<File | null>(null);
   const [creatorAesthetic, setCreatorAesthetic] = useState('Minimal');
   const refresh = useCallback(async () => {
     const wardrobe = await api<Wardrobe>('/api/wardrobe');
@@ -291,6 +292,11 @@ export default function WardrobeApp({
             )}
             {tab === 'For You' && (
               <ForYouFeed
+                onIdentify={(photo) => {
+                  setFeedPhoto(photo);
+                  setTab('Spotter');
+                  window.scrollTo({ top: 0, behavior: 'auto' });
+                }}
                 key={user?.id ?? 'guest'}
                 onAuth={() => {
                   setAccountMode('auth');
@@ -305,6 +311,8 @@ export default function WardrobeApp({
             {tab === 'Spotter' && (
               <Spotter
                 key={spotterSession}
+                initialPhoto={feedPhoto}
+                onPhotoReceived={() => setFeedPhoto(null)}
                 onUse={(p) => {
                   setPieces(p);
                   setTab('Canvas');
@@ -495,6 +503,7 @@ export default function WardrobeApp({
             onSignedOut={() => {
               // Clear private scan state, while retaining guest uploads through sign-in.
               setSpotterSession((current) => current + 1);
+              setFeedPhoto(null);
               setAccount(false);
               setUser(null);
               setData(blank);

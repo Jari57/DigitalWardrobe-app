@@ -992,6 +992,36 @@ legend {
   align-items: center;
   gap: 7px;
 }
+.legal-links {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px 22px 110px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+  font-size: 12px;
+}
+.legal-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  line-height: 1.75;
+}
+.legal-page h1 {
+  font-size: clamp(26px, 5vw, 36px);
+  margin: 24px 0 8px;
+}
+.legal-page h2 {
+  font-size: 21px;
+  margin: 28px 0 8px;
+}
+.legal-page p {
+  margin: 12px 0;
+}
+.legal-page code {
+  overflow-wrap: anywhere;
+}
 .brand-wordmark img {
   border-radius: 9px;
   flex-shrink: 0;

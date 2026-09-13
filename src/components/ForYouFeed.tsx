@@ -38,9 +38,11 @@ function Photo({ item }: { item: FeedItem }) {
 export default function ForYouFeed({
   onAuth,
   onStyle,
+  onIdentify,
 }: {
   onAuth: () => void;
   onStyle: (aesthetic: string) => void;
+  onIdentify: (photo: File) => void;
 }) {
   const [data, setData] = useState<Response>();
   const [mode, setMode] = useState('for-you'),
@@ -83,6 +85,28 @@ export default function ForYouFeed({
       await api('/api/for-you/feedback', 'POST', { itemId, action });
       setHidden(action === 'hide' ? itemId : undefined);
       setRevision((n) => n + 1);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function identify(item: FeedItem) {
+    setBusy(true);
+    setError('');
+    try {
+      const response = await fetch('/api/for-you/photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId: item.id }),
+      });
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(
+          result.error || 'This photo could not be opened. Upload a screenshot instead.',
+        );
+      }
+      onIdentify(new File([await response.blob()], 'for-you-look.webp', { type: 'image/webp' }));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -277,7 +301,7 @@ export default function ForYouFeed({
               </h3>
               <div className="row wrap">
                 <button
-                  className="primary compact"
+                  className="compact"
                   onClick={() =>
                     onStyle(
                       item.aesthetics.length
@@ -291,21 +315,21 @@ export default function ForYouFeed({
                   <Sparkles size={15} />
                   Try the vibe
                 </button>
-                <a
-                  className="feed-shop"
-                  href={`https://www.google.com/search?tbm=shop&gl=${data.preferences.region === 'GB' ? 'uk' : data.preferences.region.toLowerCase()}&q=${encodeURIComponent([...item.aesthetics, ...item.categories, 'clothing'].join(' '))}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  className="primary compact"
+                  disabled={busy || !item.imageUrl}
+                  onClick={() => identify(item)}
                 >
-                  Find pieces <ArrowUpRight size={14} />
-                </a>
+                  {busy ? 'Opening…' : 'Identify this look'} <ArrowUpRight size={14} />
+                </button>
               </div>
               <details>
                 <summary>Why this?</summary>
                 <p>{item.reason}. Fashion coverage, not a verified viral ranking.</p>
                 <small>
-                  Photo: {item.imageCredit || item.publisher}. Shopping opens an external search;
-                  availability is not verified.
+                  Photo: {item.imageCredit || item.publisher}. Identify this look opens its photo
+                  for review. Scan it to find similar pieces; exact identity and availability are
+                  not guaranteed.
                 </small>
                 <button
                   className="text-button"

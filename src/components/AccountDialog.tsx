@@ -187,6 +187,9 @@ export default function AccountDialog({
           {error}
         </p>
       )}
+      <a className="text-button" href="/cookies" target="_blank" rel="noopener noreferrer">
+        Cookies &amp; device storage
+      </a>
     </Modal>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import '@fontsource-variable/plus-jakarta-sans';
 import InstallApp from '@/components/InstallApp';
+import LegalLinks from '@/components/LegalLinks';
 import './globals.css';
 import './themes.css';
 export const metadata: Metadata = {
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <InstallApp />
+        <LegalLinks />
       </body>
     </html>
   );
