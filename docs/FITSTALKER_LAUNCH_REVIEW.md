@@ -6,7 +6,7 @@ Decision: hold broad public launch. A controlled owner trial can continue after 
 
 The owner identified a misleading For You shopping CTA: its category-only Google search did not identify the pictured garment. Removed those generic shopping links. For You now offers Identify this look, carrying the persisted card's actual photo into Spotter preview through a bounded publisher-only fetch. AI remains explicit; shopping results remain evidence-qualified alternatives/possible exact matches, not guaranteed exact items. One real ELLE photo successfully returned normalized WebP locally without AI calls.
 
-The factual cookie notice is public. Privacy and Terms drafts are in docs/legal; the owner declined publication of their personal email and confirmed no support inbox is set up. Do not publish an invented contact. Final public policies and a working request channel remain launch gates. Exact pictured-product discovery must be evaluated before making it the product's guaranteed promise; this handoff correction alone does not establish exact matching.
+Privacy, Terms and cookie pages are implemented. The owner explicitly chose support@fitstalker.com for publication after declining use of their personal email. This address still needs mailbox or forwarding activation and a delivery check; it is not yet a verified working request channel. Earlier policy drafts remain in docs/legal for history. Exact pictured-product discovery must be evaluated before making it the product's guaranteed promise; this handoff correction alone does not establish exact matching.
 
 ## Changes from the team review
 
