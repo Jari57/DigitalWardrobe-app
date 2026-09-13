@@ -111,7 +111,7 @@ export default function WardrobeApp({
         <div>
           <div className="brand-kicker">
             <span />
-            YOUR EVERYDAY STYLE STUDIO
+            SCREENSHOT TO SHOPPING
           </div>
           <h1>
             Wardrobe<span className="brand-dot">.</span>
@@ -131,9 +131,9 @@ export default function WardrobeApp({
             <UserRound size={18} />
             {!user && 'Sign in'}
           </button>
-          <button className="primary compact" disabled={loading} onClick={add}>
-            <Plus size={16} />
-            Import
+          <button className="primary compact" disabled={loading} onClick={() => setTab('Spotter')}>
+            <Camera size={16} />
+            Find this fit
           </button>
         </div>
       </header>
@@ -166,6 +166,39 @@ export default function WardrobeApp({
           <>
             {tab === 'Closet' && (
               <>
+                <section className="screenshot-start stack" aria-label="Screenshot quick start">
+                  <span className="eyebrow">SAW A FIT YOU LOVE?</span>
+                  <h2>
+                    Screenshot it.
+                    <br />
+                    Find your version.
+                  </h2>
+                  <p>From TikTok, Google or anywhere you scroll.</p>
+                  <div className="screenshot-steps">
+                    <div>
+                      <Camera />
+                      <strong>Screenshot</strong>
+                      <small>Save the outfit</small>
+                    </div>
+                    <div>
+                      <Search />
+                      <strong>Identify</strong>
+                      <small>Pick a piece</small>
+                    </div>
+                    <div>
+                      <Shirt />
+                      <strong>Find it</strong>
+                      <small>Explore shops</small>
+                    </div>
+                  </div>
+                  <button className="primary" onClick={() => setTab('Spotter')}>
+                    <Camera size={20} />
+                    Find this fit
+                  </button>
+                  <small>
+                    Upload your screenshot. We’ll identify clothes and search for similar pieces.
+                  </small>
+                </section>
                 {user && data.outfits.length === 0 && (
                   <CreatorStart
                     key={user.id}

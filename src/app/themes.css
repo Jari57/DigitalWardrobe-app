@@ -402,3 +402,82 @@ html[data-theme='dark'] .blind-grid .locked {
     transition-duration: 0.01ms !important;
   }
 }
+.screenshot-start {
+  padding: 24px;
+  border: 1px solid #c7a6b2;
+  border-radius: 26px;
+  background: #f0e2e6;
+  margin-bottom: 24px;
+}
+.screenshot-start h2 {
+  font-size: clamp(30px, 7vw, 42px);
+  line-height: 1.08;
+  letter-spacing: -1.4px;
+}
+.screenshot-start > .primary {
+  width: 100%;
+  min-height: 56px;
+  font-size: 17px;
+  background: #442f3c;
+  color: #fff;
+  border-color: #442f3c;
+}
+.screenshot-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px 0;
+}
+.screenshot-steps > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.screenshot-steps svg {
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  background: #fff9;
+  border-radius: 14px;
+}
+.screenshot-steps strong {
+  font-size: 12px;
+}
+.screenshot-steps small {
+  font-size: 10px;
+}
+.screenshot-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 26px 12px;
+  border: 2px dashed #af8898;
+  border-radius: 20px;
+  background: #f0e2e655;
+  text-align: center;
+}
+.screenshot-upload span {
+  font-size: 12px;
+}
+.screenshot-upload input {
+  max-width: 100%;
+}
+html[data-theme='dark'] .screenshot-start {
+  background: #302630;
+  border-color: #76596a;
+}
+html[data-theme='dark'] .screenshot-start > .primary {
+  background: #e7cbd4;
+  color: #30212c;
+  border-color: #e7cbd4;
+}
+html[data-theme='dark'] .screenshot-steps svg {
+  background: #4c3948;
+}
+html[data-theme='dark'] .screenshot-upload {
+  background: #302630;
+  border-color: #967583;
+}

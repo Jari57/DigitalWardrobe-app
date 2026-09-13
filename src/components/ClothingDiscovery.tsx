@@ -23,6 +23,16 @@ export default function ClothingDiscovery({
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
+  const [preview, setPreview] = useState('');
+  useEffect(() => {
+    if (!photo) {
+      setPreview('');
+      return;
+    }
+    const url = URL.createObjectURL(photo);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photo]);
   const [uploaded, setUploaded] = useState('');
   const [edit, setEdit] = useState<DetectedItem | null>(null);
   const [saved, setSaved] = useState('');
@@ -106,14 +116,16 @@ export default function ClothingDiscovery({
     <section className="discovery stack" aria-label="Clothing discovery">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">PHOTO TO FIND</span>
-          <h2>See it. Find your version.</h2>
-          <p>Identify the pieces. Discover where to shop.</p>
+          <span className="eyebrow">SCREENSHOT → IDENTIFY → SHOP</span>
+          <h2>Find this fit.</h2>
+          <p>That TikTok outfit. That Google find. Start with a screenshot.</p>
         </div>
         <ScanLine size={28} />
       </div>
-      <label>
-        Clothing or outfit photo
+      <label className="screenshot-upload">
+        <ScanLine size={32} />
+        <strong>Upload a screenshot or photo</strong>
+        <span>Choose from your photos or files</span>
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
@@ -123,8 +135,10 @@ export default function ClothingDiscovery({
             setUploaded('');
             setError('');
           }}
+          aria-label="Clothing or outfit photo"
         />
       </label>
+      {preview && <img className="discovery-photo" src={preview} alt="Your selected screenshot" />}
       <small>
         JPG, PNG or WebP · up to 4 MB. Scanning sends your photo to our AI provider. Only garment
         descriptions are used for shopping searches.
@@ -178,14 +192,16 @@ export default function ClothingDiscovery({
           </select>
         </label>
       )}
-      <label className="delete-confirmation">
-        <input
-          type="checkbox"
-          checked={availableOnly}
-          onChange={(event) => setAvailableOnly(event.target.checked)}
-        />
-        Only retailer-reported in-stock results
-      </label>
+      {detection && (
+        <label className="delete-confirmation">
+          <input
+            type="checkbox"
+            checked={availableOnly}
+            onChange={(event) => setAvailableOnly(event.target.checked)}
+          />
+          Only retailer-reported in-stock results
+        </label>
+      )}
       {detection && (
         <>
           <img
