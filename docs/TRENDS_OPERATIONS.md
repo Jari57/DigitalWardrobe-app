@@ -19,3 +19,9 @@ Hourly scheduling is configured; verify a scheduled production execution in Verc
 ## Historical editions
 
 The older monthly JSON editions and /api/trends remain as a source-backed archive. They do not drive For You. No new monthly-only publishing requirement should be inferred from older release notes.
+
+## Deployment evidence
+
+Runtime 169ad39 is live at https://digital-wardrobe-app-vert.vercel.app via production deployment dpl_7NGreFsvPwtf1xu4VhytSNUXQMjR (https://digital-wardrobe-r9ljdkuhi-almonjs-projects.vercel.app). Preview cold-start feed retrieval passed before promotion. Production returned 19 categorized stories with 19 real photos; browser checks passed for light/dark, 320px width, zero page errors, session availability and private no-store responses. An unauthenticated refresh returned 401; the authorized production refresh returned 200 with skipped=true because a recent refresh already existed. This verifies configuration, not an observed scheduled invocation. The post-deployment error-log scan returned no errors.
+
+Rollback target: https://digital-wardrobe-hzhjbpawb-almonjs-projects.vercel.app (57ae9b2). If rolling back, confirm the stable alias explicitly; migration 006 is additive and can remain. The source branch is codex/production-wardrobe. No Stripe or AI allowance changes.
