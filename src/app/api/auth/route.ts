@@ -69,6 +69,7 @@ export async function POST(request: Request) {
     const candidateHash = hashToken(input.recoveryCode);
     if (
       !found ||
+      !/^[a-f0-9]{64}$/.test(found.recoveryHash) ||
       !timingSafeEqual(Buffer.from(found.recoveryHash, 'hex'), Buffer.from(candidateHash, 'hex'))
     )
       throw new ApiError(401, 'Username or recovery code is incorrect.');

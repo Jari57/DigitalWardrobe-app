@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { User } from '@/lib/types';
 import { api, Modal } from './ui';
+import { googleIdentityToken } from '@/lib/google-signin';
 
 export default function AccountSettings({
   user,
@@ -17,6 +18,11 @@ export default function AccountSettings({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  async function credential(form: FormData) {
+    return user.googleAuthenticated
+      ? { idToken: await googleIdentityToken() }
+      : { password: form.get('password') };
+  }
   async function run(action: () => Promise<void>) {
     setBusy(true);
     setError('');
@@ -40,6 +46,10 @@ export default function AccountSettings({
         <p>
           Signed in as <strong>@{user.username}</strong>. Your photos and saved looks are private.
         </p>
+        {user.isAdmin && <a href="/admin">Administration</a>}
+        {user.googleAuthenticated && (
+          <p>Google confirms sensitive changes. Choose the same Google account when prompted.</p>
+        )}
         {deleting ? (
           <form
             className="stack"
@@ -47,7 +57,7 @@ export default function AccountSettings({
               event.preventDefault();
               const form = new FormData(event.currentTarget);
               void run(async () => {
-                await api('/api/account', 'DELETE', { password: form.get('password') });
+                await api('/api/account', 'DELETE', await credential(form));
                 onSignedOut();
               });
             }}
@@ -57,17 +67,19 @@ export default function AccountSettings({
               This removes your photos, wardrobe, saved looks, inspiration and wear history. This
               cannot be undone.
             </p>
-            <label>
-              Confirm your password
-              <input
-                type="password"
-                name="password"
-                autoComplete="current-password"
-                required
-                maxLength={128}
-                disabled={busy}
-              />
-            </label>
+            {!user.googleAuthenticated && (
+              <label>
+                Confirm your password
+                <input
+                  type="password"
+                  name="password"
+                  autoComplete="current-password"
+                  required
+                  maxLength={128}
+                  disabled={busy}
+                />
+              </label>
+            )}
             <label className="delete-confirmation">
               <input type="checkbox" required disabled={busy} />I understand that all my data will
               be deleted.
@@ -98,28 +110,30 @@ export default function AccountSettings({
                   if (form.get('newPassword') !== form.get('repeatPassword'))
                     throw new Error('New passwords must match.');
                   await api('/api/account', 'PATCH', {
-                    password: form.get('password'),
+                    ...(await credential(form)),
                     newPassword: form.get('newPassword'),
                   });
                   element.reset();
                   setMessage(
-                    'Password updated. Other sessions have been signed out. Your recovery code still works.',
+                    'Password updated. Other sessions have been signed out. Keep your existing recovery code if you have one; linked Google sign-in remains available.',
                   );
                 });
               }}
             >
               <h3>Change password</h3>
-              <label>
-                Current password
-                <input
-                  type="password"
-                  name="password"
-                  autoComplete="current-password"
-                  required
-                  maxLength={128}
-                  disabled={busy}
-                />
-              </label>
+              {!user.googleAuthenticated && (
+                <label>
+                  Current password
+                  <input
+                    type="password"
+                    name="password"
+                    autoComplete="current-password"
+                    required
+                    maxLength={128}
+                    disabled={busy}
+                  />
+                </label>
+              )}
               <label>
                 New password
                 <input
@@ -148,6 +162,23 @@ export default function AccountSettings({
                 Update password
               </button>
             </form>
+            {!user.googleLinked && (
+              <button
+                disabled={busy}
+                onClick={() =>
+                  run(async () => {
+                    await api('/api/auth/google', 'POST', {
+                      idToken: await googleIdentityToken(),
+                      link: true,
+                    });
+                    window.location.reload();
+                  })
+                }
+              >
+                Link Google to this closet
+              </button>
+            )}
+            {user.googleLinked && <p>Google sign-in is linked to this closet.</p>}
             <button
               disabled={busy}
               onClick={() =>

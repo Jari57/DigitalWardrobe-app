@@ -10,6 +10,9 @@ export type Category = (typeof categories)[number];
 export interface User {
   id: string;
   username: string;
+  googleLinked?: boolean;
+  googleAuthenticated?: boolean;
+  isAdmin?: boolean;
 }
 export interface Garment {
   id: string;

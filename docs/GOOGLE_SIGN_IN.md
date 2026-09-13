@@ -1,0 +1,17 @@
+# Google sign-in and administration
+
+Existing Firebase project: `digitalwardrobe-app`, web app `DigitalWardrobe.app`. Google sign-in was enabled using Firebase CLI auth provisioning; existing authorized domains were preserved and the stable Vercel domain added. Apple is intentionally omitted because the owner has no Apple Developer account. Username/password authentication remains available.
+
+The Firebase web configuration is public client configuration, not a service-account credential. No private signing key or service-account JSON is stored in the repository. Firebase Admin verifies the client ID token signature, issuer, audience and expiry. The app additionally requires Google as the sign-in provider, verified email, and authentication within five minutes. Emulator tokens are rejected. Firebase client persistence is in memory and cleared after token exchange; the app keeps using its HttpOnly session cookie.
+
+New Google users receive a separate private closet with a generated username. Existing users must first sign in with their username and use Account settings → Link Google to this closet. Linking verifies both the existing session and the Google identity; identities already linked to another closet are rejected. Accounts are never merged by matching an email or username. Sensitive changes in Google-authenticated sessions require a fresh matching Google login.
+
+The administrator email designated by the owner is `jari57@gmail.com`. `/admin` requires both the stored Google-verified email and a Google-authenticated app session. A password session alone never gains administrator access. The first admin page shows aggregate account, garment, look and unsettled-AI counts; it does not expose customer photos or offer destructive controls.
+
+Google-only accounts cannot use recovery-code login unless such a credential is established separately. Recovery requests return an ordinary invalid-code response instead of a hash-length exception. App account deletion removes the local closet, linked identifier and sessions; Google/Firebase may retain their authentication identity records. This release does not claim deletion of the user's Google account or provider-wide data.
+
+Six targeted tests passed: account changes/deletion, creator lifecycle, private PWA cache/update, verified-claim restrictions, forged-token rejection, and administrator route access. A test-created Google session fixture verifies the admin guard; it does not substitute for completing a real Google OAuth login. Final owner acceptance requires choosing the designated Google account through Continue with Google. No administrator session has been created on the owner's behalf.
+
+Dependencies: Firebase Web 12.19.0 and Firebase Admin 14.4.0. The transitive gaxios UUID dependency is overridden to the compatible CommonJS 11.1.1 line to avoid the reported pre-11.1.1 advisory; gaxios uses UUID v4. Dependency audit reports zero vulnerabilities after the change.
+
+References: [Firebase Google sign-in](https://firebase.google.com/docs/auth/web/google-signin), [server token verification](https://firebase.google.com/docs/auth/admin/verify-id-tokens).

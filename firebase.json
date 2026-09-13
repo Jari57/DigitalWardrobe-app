@@ -1,0 +1,11 @@
+{
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Digital Wardrobe",
+        "supportEmail": "jari57@gmail.com",
+        "authorizedRedirectUris": ["https://digitalwardrobe-app.firebaseapp.com/__/auth/handler"]
+      }
+    }
+  }
+}

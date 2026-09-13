@@ -2,6 +2,7 @@ import { createHash, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { db } from './db';
 import { ApiError } from './http';
+import { isAdministrator } from './google';
 
 const derive = (password: string, salt: string): Promise<Buffer> =>
   new Promise((resolve, reject) => {
@@ -34,20 +35,29 @@ export async function sessionUser() {
   if (!token || !/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
   const session = await db.session.findUnique({
     where: { tokenHash: hashToken(token) },
-    include: { user: { select: { id: true, username: true } } },
+    include: { user: { select: { id: true, username: true, googleEmail: true, googleUid: true } } },
   });
-  return session && session.expiresAt > new Date() ? session.user : null;
+  return session && session.expiresAt > new Date()
+    ? {
+        id: session.user.id,
+        username: session.user.username,
+        googleLinked: !!session.user.googleUid,
+        googleAuthenticated: session.googleAuthenticated,
+        isAdmin: isAdministrator(session.user.googleEmail, session.googleAuthenticated),
+      }
+    : null;
 }
 export async function requireUser() {
   const user = await sessionUser();
   if (!user) throw new ApiError(401, 'Sign in to continue.');
   return user;
 }
-export async function createSession(userId: string) {
+export async function createSession(userId: string, googleAuthenticated = false) {
   const token = randomBytes(32).toString('base64url');
   await db.session.create({
     data: {
       userId,
+      googleAuthenticated,
       tokenHash: hashToken(token),
       expiresAt: new Date(Date.now() + lifetime * 1000),
     },

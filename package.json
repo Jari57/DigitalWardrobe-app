@@ -18,6 +18,8 @@
     "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
     "@prisma/client": "6.19.3",
     "ai": "^7.0.99",
+    "firebase": "12.19.0",
+    "firebase-admin": "14.4.0",
     "lucide-react": "^0.577.0",
     "next": "16.3.5",
     "react": "19.3.0",
@@ -39,6 +41,9 @@
     "node": ">=22.0.0"
   },
   "overrides": {
-    "deepmerge-ts": "^8.0.0"
+    "deepmerge-ts": "^8.0.0",
+    "gaxios": {
+      "uuid": "^11.1.1"
+    }
   }
 }

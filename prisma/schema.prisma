@@ -12,6 +12,8 @@ model User {
   username String @unique
   passwordHash String
   recoveryHash String
+  googleUid String? @unique
+  googleEmail String?
   createdAt DateTime @default(now())
   sessions Session[]
   garments Garment[]
@@ -24,6 +26,7 @@ model User {
 model Session {
   id String @id @default(cuid())
   tokenHash String @unique
+  googleAuthenticated Boolean @default(false)
   userId String
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime

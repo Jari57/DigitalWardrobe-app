@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { api, Modal, download } from './ui';
+import { googleIdentityToken } from '@/lib/google-signin';
 export default function AccountDialog({
   onClose,
   onAuthenticated,
@@ -89,6 +90,34 @@ export default function AccountDialog({
           }}
         >
           <p>Your photos, pieces and saved looks stay in your private account.</p>
+          {mode !== 'recover' && (
+            <>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  setError('');
+                  try {
+                    await api('/api/auth/google', 'POST', { idToken: await googleIdentityToken() });
+                    await onAuthenticated();
+                    onClose();
+                  } catch (e) {
+                    setError((e as Error).message);
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                Continue with Google
+              </button>
+              <small>
+                Already have a closet? Sign in below, then link Google in Account settings to keep
+                your pieces together.
+              </small>
+              <p>Or use your username</p>
+            </>
+          )}
           <label>
             Username
             <input
