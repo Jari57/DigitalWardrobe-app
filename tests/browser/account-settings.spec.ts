@@ -13,7 +13,7 @@ test('signup preserves recovery code, password change invalidates old session, d
     deleted = false;
   try {
     await page.goto('/');
-    await page.getByRole('button', { name: 'Open account', exact: true }).click();
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.getByRole('button', { name: 'Create account', exact: true }).click();
     await page.getByLabel('Username', { exact: true }).fill(username);
     await page.getByLabel('Password', { exact: true }).fill(password);
@@ -39,10 +39,10 @@ test('signup preserves recovery code, password change invalidates old session, d
     const revoked = await context.request.get('/api/wardrobe', { headers: { Cookie: oldCookies } });
     expect(revoked.status()).toBe(401);
     await page.getByRole('button', { name: 'Sign out', exact: true }).click();
-    await page.getByRole('button', { name: 'Open account', exact: true }).click();
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.getByLabel('Username', { exact: true }).fill(username);
     await page.getByLabel('Password', { exact: true }).fill(password);
-    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Sign in', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Account settings', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Account settings', exact: true }).click();
     await page.getByRole('button', { name: 'Delete my account' }).click();
@@ -52,7 +52,7 @@ test('signup preserves recovery code, password change invalidates old session, d
     await expect(page.getByRole('dialog').getByRole('alert')).toHaveText('Password is incorrect.');
     await page.getByLabel('Confirm your password').fill(password);
     await page.getByRole('button', { name: 'Permanently delete account' }).click();
-    await expect(page.getByRole('button', { name: 'Open account', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
     deleted = true;
     const signin = await context.request.post('/api/auth', {
       headers,

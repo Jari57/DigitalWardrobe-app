@@ -32,7 +32,11 @@ const tabs = [
   { id: 'Looks', icon: Grid2X2 },
   { id: 'Stats', icon: BarChart3 },
 ] as const;
-export default function WardrobeApp() {
+export default function WardrobeApp({
+  initialAccountOpen = false,
+}: {
+  initialAccountOpen?: boolean;
+}) {
   const [user, setUser] = useState<User | null>(null),
     [data, setData] = useState<Wardrobe>(blank),
     [tab, setTab] = useState<string>('Closet'),
@@ -40,7 +44,7 @@ export default function WardrobeApp() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [notice, setNotice] = useState(''),
-    [account, setAccount] = useState(false),
+    [account, setAccount] = useState(initialAccountOpen),
     [accountMode, setAccountMode] = useState<'auth' | 'settings'>('auth'),
     [editing, setEditing] = useState<Garment | null | undefined>(undefined),
     [blind, setBlind] = useState(false),
@@ -113,8 +117,8 @@ export default function WardrobeApp() {
         <div className="row">
           <ThemeToggle />
           <button
-            aria-label={user ? 'Account settings' : 'Open account'}
-            className="icon-button"
+            aria-label={user ? 'Account settings' : 'Sign in'}
+            className={user ? 'icon-button' : 'compact'}
             disabled={busy || loading}
             onClick={() => {
               setAccountMode(user ? 'settings' : 'auth');
@@ -122,6 +126,7 @@ export default function WardrobeApp() {
             }}
           >
             <UserRound size={18} />
+            {!user && 'Sign in'}
           </button>
           <button className="primary compact" disabled={loading} onClick={add}>
             <Plus size={16} />
