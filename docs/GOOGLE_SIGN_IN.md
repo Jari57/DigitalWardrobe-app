@@ -1,5 +1,7 @@
 # Google sign-in and administration
 
+Live runtime `57ae9b2`, production deployment `dpl_622HCtR37mi67HqTan7EcdWLXUP8`, at https://digital-wardrobe-app-vert.vercel.app. Preview and production cold-start session checks passed after the compatibility fix. Hosted forged-token requests return 401. A clean browser reached Google's actual email/password sign-in screen from Continue with Google, with no CSP violations; no credentials were entered. The owner must complete the first real login to verify the successful OAuth callback and administrator account activation.
+
 Existing Firebase project: `digitalwardrobe-app`, web app `DigitalWardrobe.app`. Google sign-in was enabled using Firebase CLI auth provisioning; existing authorized domains were preserved and the stable Vercel domain added. Apple is intentionally omitted because the owner has no Apple Developer account. Username/password authentication remains available.
 
 The Firebase web configuration is public client configuration, not a service-account credential. No private signing key or service-account JSON is stored in the repository. Firebase Admin verifies the client ID token signature, issuer, audience and expiry. The app additionally requires Google as the sign-in provider, verified email, and authentication within five minutes. Emulator tokens are rejected. Firebase client persistence is in memory and cleared after token exchange; the app keeps using its HttpOnly session cookie.
