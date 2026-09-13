@@ -7,6 +7,14 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Your clothes. Your next fit.',
     start_url: '/',
     scope: '/',
+    share_target: {
+      action: '/share-target',
+      method: 'POST',
+      enctype: 'multipart/form-data',
+      params: {
+        files: [{ name: 'screenshot', accept: ['image/jpeg', 'image/png', 'image/webp'] }],
+      },
+    },
     display: 'standalone',
     background_color: '#faf7f2',
     theme_color: '#151218',

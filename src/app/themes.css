@@ -441,3 +441,39 @@ html[data-theme='dark'] .screenshot-cta {
   padding: 18px 0;
   font-size: 13px;
 }
+.scan-steps {
+  display: flex;
+  padding: 0;
+  margin: 0;
+  gap: 8px;
+  list-style: none;
+  font-size: 12px;
+}
+.scan-steps li {
+  flex: 1;
+  padding: 10px 4px;
+  text-align: center;
+  border-bottom: 2px solid #cfc4ca;
+  color: #796c75;
+}
+.scan-steps [aria-current='step'] {
+  border-color: #684558;
+  color: #442f3c;
+  font-weight: 800;
+}
+html[data-theme='dark'] .scan-steps li {
+  color: #c8c1cc;
+}
+html[data-theme='dark'] .scan-steps [aria-current='step'] {
+  color: #f3dce5;
+  border-color: #e7cbd4;
+}
+.scan-help {
+  font-size: 12px;
+}
+.scan-help summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}

@@ -39,6 +39,40 @@ export default function ClothingDiscovery({
   const [saved, setSaved] = useState('');
   const [enabled, setEnabled] = useState<boolean | null>(null);
   useEffect(() => {
+    const token = new URL(location.href).searchParams.get('share');
+    if (!token) return;
+    const channel = new MessageChannel();
+    let finished = false;
+    const finish = (file?: File) => {
+      if (finished) return;
+      finished = true;
+      const url = new URL(location.href);
+      url.searchParams.delete('share');
+      history.replaceState(history.state, '', url);
+      if (file) setPhoto(file);
+      else setError('That share could not be opened. Upload your screenshot below.');
+      channel.port1.close();
+    };
+    const start = setTimeout(() => {
+      if (token === 'unavailable' || !navigator.serviceWorker?.controller) {
+        finish();
+        return;
+      }
+      channel.port1.onmessage = (event) =>
+        finish(event.data.file instanceof File ? event.data.file : undefined);
+      navigator.serviceWorker.controller.postMessage({ type: 'TAKE_SCREENSHOT', token }, [
+        channel.port2,
+      ]);
+    }, 0);
+    const timeout = setTimeout(() => finish(), 4000);
+    return () => {
+      finished = true;
+      clearTimeout(start);
+      clearTimeout(timeout);
+      channel.port1.close();
+    };
+  }, []);
+  useEffect(() => {
     if (inspirationImage) {
       setUploaded(inspirationImage);
       setPhoto(null);
@@ -122,11 +156,16 @@ export default function ClothingDiscovery({
         </div>
         <ScanLine size={28} />
       </div>
+      <ol className="scan-steps" aria-label="Your next step">
+        <li aria-current={!photo && !uploaded && !detection ? 'step' : undefined}>1 Upload</li>
+        <li aria-current={(photo || uploaded) && !detection ? 'step' : undefined}>2 Identify</li>
+        <li aria-current={detection ? 'step' : undefined}>3 Shop</li>
+      </ol>
       <div className="screenshot-upload">
         <ScanLine size={32} />
         <span>Screenshot the outfit. We’ll help you find the pieces.</span>
         <button
-          className="primary screenshot-cta"
+          className={photo || uploaded || detection ? 'compact' : 'primary screenshot-cta'}
           disabled={!!busy}
           onClick={() => fileInput.current?.click()}
         >
@@ -147,7 +186,6 @@ export default function ClothingDiscovery({
           aria-label="Clothing or outfit photo"
         />
       </div>
-      {preview && <img className="discovery-photo" src={preview} alt="Your selected screenshot" />}
       <small>
         JPG, PNG or WebP · up to 4 MB. Scanning sends your photo to our AI provider. Only garment
         descriptions are used for shopping searches.
@@ -169,6 +207,25 @@ export default function ClothingDiscovery({
           <ScanLine size={18} />
           Identify clothes
         </button>
+      )}
+      {preview && !detection && (
+        <img className="discovery-photo" src={preview} alt="Your selected screenshot" />
+      )}
+      {!photo && !uploaded && !detection && (
+        <details className="scan-help">
+          <summary>How do I get a screenshot here?</summary>
+          <p>
+            Pause the video or open the outfit photo. Take a screenshot, then tap Upload screenshot.
+          </p>
+          <p>
+            Installed on a supported Android browser? Open the screenshot in Photos, tap Share and
+            choose Wardrobe. If it isn’t listed, use Upload screenshot.
+          </p>
+          <p>
+            On iPhone, save the screenshot and upload it here. A TikTok or Instagram link alone does
+            not include the outfit photo.
+          </p>
+        </details>
       )}
       {enabled === false && (
         <p role="status">
