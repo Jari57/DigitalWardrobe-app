@@ -161,9 +161,11 @@ export default function ClothingDiscovery({
 
   return (
     <section className="discovery stack" aria-label="Clothing discovery">
-      <div className="section-heading">
+      <div className="section-heading discovery-heading">
         <div>
-          <h2>Find clothes from a screenshot.</h2>
+          <h2>
+            Find clothes from <span>a screenshot.</span>
+          </h2>
           <p>Spotted on TikTok, Google or anywhere else? Find similar pieces to buy.</p>
         </div>
         <ScanLine size={28} />
@@ -174,7 +176,9 @@ export default function ClothingDiscovery({
         <li aria-current={detection ? 'step' : undefined}>3 Shop</li>
       </ol>
       <div className="screenshot-upload">
-        <ScanLine size={32} />
+        <div className="scan-emblem" aria-hidden="true">
+          <ScanLine size={32} />
+        </div>
         <span>Screenshot the outfit. We’ll help you find the pieces.</span>
         <button
           className={photo || uploaded || detection ? 'compact' : 'primary screenshot-cta'}
