@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ScanLine, ArrowUpRight } from 'lucide-react';
 import type { Detection, DetectedItem, ShoppingResult } from '@/lib/discovery';
 import { api, categories, Modal, upload } from './ui';
@@ -16,6 +16,7 @@ export default function ClothingDiscovery({
   inspirationImage?: string;
 }) {
   const [recent, setRecent] = useState<Detection[]>([]);
+  const fileInput = useRef<HTMLInputElement>(null);
   const [detection, setDetection] = useState<Detection | null>(null);
   const [shopping, setShopping] = useState<Record<string, ShoppingResult>>({});
   const [country, setCountry] = useState('US');
@@ -116,28 +117,36 @@ export default function ClothingDiscovery({
     <section className="discovery stack" aria-label="Clothing discovery">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">SCREENSHOT → IDENTIFY → SHOP</span>
-          <h2>Find this fit.</h2>
-          <p>That TikTok outfit. That Google find. Start with a screenshot.</p>
+          <h2>Find clothes from a screenshot.</h2>
+          <p>Spotted on TikTok, Google or anywhere else? Find similar pieces to buy.</p>
         </div>
         <ScanLine size={28} />
       </div>
-      <label className="screenshot-upload">
+      <div className="screenshot-upload">
         <ScanLine size={32} />
-        <strong>Upload a screenshot or photo</strong>
-        <span>Choose from your photos or files</span>
+        <span>Screenshot the outfit. We’ll help you find the pieces.</span>
+        <button
+          className="primary screenshot-cta"
+          disabled={!!busy}
+          onClick={() => fileInput.current?.click()}
+        >
+          {photo || uploaded || detection ? 'Change screenshot' : 'Upload screenshot'}
+        </button>
         <input
+          ref={fileInput}
+          hidden
           type="file"
           accept="image/jpeg,image/png,image/webp"
           disabled={!!busy}
           onChange={(event) => {
             setPhoto(event.target.files?.[0] ?? null);
             setUploaded('');
+            setDetection(null);
             setError('');
           }}
           aria-label="Clothing or outfit photo"
         />
-      </label>
+      </div>
       {preview && <img className="discovery-photo" src={preview} alt="Your selected screenshot" />}
       <small>
         JPG, PNG or WebP · up to 4 MB. Scanning sends your photo to our AI provider. Only garment
@@ -151,10 +160,16 @@ export default function ClothingDiscovery({
           </p>
         </>
       )}
-      <button className="primary" disabled={!!busy || enabled === false} onClick={scan}>
-        <ScanLine size={18} />
-        Identify clothes
-      </button>
+      {(photo || uploaded) && !detection && (
+        <button
+          className="primary screenshot-cta"
+          disabled={!!busy || enabled === false}
+          onClick={scan}
+        >
+          <ScanLine size={18} />
+          Identify clothes
+        </button>
+      )}
       {enabled === false && (
         <p role="status">
           Clothing discovery is awaiting service activation. Your saved closet and inspiration tools
@@ -204,6 +219,7 @@ export default function ClothingDiscovery({
       )}
       {detection && (
         <>
+          {!!detection.items.length && <p>Choose a piece to find where it’s sold.</p>}
           <img
             className="discovery-photo"
             src={detection.imageUrl}

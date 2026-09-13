@@ -9,14 +9,16 @@ test('screenshot onboarding leads to upload preview and explicit sign-in without
     if (r.method() === 'POST' && r.url().includes('/api/discovery')) paid++;
   });
   await page.goto('/');
-  const start = page.getByRole('region', { name: 'Screenshot quick start' });
+  const start = page.getByRole('region', { name: 'Clothing discovery' });
   await expect(start).toBeVisible();
-  await expect(start.getByRole('button', { name: 'Find this fit' })).toBeInViewport();
+  await expect(start.getByRole('button', { name: 'Upload screenshot' })).toBeInViewport();
   await page.screenshot({ path: '../screenshot-home-light.png' });
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.screenshot({ path: '../screenshot-home-dark.png' });
-  await start.getByRole('button', { name: 'Find this fit' }).click();
-  await expect(page.getByRole('heading', { name: 'Find this fit.' })).toBeVisible();
+  const chooser = page.waitForEvent('filechooser');
+  await start.getByRole('button', { name: 'Upload screenshot' }).click();
+  await chooser;
+  await expect(page.getByRole('button', { name: 'Identify clothes', exact: true })).toHaveCount(0);
   const buffer = await sharp({
     create: { width: 200, height: 300, channels: 3, background: '#887788' },
   })

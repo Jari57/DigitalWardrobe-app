@@ -41,6 +41,7 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
       expect(saved.status()).toBe(201);
     }
     await page.goto('/');
+    await page.getByRole('navigation').getByRole('button', { name: 'Closet', exact: true }).click();
     await expect(page.getByRole('button', { name: 'All (4)', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
@@ -116,6 +117,7 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
       .getByRole('navigation')
       .getByRole('button', { name: 'Spotter', exact: true })
       .click();
+    await page.getByText('Recreate a look with my closet', { exact: true }).click();
     await page.getByRole('button', { name: 'Add inspiration', exact: true }).click();
     await page.getByLabel('Name', { exact: true }).fill('QA inspiration');
     await page
@@ -129,6 +131,7 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
       .getByRole('navigation')
       .getByRole('button', { name: 'Spotter', exact: true })
       .click();
+    await page.getByText('Recreate a look with my closet', { exact: true }).click();
     await expect(page.getByRole('heading', { name: 'QA inspiration' })).toBeVisible();
     page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Delete reference' }).click();
