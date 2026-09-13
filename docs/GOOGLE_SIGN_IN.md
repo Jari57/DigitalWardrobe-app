@@ -12,6 +12,6 @@ Google-only accounts cannot use recovery-code login unless such a credential is 
 
 Six targeted tests passed: account changes/deletion, creator lifecycle, private PWA cache/update, verified-claim restrictions, forged-token rejection, and administrator route access. A test-created Google session fixture verifies the admin guard; it does not substitute for completing a real Google OAuth login. Final owner acceptance requires choosing the designated Google account through Continue with Google. No administrator session has been created on the owner's behalf.
 
-Dependencies: Firebase Web 12.19.0 and Firebase Admin 14.4.0. The transitive gaxios UUID dependency is overridden to the compatible CommonJS 11.1.1 line to avoid the reported pre-11.1.1 advisory; gaxios uses UUID v4. Dependency audit reports zero vulnerabilities after the change.
+Dependencies: Firebase Web 12.19.0 and Firebase Admin 13.6.0. Admin 14.4.0 passed local checks but its JWKS dependency failed at cold start in Vercel with ERR_REQUIRE_ESM; production was rolled back immediately. The 13.6.0 release uses the CommonJS-compatible JWKS dependency. Transitive UUID dependencies are overridden to the compatible CommonJS 11.1.1 line to avoid the reported pre-11.1.1 advisory. Dependency audit reports zero vulnerabilities after the change.
 
 References: [Firebase Google sign-in](https://firebase.google.com/docs/auth/web/google-signin), [server token verification](https://firebase.google.com/docs/auth/admin/verify-id-tokens).
