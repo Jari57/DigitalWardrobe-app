@@ -190,6 +190,17 @@ export default function AccountDialog({
       <a className="text-button" href="/cookies" target="_blank" rel="noopener noreferrer">
         Cookies &amp; device storage
       </a>
+      <p className="note">
+        Review our{' '}
+        <a href="/terms" target="_blank" rel="noopener noreferrer">
+          Terms
+        </a>{' '}
+        and{' '}
+        <a href="/privacy" target="_blank" rel="noopener noreferrer">
+          Privacy notice
+        </a>
+        .
+      </p>
     </Modal>
   );
 }
