@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { db } from '@/server/db';
-import { rateLimit } from '@/server/auth';
+import { rateLimit, requestIp } from '@/server/auth';
 import { ApiError, checkOrigin, handleError, readJson } from '@/server/http';
 import { fetchFeedPhoto } from '@/server/feed-photo';
 export const runtime = 'nodejs';
@@ -12,8 +12,7 @@ export async function POST(request: Request) {
       request,
       z.object({ itemId: z.string().regex(/^[a-f0-9]{64}$/) }).strict(),
     );
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-    await rateLimit(`feed-photo:${ip}`, 20, 3600);
+    await rateLimit(`feed-photo:${requestIp(request)}`, 20, 3600);
     const item = await db.trendItem.findUnique({ where: { id: itemId } });
     if (!item?.imageUrl || !item.categories.length || item.publishedAt > new Date())
       throw new ApiError(
