@@ -271,6 +271,117 @@ html[data-theme='dark'] .blind-grid .locked {
 .trend-card h3 {
   flex: 1;
 }
+.for-you {
+  gap: 18px;
+}
+.for-you h2 {
+  font-size: 32px;
+}
+.feed-card {
+  border: 1px solid var(--border, #d8d1cb);
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--surface, #fff);
+}
+.feed-image-wrap {
+  position: relative;
+}
+.feed-photo {
+  width: 100%;
+  aspect-ratio: 4/5;
+  object-fit: cover;
+  background: #e6ded5;
+}
+.feed-photo-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  color: #665661;
+}
+.feed-save {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  border-radius: 50%;
+  background: #faf9f6ed;
+  color: #30292d;
+  border: 0;
+}
+.feed-copy {
+  padding: 16px;
+  gap: 12px;
+}
+.feed-copy h3 {
+  font-size: 20px;
+  line-height: 1.35;
+  letter-spacing: -0.4px;
+}
+.feed-copy h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+.feed-copy .eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.7px;
+}
+.feed-copy details {
+  font-size: 12px;
+}
+.feed-copy summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: inherit;
+}
+.feed-shop {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+.feed-chip {
+  text-transform: capitalize;
+  border-radius: 24px;
+}
+.feed-chip[aria-pressed='true'] {
+  background: #e7cbd4;
+  border-color: #b98d9c;
+  color: #442936;
+}
+.feed-loading {
+  min-height: 360px;
+  border-radius: 24px;
+  background: #e6ded560;
+  display: grid;
+  place-items: center;
+}
+.for-you fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.for-you legend {
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 12px;
+}
+[data-theme='dark'] .feed-card {
+  background: #252127;
+  border-color: #514650;
+}
+[data-theme='dark'] .feed-chip[aria-pressed='true'] {
+  background: #725563;
+  color: #fff7fa;
+  border-color: #967583;
+}
+[data-theme='dark'] .feed-photo-fallback {
+  background: #342c34;
+  color: #dfcbd4;
+}
 .trend-card .row {
   flex-wrap: wrap;
 }

@@ -21,6 +21,8 @@ model User {
   references Reference[]
   images Image[]
   agentRequests AgentRequest[]
+  trendPreference TrendPreference?
+  trendFeedback TrendFeedback[]
 }
 
 model Session {
@@ -179,4 +181,49 @@ model AgentGeneration {
   request AgentRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   costMicros Int?
   @@index([requestId])
+}
+
+model TrendItem {
+  id String @id
+  url String @unique
+  title String
+  publisher String
+  imageUrl String?
+  imageCredit String?
+  publishedAt DateTime
+  firstSeenAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  categories String[]
+  aesthetics String[]
+  feedback TrendFeedback[]
+  @@index([publishedAt])
+}
+
+model TrendPreference {
+  userId String @id
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categories String[]
+  aesthetics String[]
+  region String @default("US")
+}
+
+model TrendFeedback {
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId String
+  item TrendItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  liked Boolean @default(false)
+  saved Boolean @default(false)
+  hidden Boolean @default(false)
+  updatedAt DateTime @updatedAt
+  @@id([userId, itemId])
+  @@index([userId, updatedAt])
+}
+
+model TrendRefresh {
+  id String @id
+  lockUntil DateTime
+  lastAttempt DateTime?
+  lastSuccess DateTime?
+  failedSources String[]
 }

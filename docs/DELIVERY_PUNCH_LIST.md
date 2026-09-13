@@ -185,3 +185,17 @@ Added deterministic URL exclusions before AI ranking and after retailer redirect
 
 Production build, nine targeted tests and one real-photo browser journey passed locally. Live shirt search produced four sourced listings; Tommy Hilfiger supplied USD 23.85 and OutOfStock metadata, OZMOD had ambiguous variants, and Amazon/Bloomingdale's remained unknown. Cache reuse, ownership rejection, saved garment persistence and test-account cleanup passed. This establishes one live sold-out/price extraction, not in-stock, size-level or shipping coverage. Real multi-piece evaluation, exact identity and the remaining unchecked items stay open.
 
+
+## For You update — September 12, 2026
+
+User direction supersedes the monthly-list batch: frequent individual discoveries, interest/type personalization, simple image-heavy UX.
+
+- [x] Add For You navigation with large real publisher photos, compact controls and existing muted light/dark palette.
+- [x] Persist private style/type preferences, likes, saves, not-interested and undo.
+- [x] Add bounded hourly RSS refresh, source/date checks, duplicate suppression, lock and secret-protected cron.
+- [x] Verify real photos, ranking, private account data, mobile themes and existing creator/PWA flows without AI spend.
+- [ ] Observe the first scheduled production cron execution after deployment.
+- [ ] Connect permitted, verified TikTok momentum signals; editorial freshness alone does not establish virality.
+- [ ] Complete physical-phone and signed-in owner acceptance checks.
+
+See TRENDS_OPERATIONS.md for source coverage and operating limitations. Stripe remains last and unconfigured.

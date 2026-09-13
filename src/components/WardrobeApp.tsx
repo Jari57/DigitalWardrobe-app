@@ -10,6 +10,7 @@ import {
   Search,
   Shirt,
   Shuffle,
+  Sparkles,
   UserRound,
 } from 'lucide-react';
 import type { Garment, Piece, User, Wardrobe, Outfit } from '@/lib/types';
@@ -23,10 +24,12 @@ import BlindFit from './BlindFit';
 import CreatorStart from './CreatorStart';
 import ThemeToggle from './ThemeToggle';
 import Spotter from './Spotter';
+import ForYouFeed from './ForYouFeed';
 import { api, categories, Empty } from './ui';
 const blank: Wardrobe = { garments: [], outfits: [], references: [] };
 const tabs = [
   { id: 'Closet', icon: Shirt },
+  { id: 'For You', icon: Sparkles },
   { id: 'Spotter', icon: Camera },
   { id: 'Canvas', icon: Layers },
   { id: 'Looks', icon: Grid2X2 },
@@ -288,12 +291,21 @@ export default function WardrobeApp({
                 )}
               </>
             )}
-            {tab === 'Spotter' && (
-              <Spotter
-                onStyleTrend={(aesthetic) => {
+            {tab === 'For You' && (
+              <ForYouFeed
+                key={user?.id ?? 'guest'}
+                onAuth={() => {
+                  setAccountMode('auth');
+                  setAccount(true);
+                }}
+                onStyle={(aesthetic) => {
                   setCreatorAesthetic(aesthetic);
                   setBlind(true);
                 }}
+              />
+            )}
+            {tab === 'Spotter' && (
+              <Spotter
                 onUse={(p) => {
                   setPieces(p);
                   setTab('Canvas');

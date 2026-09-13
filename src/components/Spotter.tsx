@@ -1,5 +1,4 @@
 'use client';
-import MonthlyTrends from './MonthlyTrends';
 import ClothingDiscovery from './ClothingDiscovery';
 import ReferenceMatcher from './ReferenceMatcher';
 import { useState } from 'react';
@@ -13,7 +12,6 @@ export default function Spotter({
   onAuth,
   authenticated,
   onUse,
-  onStyleTrend,
 }: {
   garments: Garment[];
   references: Reference[];
@@ -21,9 +19,7 @@ export default function Spotter({
   onAuth: () => void;
   authenticated: boolean;
   onUse: (pieces: Piece[]) => void;
-  onStyleTrend: (aesthetic: string) => void;
 }) {
-  const [trendsOpen, setTrendsOpen] = useState(false);
   const [matching, setMatching] = useState<Reference | null>(null),
     [inspirationImage, setInspirationImage] = useState<{ url: string; key: number }>();
   const [open, setOpen] = useState(false),
@@ -31,14 +27,6 @@ export default function Spotter({
     [error, setError] = useState('');
   return (
     <div className="stack">
-      <button
-        className="challenge-banner"
-        aria-expanded={trendsOpen}
-        onClick={() => setTrendsOpen(!trendsOpen)}
-      >
-        The monthly trend edit · {trendsOpen ? 'Close' : 'Explore'}
-      </button>
-      {trendsOpen && <MonthlyTrends onStyle={onStyleTrend} />}
       <ClothingDiscovery
         key={inspirationImage?.key}
         inspirationImage={inspirationImage?.url}
