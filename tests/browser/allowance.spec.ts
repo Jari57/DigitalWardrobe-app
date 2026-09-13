@@ -17,6 +17,7 @@ test('AI allowance is private and visible without starting generation', async ({
     expect(response.headers()['cache-control']).toBe('no-store');
     expect(await response.json()).toMatchObject({ enabled: true, remaining: 10, limit: 10 });
     await page.goto('/');
+    await page.getByRole('navigation').getByRole('button', { name: 'Closet', exact: true }).click();
     await expect(page.getByText(/AI: 10 of 10 daily actions left/)).toBeVisible();
   } finally {
     await context.request.delete('/api/account', { headers, data: { password } });

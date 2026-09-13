@@ -28,9 +28,9 @@ import ForYouFeed from './ForYouFeed';
 import { api, categories, Empty } from './ui';
 const blank: Wardrobe = { garments: [], outfits: [], references: [] };
 const tabs = [
-  { id: 'Closet', icon: Shirt },
-  { id: 'For You', icon: Sparkles },
   { id: 'Spotter', icon: Camera },
+  { id: 'For You', icon: Sparkles },
+  { id: 'Closet', icon: Shirt },
   { id: 'Canvas', icon: Layers },
   { id: 'Looks', icon: Grid2X2 },
   { id: 'Stats', icon: BarChart3 },
@@ -56,6 +56,7 @@ export default function WardrobeApp({
     [color, setColor] = useState('all'),
     [pieces, setPieces] = useState<Piece[]>([]);
   const [creatorOutfit, setCreatorOutfit] = useState<Outfit | null>(null);
+  const [spotterSession, setSpotterSession] = useState(0);
   const [creatorAesthetic, setCreatorAesthetic] = useState('Minimal');
   const refresh = useCallback(async () => {
     const wardrobe = await api<Wardrobe>('/api/wardrobe');
@@ -303,6 +304,7 @@ export default function WardrobeApp({
             )}
             {tab === 'Spotter' && (
               <Spotter
+                key={spotterSession}
                 onUse={(p) => {
                   setPieces(p);
                   setTab('Canvas');
@@ -491,6 +493,8 @@ export default function WardrobeApp({
             user={user}
             onClose={() => setAccount(false)}
             onSignedOut={() => {
+              // Clear private scan state, while retaining guest uploads through sign-in.
+              setSpotterSession((current) => current + 1);
               setAccount(false);
               setUser(null);
               setData(blank);
