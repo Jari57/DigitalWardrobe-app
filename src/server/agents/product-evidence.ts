@@ -56,7 +56,7 @@ export async function fetchProductPage(value: string): Promise<Page> {
           headers: {
             Accept: 'text/html',
             'Accept-Encoding': 'identity',
-            'User-Agent': 'DigitalWardrobe/1.0 (product metadata check)',
+            'User-Agent': 'FitStalker/1.0 (product metadata check)',
           },
           lookup: (_host, _options, callback) => callback(null, address, 4),
         },

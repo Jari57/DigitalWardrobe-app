@@ -2,7 +2,7 @@
   "auth": {
     "providers": {
       "googleSignIn": {
-        "oAuthBrandDisplayName": "Digital Wardrobe",
+        "oAuthBrandDisplayName": "FitStalker",
         "supportEmail": "jari57@gmail.com",
         "authorizedRedirectUris": ["https://digitalwardrobe-app.firebaseapp.com/__/auth/handler"]
       }

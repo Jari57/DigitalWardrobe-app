@@ -35,7 +35,7 @@ test('PWA caches only public assets and returns a private-data-free offline page
   await expect(page.getByText(/Private wardrobe content/)).toBeVisible();
   await context.setOffline(false);
   await page.getByRole('link', { name: 'Try connecting again' }).click();
-  await expect(page.getByRole('heading', { name: 'Wardrobe.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'FitStalker' })).toBeVisible();
   // A distinct script URL installs a new worker for this isolated test scope.
   await page.evaluate(async () => {
     await navigator.serviceWorker.register('/sw.js?update-test=1');

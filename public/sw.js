@@ -1,5 +1,5 @@
 // Deliberately network-only for customer content. Never cache app HTML or APIs.
-const CACHE = 'wardrobe-public-v1';
+const CACHE = 'wardrobe-public-v2-fitstalker';
 // Ephemeral handoff only: no customer photos in Cache Storage or IndexedDB.
 const incomingShares = new Map();
 const PUBLIC = [

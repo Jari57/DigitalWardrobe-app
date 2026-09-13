@@ -113,8 +113,9 @@ export default function WardrobeApp({
             <span />
             SCREENSHOT TO SHOPPING
           </div>
-          <h1>
-            Wardrobe<span className="brand-dot">.</span>
+          <h1 className="brand-wordmark">
+            <img src="/icons/icon-192.png" alt="" width="32" height="32" />
+            FitStalker
           </h1>
         </div>
         <div className="row">

@@ -128,9 +128,7 @@ export default function OutfitCanvas({
 }) {
   const [selected, setSelected] = useState<string>(),
     [name, setName] = useState(''),
-    [caption, setCaption] = useState(
-      "Today's fit, straight from my closet. #GRWM #DigitalWardrobe",
-    ),
+    [caption, setCaption] = useState("Today's fit, straight from my closet. #GRWM #FitStalker"),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(''),
     [error, setError] = useState('');

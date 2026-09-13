@@ -96,7 +96,7 @@ export default function InstallApp() {
               } else setHelp(!help);
             }}
           >
-            Install Wardrobe
+            Install FitStalker
           </button>
           {help && (
             <p className="note">

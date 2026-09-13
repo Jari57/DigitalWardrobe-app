@@ -986,3 +986,18 @@ legend {
 .creator-reopen {
   margin-bottom: 12px;
 }
+
+.brand-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.brand-wordmark img {
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+.app-header .brand-wordmark {
+  font-size: 25px;
+  letter-spacing: -1px;
+  font-weight: 650;
+}

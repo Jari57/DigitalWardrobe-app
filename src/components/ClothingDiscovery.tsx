@@ -219,7 +219,7 @@ export default function ClothingDiscovery({
           </p>
           <p>
             Installed on a supported Android browser? Open the screenshot in Photos, tap Share and
-            choose Wardrobe. If it isn’t listed, use Upload screenshot.
+            choose FitStalker. If it isn’t listed, use Upload screenshot.
           </p>
           <p>
             On iPhone, save the screenshot and upload it here. A TikTok or Instagram link alone does

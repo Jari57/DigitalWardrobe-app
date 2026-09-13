@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'Digital Wardrobe Studio',
-    short_name: 'Wardrobe',
-    description: 'Your clothes. Your next fit.',
+    name: 'FitStalker',
+    short_name: 'FitStalker',
+    description: 'See the fit. Find the pieces.',
     start_url: '/',
     scope: '/',
     share_target: {

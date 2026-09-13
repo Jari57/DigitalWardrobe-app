@@ -20,7 +20,7 @@ export default function AccountDialog({
         code
           ? 'Save your recovery code'
           : mode === 'signin'
-            ? 'Welcome to your wardrobe'
+            ? 'Welcome to FitStalker'
             : mode === 'signup'
               ? 'Make room for your style'
               : 'Recover your account'
@@ -51,10 +51,10 @@ export default function AccountDialog({
           <button
             onClick={() =>
               download(
-                new Blob([`Digital Wardrobe recovery code\n${code}\nKeep this private.`], {
+                new Blob([`FitStalker recovery code\n${code}\nKeep this private.`], {
                   type: 'text/plain',
                 }),
-                'wardrobe-recovery-code.txt',
+                'fitstalker-recovery-code.txt',
               )
             }
           >
