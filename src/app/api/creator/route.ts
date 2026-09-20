@@ -86,6 +86,9 @@ export async function POST(request: Request) {
   } catch (error) {
     if (dispatched) {
       await dispatched.ledger.markUncertain(dispatched.userId, dispatched.id).catch(() => {});
+      await dispatched.ledger
+        .settleFailedSingleStage(dispatched.userId, dispatched.id)
+        .catch(() => {});
       if (error instanceof ApiError) return handleError(error);
       return json(
         { error: 'Creator AI could not finish. Your saved look and current edits are safe.' },

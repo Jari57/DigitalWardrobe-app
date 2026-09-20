@@ -145,6 +145,13 @@ export function shoppingPageKind(value: string): 'excluded' | 'product-path' | '
   } catch {
     return 'excluded';
   }
+  // Adidas uses a model-code HTML path, not a /product/ segment. This is a URL
+  // shape signal only: it does not verify identity, price, stock or authenticity.
+  if (
+    /^(?:www\.)?adidas\.(?:com|co\.uk|ca|com\.au)$/.test(host) &&
+    /^\/(?:[a-z]{2}\/)?[a-z0-9-]+\/[a-z0-9]{6}\.html$/.test(path)
+  )
+    return 'product-path';
   // A collection may contain a direct product URL, so check that first.
   if (/\/(?:products?|dp|pd|p)\/[^/]+/.test(path) || /\/[^/]+-p\d+\.html$/.test(path))
     return 'product-path';
@@ -241,6 +248,13 @@ export function groundedListings(
   sources: { title: string; url: string }[],
   visibleBrand: string | null,
 ) {
+  const words = (text: string) =>
+    ' ' +
+    text
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, ' ')
+      .trim() +
+    ' ';
   const seen = new Set<string>();
   return ranking.listings.flatMap((item) => {
     const source = sources[item.sourceIndex];
@@ -254,7 +268,9 @@ export function groundedListings(
         retailer: new URL(url).hostname.replace(/^www\./, ''),
         reason: item.reason,
         match:
-          item.match === 'possible-exact' && visibleBrand
+          item.match === 'possible-exact' &&
+          visibleBrand &&
+          words(source.title).includes(words(visibleBrand))
             ? ('possible-exact' as const)
             : ('similar' as const),
       },

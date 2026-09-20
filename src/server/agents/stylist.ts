@@ -1,6 +1,7 @@
+import { recordStepUsage } from './usage';
 import { gateway, ToolLoopAgent, Output, isStepCount } from 'ai';
 import { z } from 'zod';
-import { validateStylistResult } from './contracts';
+import { qualityStylist } from './quality';
 import { generationCost } from './discovery';
 
 export type StyleCandidate = { id: string; name: string; category: string; color: string };
@@ -13,6 +14,7 @@ export async function styleOwnedWardrobe(
   const agent = new ToolLoopAgent({
     model: gateway('google/gemini-2.5-flash'),
     maxRetries: 0,
+    onStepEnd: recordStepUsage,
     maxOutputTokens: 1200,
     stopWhen: isStepCount(1),
     providerOptions: {
@@ -35,18 +37,19 @@ export async function styleOwnedWardrobe(
     prompt: JSON.stringify({ candidates, lockedIds, occasion, aesthetic }),
     abortSignal: AbortSignal.timeout(40_000),
   });
-  const value = validateStylistResult(
+  const cost = await generationCost(result);
+  const value = qualityStylist(
     {
       ...result.output,
       explanation: result.output.explanation.slice(0, 500),
       limitations: result.output.limitations.map((note) => note.slice(0, 500)),
     },
-    candidates.map((item) => item.id),
+    candidates,
     lockedIds,
   );
   return {
     value,
-    cost: await generationCost(result),
+    cost,
     inputTokens: result.totalUsage.inputTokens ?? 0,
     outputTokens: result.totalUsage.outputTokens ?? 0,
   };

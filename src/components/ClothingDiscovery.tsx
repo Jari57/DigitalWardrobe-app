@@ -300,7 +300,8 @@ export default function ClothingDiscovery({
       </div>
       <small>
         JPG, PNG or WebP · up to 4 MB. Scanning sends your photo to our AI provider. Only garment
-        descriptions are used for shopping searches.
+        descriptions are used for shopping searches. For a crowded image, crop to one outfit before
+        uploading.
       </small>
       {uploaded && !photo && !detection && (
         <>
@@ -599,6 +600,10 @@ export default function ClothingDiscovery({
                     <small>
                       Searched {new Date(result.searchedAt).toLocaleDateString()} · Search region is
                       a preference, not confirmed shipping coverage.
+                    </small>
+                    <small>
+                      Compare the details before buying. A sourced link is not a seller endorsement;
+                      confirm size, delivery and returns with the retailer.
                     </small>
                     {result.listings
                       .filter(

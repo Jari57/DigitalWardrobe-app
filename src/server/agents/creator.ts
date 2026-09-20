@@ -1,3 +1,4 @@
+import { recordStepUsage } from './usage';
 import { gateway, ToolLoopAgent, Output, isStepCount } from 'ai';
 import { z } from 'zod';
 import { creatorResultSchema } from './contracts';
@@ -11,6 +12,7 @@ export async function createOutfitContent(
   const agent = new ToolLoopAgent({
     model: gateway('google/gemini-2.5-flash'),
     maxRetries: 0,
+    onStepEnd: recordStepUsage,
     maxOutputTokens: 900,
     stopWhen: isStepCount(1),
     providerOptions: {
@@ -29,13 +31,14 @@ export async function createOutfitContent(
     prompt: JSON.stringify({ outfit, tone }),
     abortSignal: AbortSignal.timeout(40_000),
   });
+  const cost = await generationCost(result);
   const value = creatorResultSchema.parse({
     caption: result.output.caption.trim().slice(0, 160),
     filmingSteps: result.output.filmingSteps.map((s) => s.trim().slice(0, 240)),
   });
   return {
     value,
-    cost: await generationCost(result),
+    cost,
     inputTokens: result.totalUsage.inputTokens ?? 0,
     outputTokens: result.totalUsage.outputTokens ?? 0,
   };

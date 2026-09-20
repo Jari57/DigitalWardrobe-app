@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const key = createHash('sha256')
       .update(
         JSON.stringify({
-          version: 'stylist-v1',
+          version: 'stylist-quality-v2',
           input: normalized,
           candidates,
           day: new Date().toISOString().slice(0, 10),
@@ -96,6 +96,9 @@ export async function POST(request: Request) {
   } catch (error) {
     if (dispatched) {
       await dispatched.ledger.markUncertain(dispatched.userId, dispatched.id).catch(() => {});
+      await dispatched.ledger
+        .settleFailedSingleStage(dispatched.userId, dispatched.id)
+        .catch(() => {});
       if (error instanceof ApiError) return handleError(error);
       console.error('Stylist generation failed', {
         name: error instanceof Error ? error.name : 'UnknownError',

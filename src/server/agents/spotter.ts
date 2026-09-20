@@ -1,6 +1,7 @@
+import { recordStepUsage } from './usage';
 import { gateway, ToolLoopAgent, Output, isStepCount } from 'ai';
 import { z } from 'zod';
-import { validateSpotterResult } from './contracts';
+import { qualitySpotter } from './quality';
 import { detectClothes, generationCost } from './discovery';
 import type { StyleCandidate } from './stylist';
 
@@ -29,6 +30,7 @@ export async function matchInspiration(
   const agent = new ToolLoopAgent({
     model: gateway('google/gemini-2.5-flash'),
     maxRetries: 0,
+    onStepEnd: recordStepUsage,
     maxOutputTokens: 2000,
     stopWhen: isStepCount(1),
     providerOptions: {
@@ -74,7 +76,8 @@ export async function matchInspiration(
     ],
     abortSignal: AbortSignal.timeout(45_000),
   });
-  const value = validateSpotterResult(
+  const cost = await generationCost(result);
+  const value = qualitySpotter(
     {
       elements: result.output.elements.map((e) => ({
         ...e,
@@ -83,11 +86,11 @@ export async function matchInspiration(
       })),
       limitations: result.output.limitations.map((n) => n.slice(0, 500)),
     },
-    candidates.map((c) => c.id),
+    candidates,
   );
   return {
     value,
-    cost: await generationCost(result),
+    cost,
     inputTokens: result.totalUsage.inputTokens ?? 0,
     outputTokens: result.totalUsage.outputTokens ?? 0,
   };

@@ -12,6 +12,20 @@ export async function recordGeneration(id: unknown, costMicros: number | null) {
   await db.agentGeneration.upsert({
     where: { id, requestId: context.requestId },
     create: { id, requestId: context.requestId, costMicros },
-    update: { costMicros },
+    update: costMicros === null ? {} : { costMicros },
   });
+}
+
+// Persist the receipt before structured-output validation can reject a completed call.
+export async function recordStepUsage(step: {
+  providerMetadata?: Record<string, Record<string, unknown>>;
+}) {
+  const receipt = step.providerMetadata?.gateway;
+  const raw = receipt?.cost;
+  const cost =
+    typeof raw === 'number' || (typeof raw === 'string' && raw.trim()) ? Number(raw) : NaN;
+  await recordGeneration(
+    receipt?.generationId,
+    Number.isFinite(cost) && cost >= 0 ? Math.ceil(cost * 1_000_000) : null,
+  );
 }

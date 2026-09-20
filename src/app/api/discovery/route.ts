@@ -1,4 +1,6 @@
 import { withAgentUsage } from '@/server/agents/usage';
+import { reviewShoppingResult } from '@/lib/shopping-quality';
+import type { ShoppingResult } from '@/lib/discovery';
 import { recordJourney } from '@/server/journey';
 import { z } from 'zod';
 import { discoveryRequestKey } from '@/server/agents/discovery-key';
@@ -52,10 +54,12 @@ export async function GET() {
       : [];
     return json({
       enabled: process.env.AI_ENABLED === 'true',
-      searches: searches.map((record) => ({
-        ...(record.result as Prisma.JsonObject),
-        id: record.id,
-      })),
+      searches: searches.map((record) =>
+        reviewShoppingResult({
+          ...(record.result as Prisma.JsonObject),
+          id: record.id,
+        } as ShoppingResult),
+      ),
       detections: records
         .filter((r) => r.result)
         .map((r) => {
@@ -115,7 +119,11 @@ export async function POST(request: Request) {
     const record = reservation.request;
     if (record.result) {
       // Attach context to older cached shopping results without generating again.
-      const cached = record.result as Prisma.JsonObject;
+      const cached = (
+        input.agent === 'shop'
+          ? reviewShoppingResult(record.result as unknown as ShoppingResult)
+          : record.result
+      ) as Prisma.JsonObject;
       if (input.agent === 'shop' && !cached.searchContext) {
         const value = {
           ...cached,
@@ -192,6 +200,9 @@ export async function POST(request: Request) {
     if (dispatched) {
       await recordJourney(dispatched.userId, 'service_failure');
       await dispatched.ledger.markUncertain(dispatched.userId, dispatched.id).catch(() => {});
+      await dispatched.ledger
+        .settleFailedSingleStage(dispatched.userId, dispatched.id)
+        .catch(() => {});
       const status =
         error && typeof error === 'object' && 'statusCode' in error
           ? Number(error.statusCode)

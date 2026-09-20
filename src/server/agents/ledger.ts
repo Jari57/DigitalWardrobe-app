@@ -177,6 +177,29 @@ export class AgentLedger {
     });
   }
 
+  async settleFailedSingleStage(userId: string, id: string) {
+    const record = await this.db.agentRequest.findFirst({
+      where: {
+        id,
+        userId,
+        state: 'uncertain',
+        agent: { in: ['detect', 'capture', 'spotter', 'stylist', 'creator'] },
+        result: { equals: Prisma.DbNull },
+      },
+      include: { generations: true },
+    });
+    if (!record || record.generations.length !== 1) return false;
+    const cost = record.generations[0].costMicros;
+    if (cost === null || cost < 0) return false;
+    await this.settle(userId, id, {
+      state: 'failed',
+      actualMicros: cost,
+      inputTokens: record.inputTokens ?? 0,
+      outputTokens: record.outputTokens ?? 0,
+    });
+    return true;
+  }
+
   async settle(
     userId: string,
     id: string,
