@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client';
+import { feedbackReasons, type LearningAgent } from '@/lib/agent-learning';
 import { z } from 'zod';
 import { requireUser, rateLimit } from '@/server/auth';
 import { db } from '@/server/db';
@@ -12,18 +14,32 @@ export async function POST(request: Request) {
         .object({
           id: z.string().min(1).max(80),
           feedback: z.enum(['helpful', 'not-helpful']).nullable(),
+          reason: z.string().max(40).nullable().optional(),
+          remember: z.boolean().optional(),
         })
         .strict(),
     );
     await rateLimit(`feedback:${user.id}`, 30, 3600);
     const record = await db.agentRequest.findFirst({
       where: { id: input.id, userId: user.id },
-      select: { result: true },
+      select: { result: true, agent: true },
     });
     if (!record?.result) throw new ApiError(404, 'Completed suggestion not found.');
+    if (
+      input.reason &&
+      (!Object.hasOwn(feedbackReasons, record.agent) ||
+        !Object.hasOwn(feedbackReasons[record.agent as LearningAgent], input.reason))
+    )
+      throw new ApiError(400, 'Choose a feedback reason for this agent.');
     const changed = await db.agentRequest.updateMany({
       where: { id: input.id, userId: user.id },
-      data: { feedback: input.feedback, feedbackAt: input.feedback ? new Date() : null },
+      data: {
+        feedback: input.feedback,
+        feedbackAt: input.feedback ? new Date() : null,
+        feedbackDetails: input.feedback
+          ? { reason: input.reason ?? null, remember: input.remember === true }
+          : Prisma.DbNull,
+      },
     });
     if (!changed.count) throw new ApiError(404, 'Suggestion not found.');
     return json({ ok: true });

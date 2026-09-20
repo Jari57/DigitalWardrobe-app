@@ -1,10 +1,12 @@
 'use client';
+import AgentFeedback from './AgentFeedback';
 import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import type { Garment, Piece, Reference } from '@/lib/types';
 import { api, categories, Modal } from './ui';
 import { arrange } from './OutfitCanvas';
 type Proposal = {
+  id?: string;
   elements: { description: string; garmentId: string | null; explanation: string }[];
   limitations: string[];
 };
@@ -82,8 +84,8 @@ export default function ReferenceMatcher({
         <p>Find substitutes in your own closet, then choose which pieces to keep.</p>
         <small>
           AI matching sends this inspiration photo and up to 40 saved garment descriptions to our
-          provider. It uses names, categories and colors for your closet pieces. Uses your daily AI
-          allowance.
+          provider. It uses names, categories, colors and up to 12 owned photos for your closet
+          pieces. Uses your daily AI allowance.
         </small>
         <button className="primary" disabled={busy} onClick={match}>
           <Sparkles size={18} />
@@ -106,6 +108,7 @@ export default function ReferenceMatcher({
                 <p>{element.explanation}</p>
               </article>
             ))}
+            {proposal.id && <AgentFeedback id={proposal.id} agent="spotter" />}
             {proposal.limitations.map((note, i) => (
               <small key={i}>{note}</small>
             ))}

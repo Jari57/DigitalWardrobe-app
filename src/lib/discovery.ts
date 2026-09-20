@@ -37,6 +37,8 @@ export function shoppingItem(item: DetectedItem, description?: string): Detected
     name: 'User-described garment',
     description,
     visibleBrand: null,
+    readableText: [],
+    visibleModelCode: null,
     uncertainty: 'User-supplied search description; brand and product identity are unverified.',
   };
 }
@@ -54,6 +56,8 @@ export const detectedItemSchema = z
     description: z.string().min(1).max(400),
     visibleBrand: z.string().max(80).nullable(),
     uncertainty: z.string().max(300),
+    readableText: z.array(z.string().max(100)).max(4).optional(),
+    visibleModelCode: z.string().max(80).nullable().optional(),
   })
   .strict();
 export const detectionSchema = z
@@ -92,6 +96,10 @@ export type ProductEvidence = {
   checkedAt: string;
   sourceUrl: string;
   productName?: string;
+  brand?: string;
+  modelCode?: string;
+  colorName?: string;
+  imageUrl?: string;
   price?: number;
   currency?: string;
   note: string;
@@ -113,6 +121,11 @@ export type ShoppingResult = {
     reason: string;
     match: 'similar' | 'possible-exact';
     evidence?: ProductEvidence;
+    visualReview?: {
+      status: 'consistent' | 'similar' | 'different' | 'unclear' | 'not-reviewed';
+      note: string;
+    };
+    identityEvidence?: 'matching-code-and-visuals' | 'unverified';
   }[];
   note: string;
 };

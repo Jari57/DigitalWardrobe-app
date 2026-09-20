@@ -1,3 +1,4 @@
+import { gateway } from 'ai';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { db } from '@/server/db';
 const usageContext = new AsyncLocalStorage<{ userId: string; requestId: string }>();
@@ -28,4 +29,34 @@ export async function recordStepUsage(step: {
     receipt?.generationId,
     Number.isFinite(cost) && cost >= 0 ? Math.ceil(cost * 1_000_000) : null,
   );
+}
+
+type Meter = { providerMetadata?: Record<string, Record<string, unknown>> };
+
+export async function generationCost(result: Meter): Promise<number | null> {
+  const id = result.providerMetadata?.gateway?.generationId;
+  let measured: number | null = null;
+  const raw = result.providerMetadata?.gateway?.cost;
+  if ((typeof raw === 'string' && raw.trim() !== '') || typeof raw === 'number') {
+    const cost = Number(raw);
+    if (Number.isFinite(cost) && cost >= 0) measured = Math.ceil(cost * 1_000_000);
+  }
+  if (measured === null && typeof id === 'string')
+    try {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const info = await Promise.race([
+        gateway.getGenerationInfo({ id }),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Cost lookup timed out')), 3000);
+        }),
+      ]).finally(() => clearTimeout(timer));
+      measured =
+        Number.isFinite(info.totalCost) && info.totalCost >= 0
+          ? Math.ceil(info.totalCost * 1_000_000)
+          : null;
+    } catch {
+      /* Keep unknown cost reserved until reconciliation. */
+    }
+  await recordGeneration(id, measured);
+  return measured;
 }

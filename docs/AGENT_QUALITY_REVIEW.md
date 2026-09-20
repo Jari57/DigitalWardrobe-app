@@ -38,4 +38,4 @@ Final code build and formatting passed. After removing diagnostic logging, targe
 
 ## Release
 
-Deployment verification pending. Rollback target: digital-wardrobe-691xzav2i-almonjs-projects.vercel.app (runtime 883aff0). No schema migration is required for this change.
+Published runtime 29fec37 to digital-wardrobe-7yvfx6c4k-almonjs-projects.vercel.app (dpl_7CcmNMb6mCsA15FxY4MfB34f4LJg). All three production domains returned healthy database status and version 29fec37. Automatic domain assignment is enabled; the project production target and hourly minute-17 cron both point to this deployment. Rollback target: digital-wardrobe-691xzav2i-almonjs-projects.vercel.app (runtime 883aff0). No schema migration is required for this change.

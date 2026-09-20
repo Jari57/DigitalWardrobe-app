@@ -1,11 +1,17 @@
 'use client';
+import AgentFeedback from './AgentFeedback';
 import { useState } from 'react';
 import { Lock, Unlock, Shuffle, Sparkles } from 'lucide-react';
 import type { Garment, Piece } from '@/lib/types';
 import { Modal, categories, api } from './ui';
 import { arrange } from './OutfitCanvas';
 
-type Recommendation = { garmentIds: string[]; explanation: string; limitations: string[] };
+type Recommendation = {
+  id?: string;
+  garmentIds: string[];
+  explanation: string;
+  limitations: string[];
+};
 export default function BlindFit({
   garments,
   onClose,
@@ -201,6 +207,7 @@ export default function BlindFit({
             {recommendation && (
               <div className="stack" role="status">
                 <strong>Why this works</strong>
+                {recommendation.id && <AgentFeedback id={recommendation.id} agent="stylist" />}
                 <p>{recommendation.explanation}</p>
                 {recommendation.limitations.map((note, index) => (
                   <small key={index}>{note}</small>

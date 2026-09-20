@@ -1,9 +1,11 @@
 'use client';
+import AgentFeedback from './AgentFeedback';
 import { useState } from 'react';
 import type { Garment, Outfit } from '@/lib/types';
 import { Modal, api } from './ui';
 import ExportActions from './ExportActions';
 type Draft = {
+  groundingNote?: string;
   id: string;
   caption: string;
   filmingSteps: string[];
@@ -148,6 +150,8 @@ export default function CreatorDialog({
             <small>Rates the original AI draft. Feedback is deleted with your account.</small>
           </div>
         )}
+        {draft && <AgentFeedback id={draft.id} agent="creator" />}
+        {draft?.groundingNote && <small>{draft.groundingNote}</small>}
         {error && (
           <p role="alert" className="error">
             {error}

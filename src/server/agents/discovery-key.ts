@@ -4,13 +4,15 @@ import { createHash } from 'node:crypto';
 export function discoveryRequestKey(
   input: { agent: string },
   day = new Date().toISOString().slice(0, 10),
+  memoryVersion = 'none',
 ) {
   return createHash('sha256')
     .update(
-      (input.agent === 'shop' ? 'shopping-quality-v3:' : 'capture-v2:') +
+      (input.agent === 'shop' ? 'shopping-visual-v4:' : 'capture-evidence-v3:') +
         JSON.stringify(input) +
         ':' +
-        day,
+        day +
+        (memoryVersion === 'none' ? '' : ':' + memoryVersion),
     )
     .digest('hex');
 }

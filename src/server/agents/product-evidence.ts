@@ -168,6 +168,34 @@ export function parseProductEvidence(
         ? products[0]
         : null;
   if (!product || typeof product.name !== 'string') return unknown;
+  const shortText = (value: unknown) =>
+    typeof value === 'string' && value.trim() ? value.trim().slice(0, 120) : undefined;
+  const imageValue = Array.isArray(product.image) ? product.image[0] : product.image;
+  const imageText =
+    typeof imageValue === 'string'
+      ? imageValue
+      : imageValue && typeof imageValue === 'object'
+        ? (imageValue as Record<string, unknown>).url
+        : undefined;
+  let imageUrl: string | undefined;
+  try {
+    if (typeof imageText === 'string')
+      imageUrl = safeShoppingUrl(new URL(imageText, sourceUrl).href) ?? undefined;
+  } catch {
+    /* No usable product image. */
+  }
+  const brand =
+    typeof product.brand === 'object' && product.brand
+      ? (product.brand as Record<string, unknown>).name
+      : product.brand;
+  const identity = {
+    ...(shortText(brand) ? { brand: shortText(brand)! } : {}),
+    ...(shortText(product.mpn ?? product.sku)
+      ? { modelCode: shortText(product.mpn ?? product.sku)! }
+      : {}),
+    ...(shortText(product.color) ? { colorName: shortText(product.color)! } : {}),
+    ...(imageUrl ? { imageUrl } : {}),
+  };
   const offers = Array.isArray(product.offers)
     ? product.offers
     : product.offers
@@ -177,6 +205,7 @@ export function parseProductEvidence(
     return {
       ...unknown,
       productName: product.name.slice(0, 200),
+      ...identity,
       note: 'Multiple variants or no single offer. Check the retailer for your size and color.',
     };
   const offer = offers[0];
@@ -215,6 +244,7 @@ export function parseProductEvidence(
     checkedAt,
     sourceUrl,
     productName: product.name.slice(0, 200),
+    ...identity,
     ...(Number.isFinite(price) && price >= 0 && currency ? { price, currency } : {}),
     note: 'Retailer-reported page offer. Size, color, shipping and checkout price still need checking.',
   };

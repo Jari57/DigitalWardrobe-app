@@ -37,7 +37,14 @@ export async function reconcileCompleted(db: PrismaClient, userId: string, looku
   let resolved = 0;
   for (const record of records) {
     const value = record.result as Prisma.JsonObject;
-    const expected = record.agent === 'shop' ? (value.generationCount === 1 ? 1 : 2) : 1;
+    const expected =
+      record.agent === 'shop'
+        ? value.generationCount === 1
+          ? 1
+          : value.generationCount === 3
+            ? 3
+            : 2
+        : 1;
     if (record.generations.length !== expected) continue;
     const costs = await Promise.all(
       record.generations.map(async (generation) => {

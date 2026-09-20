@@ -5,6 +5,7 @@ import type { User } from '@/lib/types';
 import { api, Modal } from './ui';
 import { googleIdentityToken } from '@/lib/google-signin';
 import ShoppingPreferences from './ShoppingPreferences';
+import AgentMemorySettings from './AgentMemorySettings';
 
 export default function AccountSettings({
   user,
@@ -102,6 +103,7 @@ export default function AccountSettings({
         ) : (
           <>
             <ShoppingPreferences />
+            <AgentMemorySettings />
             <form
               className="stack"
               onSubmit={(event) => {

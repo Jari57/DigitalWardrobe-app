@@ -1,3 +1,4 @@
+import { loadAgentMemory } from '@/server/agents/memory';
 import { withAgentUsage } from '@/server/agents/usage';
 import { createHash } from 'node:crypto';
 import { requireUser, rateLimit } from '@/server/auth';
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
       db.image.findFirst({ where: { id: input.imageId, userId: user.id } }),
       db.garment.findMany({
         where: { userId: user.id, id: { in: input.candidateIds } },
-        select: { id: true, name: true, category: true, color: true },
+        select: { id: true, name: true, category: true, color: true, imageId: true },
         orderBy: { id: 'asc' },
       }),
     ]);
@@ -30,10 +31,12 @@ export async function POST(request: Request) {
     if (process.env.AI_ENABLED !== 'true')
       throw new ApiError(503, 'AI matching is not enabled on this deployment.');
     const normalized = { ...input, candidateIds: candidates.map((c) => c.id) };
+    const memory = await loadAgentMemory(user.id, 'spotter');
     const key = createHash('sha256')
       .update(
         JSON.stringify({
-          version: 'spotter-quality-v3',
+          version: 'spotter-visual-v4',
+          memoryVersion: memory.version,
           input: normalized,
           candidates,
           day: new Date().toISOString().slice(0, 10),
@@ -58,8 +61,19 @@ export async function POST(request: Request) {
         'This matching request is processing or was interrupted. Try again tomorrow.',
       );
     dispatched = { ledger, userId: user.id, id: record.id };
+    const candidateImages = await db.image.findMany({
+      where: {
+        userId: user.id,
+        id: { in: candidates.slice(0, 12).map((candidate) => candidate.imageId) },
+      },
+      select: { id: true, data: true, mimeType: true },
+    });
+    const photos = candidates.slice(0, 12).flatMap((candidate) => {
+      const photo = candidateImages.find((image) => image.id === candidate.imageId);
+      return photo ? [{ garmentId: candidate.id, data: photo.data, mimeType: photo.mimeType }] : [];
+    });
     const result = await withAgentUsage(user.id, record.id, () =>
-      matchInspiration(image.data, image.mimeType, candidates),
+      matchInspiration(image.data, image.mimeType, candidates, memory, photos),
     );
     if (result.cost === null)
       await db.agentRequest.updateMany({

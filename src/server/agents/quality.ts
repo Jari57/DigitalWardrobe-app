@@ -1,4 +1,5 @@
 import {
+  creatorResultSchema,
   spotterResultSchema,
   stylistResultSchema,
   validateSpotterResult,
@@ -31,7 +32,12 @@ export function qualitySpotter(value: unknown, candidates: Candidate[]) {
   );
 }
 
-export function qualityStylist(value: unknown, candidates: Candidate[], lockedIds: string[]) {
+export function qualityStylist(
+  value: unknown,
+  candidates: Candidate[],
+  lockedIds: string[],
+  avoidCombinations: string[][] = [],
+) {
   const result = stylistResultSchema.parse(value);
   const owned = new Map(candidates.map((item) => [item.id, item]));
   if (lockedIds.some((id) => !owned.has(id))) throw new Error('A locked piece is unavailable.');
@@ -46,6 +52,13 @@ export function qualityStylist(value: unknown, candidates: Candidate[], lockedId
       continue;
     if (['tops', 'bottoms'].includes(item.category) && selected.includes('dresses')) continue;
     garmentIds.push(id);
+  }
+  for (const rejected of avoidCombinations) {
+    if (rejected.length < 2 || !rejected.every((id) => garmentIds.includes(id))) continue;
+    const removable = [...garmentIds]
+      .reverse()
+      .find((id) => rejected.includes(id) && !lockedIds.includes(id));
+    if (removable) garmentIds.splice(garmentIds.indexOf(removable), 1);
   }
   const changed =
     garmentIds.length !== result.garmentIds.length ||
@@ -76,4 +89,67 @@ export function qualityStylist(value: unknown, candidates: Candidate[], lockedId
     candidates.map((item) => item.id),
     lockedIds,
   );
+}
+
+export function qualityCreator(
+  value: unknown,
+  garments: { name: string; category: string; color: string; brand?: string }[],
+) {
+  const result = creatorResultSchema.parse(value);
+  const text = [result.caption, ...result.filmingSteps].join(' ').toLowerCase();
+  const source = garments
+    .map((item) => [item.name, item.brand ?? ''].join(' ').toLowerCase())
+    .join(' ');
+  const materials = [
+    'cashmere',
+    'silk',
+    'wool',
+    'leather',
+    'linen',
+    'cotton',
+    'polyester',
+    'suede',
+    'velvet',
+  ];
+  const unsupportedMaterial = materials.some(
+    (word) =>
+      new RegExp('\\b' + word + '\\b').test(text) && !new RegExp('\\b' + word + '\\b').test(source),
+  );
+  const brands = [
+    'adidas',
+    'nike',
+    'gucci',
+    'prada',
+    'zara',
+    'chanel',
+    'louis vuitton',
+    'uniqlo',
+    'miu miu',
+    'saint laurent',
+    'balenciaga',
+    'dior',
+    'birkenstock',
+    'versace',
+    'hermes',
+  ];
+  const unsupportedBrand = brands.some((brand) => text.includes(brand) && !source.includes(brand));
+  const claims =
+    /https?:|www\.|\$\s*\d|\b(sponsored|paid partnership|guaranteed viral|best.selling|trending worldwide)\b/i.test(
+      text,
+    );
+  if (!unsupportedMaterial && !unsupportedBrand && !claims)
+    return {
+      ...result,
+      groundingNote: 'Drafted from saved garment descriptions; review before sharing.',
+    };
+  return {
+    caption: 'A fresh look from pieces I already own.',
+    filmingSteps: [
+      'Set your phone on a stable surface in good light.',
+      'Record a short full-outfit shot.',
+      'Add a close-up of a detail you like.',
+    ],
+    groundingNote:
+      'An unsupported brand, material or promotional claim was removed. This simpler draft uses no unverified product details.',
+  };
 }

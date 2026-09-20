@@ -160,6 +160,7 @@ model AgentRequest {
   result Json?
   feedback String?
   feedbackAt DateTime?
+  feedbackDetails Json?
   generations AgentGeneration[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

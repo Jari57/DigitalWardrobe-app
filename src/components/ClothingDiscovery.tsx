@@ -1,4 +1,5 @@
 'use client';
+import AgentFeedback from './AgentFeedback';
 import { useEffect, useRef, useState } from 'react';
 import { ScanLine, ArrowUpRight } from 'lucide-react';
 import type { Detection, DetectedItem, ShoppingResult, SearchPreferences } from '@/lib/discovery';
@@ -299,9 +300,9 @@ export default function ClothingDiscovery({
         />
       </div>
       <small>
-        JPG, PNG or WebP · up to 4 MB. Scanning sends your photo to our AI provider. Only garment
-        descriptions are used for shopping searches. For a crowded image, crop to one outfit before
-        uploading.
+        JPG, PNG or WebP · up to 4 MB. Scanning sends your photo to our AI provider. Shopping search
+        uses garment descriptions. Where retailer photos are available, AI may compare up to three
+        with your screenshot. For a crowded image, crop to one outfit before uploading.
       </small>
       {uploaded && !photo && !detection && (
         <>
@@ -467,6 +468,7 @@ export default function ClothingDiscovery({
             alt="Your scanned clothing photo"
           />
           <p>{detection.note}</p>
+          <AgentFeedback id={detection.id} agent="detect" />
           {!detection.items.length && (
             <p>No clothing was identified. Try a clearer photo with the whole garment visible.</p>
           )}
@@ -516,6 +518,14 @@ export default function ClothingDiscovery({
                   <h3>{item.name}</h3>
                   <p>{item.description}</p>
                   {item.uncertainty && <small>{item.uncertainty}</small>}
+                  {!!item.readableText?.length && (
+                    <small>Readable image text: {item.readableText.join(' / ')}</small>
+                  )}
+                  {item.visibleModelCode && (
+                    <small>
+                      Observed model code: {item.visibleModelCode} - check the original label
+                    </small>
+                  )}
                 </div>
                 <div className="discovery-actions">
                   <button className="primary" disabled={!!busy} onClick={() => search(index)}>
@@ -634,6 +644,20 @@ export default function ClothingDiscovery({
                           </strong>
                           <span>{listing.retailer}</span>
                           <small>{listing.reason}</small>
+                          {listing.visualReview && (
+                            <small>
+                              {listing.visualReview.status === 'not-reviewed'
+                                ? 'Photo comparison unavailable'
+                                : 'Photo comparison: ' + listing.visualReview.status}{' '}
+                              - {listing.visualReview.note}
+                            </small>
+                          )}
+                          {listing.identityEvidence === 'matching-code-and-visuals' && (
+                            <small>
+                              Observed model code matches retailer metadata; visible details agree.
+                              Authenticity and exact variant still need checking.
+                            </small>
+                          )}
                           <span>
                             {listing.evidence?.availability === 'in-stock'
                               ? 'Retailer reports: In stock'
@@ -684,6 +708,7 @@ export default function ClothingDiscovery({
                       </p>
                     )}
                     {result.note && <small>{result.note}</small>}
+                    <AgentFeedback id={result.id} agent="shop" />
                   </div>
                 )}
               </article>

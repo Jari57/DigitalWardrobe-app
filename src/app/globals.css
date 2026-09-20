@@ -1031,3 +1031,31 @@ legend {
   letter-spacing: -1px;
   font-weight: 650;
 }
+
+.agent-feedback {
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--action-border, #dedbd4);
+  padding-top: 0.75rem;
+}
+.agent-feedback > summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.agent-feedback > .stack {
+  padding-top: 0.75rem;
+}
+
+.feedback-remember {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.feedback-remember input {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0;
+  flex: 0 0 20px;
+}

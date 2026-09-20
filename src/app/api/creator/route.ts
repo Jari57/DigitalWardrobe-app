@@ -1,3 +1,4 @@
+import { loadAgentMemory } from '@/server/agents/memory';
 import { withAgentUsage } from '@/server/agents/usage';
 import { createHash } from 'node:crypto';
 import { requireUser, rateLimit } from '@/server/auth';
@@ -29,14 +30,17 @@ export async function POST(request: Request) {
       name: outfit.name,
       garments: outfit.pieces.map((p) => ({
         name: p.garment.name,
+        brand: p.garment.brand,
         category: p.garment.category,
         color: p.garment.color,
       })),
     };
+    const memory = await loadAgentMemory(user.id, 'creator');
     const key = createHash('sha256')
       .update(
         JSON.stringify({
           version: creatorVersion,
+          memoryVersion: memory.version,
           input,
           details,
           day: new Date().toISOString().slice(0, 10),
@@ -59,7 +63,7 @@ export async function POST(request: Request) {
       );
     dispatched = { ledger, userId: user.id, id: record.id };
     const result = await withAgentUsage(user.id, record.id, () =>
-      createOutfitContent(details, input.tone),
+      createOutfitContent(details, input.tone, memory),
     );
     const value = { ...result.value, version: creatorVersion, outfitId: outfit.id };
     if (result.cost === null)
