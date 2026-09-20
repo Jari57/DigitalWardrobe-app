@@ -11,7 +11,7 @@ Updated September 20, 2026. Fashion discovery and wardrobe product. This sequenc
 - [x] Prevent refresh failure after a successful closet save from presenting the save as failed.
 - [x] Remove duplicated inspiration photos after identification.
 - [x] Verify production build, formatting, and four browser checks: scoped failures, free resume/navigation, save-refresh recovery, and existing screenshot/sign-out flows. No paid provider calls.
-- [ ] Publish and verify the batch on fitstalker.com.
+- [x] Publish ca47e0a and verify fitstalker.com, www.fitstalker.com and the original Vercel address report the matching version and healthy database. Inspect the live entry screen in the browser.
 - [ ] Add editable search descriptions with validated, owner-scoped inputs and distinct cache keys. User corrections must never imply verified branding.
 - [ ] Restore persisted shopping results when reopening scans, with source and freshness labels.
 - [ ] Implement deliberate retry only for backend states proven safe; preserve uncertain budget holds and prevent duplicate dispatch.
@@ -60,3 +60,9 @@ Acceptance: complete new and returning user journeys on the release candidate; d
 - [ ] Define paid value and economics from actual usage; then implement Stripe and test entitlements, cancellation and webhook recovery.
 
 Deferred: gamified streaks/achievements, extra agent personas, large dashboards, guaranteed exact matching, verified TikTok momentum and customer-facing garment cutouts.
+
+## Release record
+
+First batch runtime: ca47e0a. Local build, formatting and four focused browser regressions passed. Tests used provider fixtures and made no paid AI calls. Previous bare-domain rollback: digital-wardrobe-on0fhg4d8-almonjs-projects.vercel.app (8626b9d). Previous www alias: digital-wardrobe-pl8847955-almonjs-projects.vercel.app. Domain aliases were manually pinned and must be verified on each release. Backend retry safety, fresh provider quality and physical-device acceptance remain open.
+
+Published deployment: digital-wardrobe-hi8s4oymb-almonjs-projects.vercel.app. All three public addresses now point to it. The prior premium visual polish (a1b880a) is included in this verified public release.
