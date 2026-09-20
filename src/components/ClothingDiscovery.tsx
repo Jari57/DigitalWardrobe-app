@@ -23,6 +23,7 @@ export default function ClothingDiscovery({
   const fileInput = useRef<HTMLInputElement>(null);
   const [detection, setDetection] = useState<Detection | null>(null);
   const [shopping, setShopping] = useState<Record<string, ShoppingResult>>({});
+  const [searchErrors, setSearchErrors] = useState<Record<string, string>>({});
   const [country, setCountry] = useState('US');
   const [availableOnly, setAvailableOnly] = useState(false);
   const [busy, setBusy] = useState('');
@@ -142,8 +143,10 @@ export default function ClothingDiscovery({
 
   async function search(index: number) {
     if (!detection) return;
+    const key = `${detection.id}:${index}:${country}`;
     setBusy(`Finding ${detection.items[index].name.toLowerCase()}…`);
     setError('');
+    setSearchErrors((previous) => ({ ...previous, [key]: '' }));
     try {
       const result = await api<ShoppingResult>('/api/discovery', 'POST', {
         agent: 'shop',
@@ -151,9 +154,9 @@ export default function ClothingDiscovery({
         itemIndex: index,
         country,
       });
-      setShopping((previous) => ({ ...previous, [`${detection.id}:${index}:${country}`]: result }));
+      setShopping((previous) => ({ ...previous, [key]: result }));
     } catch (e) {
-      setError((e as Error).message);
+      setSearchErrors((previous) => ({ ...previous, [key]: (e as Error).message }));
     } finally {
       setBusy('');
     }
@@ -206,7 +209,7 @@ export default function ClothingDiscovery({
         JPG, PNG or WebP · up to 4 MB. Scanning sends your photo to our AI provider. Only garment
         descriptions are used for shopping searches.
       </small>
-      {uploaded && !photo && (
+      {uploaded && !photo && !detection && (
         <>
           <img className="discovery-photo" src={uploaded} alt="Selected inspiration for shopping" />
           <p>
@@ -261,24 +264,42 @@ export default function ClothingDiscovery({
       )}
       {saved && <p role="status">{saved}</p>}
       {recent.length > 0 && (
-        <label>
-          Recent scans
-          <select
-            value={detection?.id ?? ''}
-            disabled={!!busy}
-            onChange={(event) => {
-              setDetection(recent.find((entry) => entry.id === event.target.value) ?? null);
-              setSaved('');
-            }}
-          >
-            <option value="">Choose a scan</option>
-            {recent.map((entry) => (
-              <option key={entry.id} value={entry.id}>
-                {entry.items.map((item) => item.name).join(', ') || 'No clothing detected'}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="stack">
+          {!detection && !photo && !uploaded && (
+            <button
+              className="resume-scan"
+              onClick={() => {
+                setDetection(recent[0]);
+                setError('');
+                setSaved('');
+              }}
+            >
+              <span>Continue your latest scan</span>
+              <small>
+                {recent[0].items.map((item) => item.name).join(', ') || 'Review your photo'}
+              </small>
+            </button>
+          )}
+          <label>
+            Recent scans
+            <select
+              value={detection?.id ?? ''}
+              disabled={!!busy}
+              onChange={(event) => {
+                setDetection(recent.find((entry) => entry.id === event.target.value) ?? null);
+                setSaved('');
+                setError('');
+              }}
+            >
+              <option value="">Choose a scan</option>
+              {recent.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.items.map((item) => item.name).join(', ') || 'No clothing detected'}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       )}
       {detection && (
         <label className="delete-confirmation">
@@ -292,7 +313,19 @@ export default function ClothingDiscovery({
       )}
       {detection && (
         <>
-          {!!detection.items.length && <p>Choose a piece to find where it’s sold.</p>}
+          {!!detection.items.length && (
+            <div className="stack">
+              <h3>Which piece caught your eye?</h3>
+              <p>Explore similar shopping options, or save a piece you already own.</p>
+              <nav className="piece-shortcuts" aria-label="Detected pieces">
+                {detection.items.map((item, index) => (
+                  <a key={index} href={`#detected-piece-${index}`}>
+                    {item.name}
+                  </a>
+                ))}
+              </nav>
+            </div>
+          )}
           <img
             className="discovery-photo"
             src={detection.imageUrl}
@@ -318,9 +351,16 @@ export default function ClothingDiscovery({
             </label>
           )}
           {detection.items.map((item, index) => {
-            const result = shopping[`${detection.id}:${index}:${country}`];
+            const key = `${detection.id}:${index}:${country}`;
+            const result = shopping[key];
+            const searchError = searchErrors[key];
             return (
-              <article className="discovery-item stack" key={`${detection.id}:${index}`}>
+              <article
+                id={`detected-piece-${index}`}
+                tabIndex={-1}
+                className="discovery-item stack"
+                key={`${detection.id}:${index}`}
+              >
                 <div>
                   <h3>{item.name}</h3>
                   <p>{item.description}</p>
@@ -340,6 +380,17 @@ export default function ClothingDiscovery({
                     I own this · save
                   </button>
                 </div>
+                {searchError && (
+                  <div className="search-recovery" role="alert">
+                    <strong>Search couldn’t finish</strong>
+                    <p>{searchError}</p>
+                    <small>
+                      Your scan is still here. No search is repeated automatically. You can search
+                      another piece or region; interrupted requests may remain unavailable until
+                      their status is resolved.
+                    </small>
+                  </div>
+                )}
                 {result && (
                   <div className="stack" aria-label={`Shopping results for ${item.name}`}>
                     <small>
@@ -405,10 +456,13 @@ export default function ClothingDiscovery({
                       !result.listings.some(
                         (listing) => listing.evidence?.availability === 'in-stock',
                       ) && (
-                        <p>
-                          No retailer-confirmed in-stock offers in these results. Turn off the
-                          filter to see unchecked alternatives.
-                        </p>
+                        <div className="stack">
+                          <p>
+                            No retailer-confirmed in-stock offers in these results. Turn off the
+                            filter to see unchecked alternatives.
+                          </p>
+                          <button onClick={() => setAvailableOnly(false)}>Show all results</button>
+                        </div>
                       )}
                     {!result.listings.length && (
                       <p>
@@ -447,9 +501,15 @@ export default function ClothingDiscovery({
                   price: null,
                   imageUrl: detection.imageUrl,
                 });
-                await onRefresh();
                 setSaved('Piece saved to your closet.');
                 setEdit(null);
+                try {
+                  await onRefresh();
+                } catch {
+                  setSaved(
+                    'Piece saved to your closet. Reload to refresh your closet; you don’t need to save it again.',
+                  );
+                }
               } catch (e) {
                 setError((e as Error).message);
               } finally {
