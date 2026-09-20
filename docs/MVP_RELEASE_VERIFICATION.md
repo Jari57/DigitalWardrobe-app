@@ -31,7 +31,7 @@ Production runtime error-log query over the preceding 24 hours returned no entri
 
 1. Provide the support forwarding recipient and configure domain mail routing. MX lookup found no MX records; support@fitstalker.com delivery is not verified.
 2. Provide the service-alert webhook destination; send and acknowledge a test notification. Confirm receipt of provider usage alerts with the team recipients.
-3. Sign into FitStalker with the designated Google owner and open /admin. Backend tests reject unverified/non-Google administrator access; actual owner sign-in remains a manual check.
+3. Completed: the existing owner session opened the live /admin page and was recognized as the verified Google administrator. Backend tests also reject unverified/non-Google administrator access.
 4. Physical iPhone and Android: photo upload, installation, native sharing, keyboard behavior, both themes and updating with unsaved work. Drafts require Save draft layout before reload.
 
 ## Deployment and rollback
@@ -44,3 +44,12 @@ Subscriptions, extra agent personas, gamification, guaranteed exact matches and 
 
 Final regression: 44 passed, 9 opt-in tests skipped; shirt and layered-group live evaluations passed separately. No failing automated checks remain.
 
+
+
+## Published release
+
+Runtime commit: 883aff0. Final production deployment: digital-wardrobe-691xzav2i-almonjs-projects.vercel.app (dpl_9jnRKnZBaQfHcYL4g66y6Mp7AzgV). fitstalker.com, www.fitstalker.com and digital-wardrobe-app-vert.vercel.app each returned HTTP 200, healthy migrated database and version 883aff0. Unauthenticated /api/experience returned 401. The signed-in live app displayed the new resume area; the existing Google owner session successfully opened /admin.
+
+Release verification found autoAssignCustomDomains=false, with the project scheduler still pointing at an older deployment and an empty job list. Restored automatic production assignment and redeployed the same tested commit. The project production target and cron definitions now point at the final deployment; /api/cron/trends is registered hourly at minute 17 UTC. An authenticated dashboard-triggered run refreshed data at 2026-09-20T19:29:09.839Z. One publisher source remained unavailable; remaining sources refreshed. No AI generation is part of this feed refresh.
+
+For future releases, verify project production target and registered cron definitions as well as public aliases. Domain aliasing alone is not sufficient evidence that background jobs moved to the release.

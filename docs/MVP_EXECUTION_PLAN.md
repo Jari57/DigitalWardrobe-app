@@ -46,10 +46,10 @@ Acceptance: preferences survive sign-in and reload, influence the relevant actio
 - [ ] Verify working support mailbox/forwarding and delivery.
 - [x] Confirm backup retention and perform isolated restore rehearsal.
 - [x] Configure provider spending controls and alert thresholds; actual email delivery remains unverified.
-- [ ] Owner completes Google login and verifies administrator access.
+- [x] Existing owner Google session verified on the live administrator page.
 - [ ] Physical iPhone and Android: uploads, install, native sharing, keyboard, themes, update with unsaved work.
 - [x] Verify account deletion, expired sessions, safe retries and allowance recovery.
-- [ ] Record release commit, rollback deployment and remaining limitations.
+- [x] Record release commit, rollback deployment and remaining limitations.
 
 Acceptance: complete new and returning user journeys on the release candidate; document real-device evidence and operational recovery, not percentage-based readiness claims.
 
@@ -68,5 +68,9 @@ First batch runtime: ca47e0a. Local build, formatting and four focused browser r
 Published deployment: digital-wardrobe-hi8s4oymb-almonjs-projects.vercel.app. All three public addresses now point to it. The prior premium visual polish (a1b880a) is included in this verified public release.
 
 
-Full MVP implementation and operations evidence: see MVP_RELEASE_VERIFICATION.md. Remaining unchecked launch gates need a support/alert destination, the owner's Google sign-in or physical devices. Photo evaluation is a small-case review, not a quality guarantee. No percentage readiness claim is made.
+Full MVP implementation and operations evidence: see MVP_RELEASE_VERIFICATION.md. Remaining unchecked launch gates need support/alert delivery setup or physical devices; live Google owner access is verified. Photo evaluation is a small-case review, not a quality guarantee. No percentage readiness claim is made.
+
+
+
+Final runtime: 883aff0; deployment digital-wardrobe-691xzav2i-almonjs-projects.vercel.app. All three public addresses verified healthy. Automatic production assignment restored, hourly cron registered and authenticated refresh succeeded. Full suite: 44 passed / 9 opt-in skipped, plus 23 HTTP checks and two separately successful real-photo evaluations. See MVP_RELEASE_VERIFICATION.md for exact evidence and limitations.
 
