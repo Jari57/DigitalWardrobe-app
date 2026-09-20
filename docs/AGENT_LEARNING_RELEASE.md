@@ -34,4 +34,7 @@ The existing model, daily spending cap, per-request reservation and zero automat
 
 ## Release and rollback
 
-Publication pending final checks. Rollback runtime: 29fec37, deployment digital-wardrobe-7yvfx6c4k-almonjs-projects.vercel.app. The new nullable feedbackDetails column is additive and may remain during rollback. Verify all production aliases, project production target and the hourly minute-17 feed cron after publication.
+Published runtime b8cb76d to digital-wardrobe-590vei67v-almonjs-projects.vercel.app (dpl_BiQEahyWir37Wn5PfTdEhCTvWktU). fitstalker.com, www.fitstalker.com and digital-wardrobe-app-vert.vercel.app each returned HTTP 200 with a ready database and version b8cb76d. The project production target and hourly minute-17 cron point to that deployment. Guest GET /api/agent-memory returned 401. The live privacy page contains the new memory and visual-comparison disclosures. Rollback runtime: 29fec37, deployment digital-wardrobe-7yvfx6c4k-almonjs-projects.vercel.app. The new nullable feedbackDetails column is additive and may remain during rollback. Verify all production aliases, project production target and the hourly minute-17 feed cron after publication.
+
+
+Production UI limitation: the browser-control tool could not start its app-server (missing path), so no final authenticated inspection of the owner browser was performed. Local mobile browser interaction, feedback save/reset, cross-account isolation and screenshots passed; production verification used deployment metadata and HTTP responses.

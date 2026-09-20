@@ -11,6 +11,6 @@ User authorized all six next upgrades and feedback-driven ongoing improvement on
 - [x] Shared: feedback reasons, inspect/reset learning, versioned memory-aware cache keys, bounded history, account-deletion cascade, no implicit provider training or autonomous production edits.
 - [x] Evaluation: deterministic safety/ownership/memory tests and opt-in known-product retrieval, with historical failures preserved; no model-quality percentage from a single passing case.
 - [x] Build, browser verification, live bounded evaluations and migration.
-- [ ] Publish and verify production aliases plus cron.
+- [x] Publish and verify production aliases plus cron.
 
 Baseline deployed runtime: 29fec37. Existing per-request $0.10 and daily $1 application caps remain unchanged. New paid evaluations must be explicit and bounded. No new model, service subscription or training purchase is authorized by implementation convenience.
