@@ -25,6 +25,7 @@ import CreatorStart from './CreatorStart';
 import ThemeToggle from './ThemeToggle';
 import Spotter from './Spotter';
 import ForYouFeed from './ForYouFeed';
+import StudioResume from './StudioResume';
 import { api, categories, Empty } from './ui';
 const blank: Wardrobe = { garments: [], outfits: [], references: [] };
 const tabs = [
@@ -59,6 +60,8 @@ export default function WardrobeApp({
   const [spotterSession, setSpotterSession] = useState(0);
   const [feedPhoto, setFeedPhoto] = useState<File | null>(null);
   const [creatorAesthetic, setCreatorAesthetic] = useState('Minimal');
+  const [styleLock, setStyleLock] = useState<string>();
+  const [feedMode, setFeedMode] = useState('for-you');
   const refresh = useCallback(async () => {
     const wardrobe = await api<Wardrobe>('/api/wardrobe');
     setData(wardrobe);
@@ -80,6 +83,9 @@ export default function WardrobeApp({
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [session]);
+  useEffect(() => {
+    if (user?.id) void api('/api/journey', 'POST', { event: 'visit' }).catch(() => {});
+  }, [user?.id]);
   function add() {
     if (user) setEditing(null);
     else {
@@ -292,12 +298,13 @@ export default function WardrobeApp({
             )}
             {tab === 'For You' && (
               <ForYouFeed
+                initialMode={feedMode}
                 onIdentify={(photo) => {
                   setFeedPhoto(photo);
                   setTab('Spotter');
                   window.scrollTo({ top: 0, behavior: 'auto' });
                 }}
-                key={user?.id ?? 'guest'}
+                key={`${user?.id ?? 'guest'}:${feedMode}`}
                 onAuth={() => {
                   setAccountMode('auth');
                   setAccount(true);
@@ -308,9 +315,17 @@ export default function WardrobeApp({
                 }}
               />
             )}
-            {tab === 'Spotter' && (
+            <div hidden={tab !== 'Spotter'}>
               <Spotter
                 key={spotterSession}
+                onStyleSaved={(id) => {
+                  setStyleLock(id);
+                  setBlind(true);
+                }}
+                onOpenCloset={() => {
+                  setTab('Closet');
+                  window.scrollTo({ top: 0, behavior: 'auto' });
+                }}
                 initialPhoto={feedPhoto}
                 onPhotoReceived={() => setFeedPhoto(null)}
                 onUse={(p) => {
@@ -326,7 +341,21 @@ export default function WardrobeApp({
                 }}
                 authenticated={!!user}
               />
-            )}
+              {user && (
+                <StudioResume
+                  key={user.id}
+                  onDraft={(draft) => {
+                    setPieces(draft.filter((p) => data.garments.some((g) => g.id === p.garmentId)));
+                    setTab('Canvas');
+                  }}
+                  onSaved={() => {
+                    setFeedMode('saved');
+                    setTab('For You');
+                  }}
+                  onLooks={() => setTab('Looks')}
+                />
+              )}
+            </div>
             {tab === 'Canvas' &&
               (data.garments.length ? (
                 <OutfitCanvas
@@ -334,6 +363,10 @@ export default function WardrobeApp({
                   pieces={pieces}
                   setPieces={setPieces}
                   onSaved={refresh}
+                  onSaveDraft={async () => {
+                    await api('/api/experience', 'PATCH', { kind: 'draft', pieces });
+                    window.dispatchEvent(new Event('wardrobe-draft-updated'));
+                  }}
                 />
               ) : (
                 <Empty
@@ -504,6 +537,10 @@ export default function WardrobeApp({
               // Clear private scan state, while retaining guest uploads through sign-in.
               setSpotterSession((current) => current + 1);
               setFeedPhoto(null);
+              setStyleLock(undefined);
+              setBlind(false);
+              setCreatorOutfit(null);
+              setEditing(undefined);
               setAccount(false);
               setUser(null);
               setData(blank);
@@ -535,12 +572,17 @@ export default function WardrobeApp({
       )}
       {blind && (
         <BlindFit
+          initialLockedId={styleLock}
           initialAesthetic={creatorAesthetic}
           garments={data.garments}
-          onClose={() => setBlind(false)}
+          onClose={() => {
+            setBlind(false);
+            setStyleLock(undefined);
+          }}
           onUse={(p) => {
             setPieces(p);
             setBlind(false);
+            setStyleLock(undefined);
             setTab('Canvas');
           }}
         />

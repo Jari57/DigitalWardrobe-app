@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { loadEnvConfig } from '@next/env';
+import { PrismaClient } from '@prisma/client';
 
 // Opt-in, real provider evaluation. Source and manually reviewed expectations:
 // docs/PHOTO_EVALUATION.md. At most three AI actions; no automatic retries.
@@ -12,6 +14,8 @@ test('layered group outfit detection and sparse closet matching stay grounded', 
     'Requires the documented, locally downloaded group photo.',
   );
   test.setTimeout(180_000);
+  loadEnvConfig(process.cwd());
+  const db = new PrismaClient();
   const password = randomBytes(20).toString('hex');
   const headers = { Origin: 'http://localhost:3100' };
   const api = context.request;
@@ -58,10 +62,15 @@ test('layered group outfit detection and sparse closet matching stay grounded', 
       const response = await api.post(path, { headers, data });
       expect(response.status(), await response.text()).toBe(200);
       const result = await response.json();
+      const accounting = await db.agentRequest.findUnique({
+        where: { id: result.id },
+        select: { state: true, actualMicros: true, reservedMicros: true },
+      });
       (report.calls as unknown[]).push({
         agent: data.agent,
         elapsedMs: Date.now() - start,
         result,
+        accounting,
       });
       return result;
     }
@@ -99,6 +108,7 @@ test('layered group outfit detection and sparse closet matching stay grounded', 
       empty.elements.every((item: { garmentId: string | null }) => item.garmentId === null),
     ).toBe(true);
   } finally {
+    await db.$disconnect();
     await testInfo.attach('outfit-evaluation', {
       body: JSON.stringify(report, null, 2),
       contentType: 'application/json',

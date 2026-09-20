@@ -132,6 +132,43 @@ export class AgentLedger {
     return changed.count === 1; // Only this caller may send the provider request.
   }
 
+  async retryRejected(userId: string, id: string) {
+    return this.atomic(async (tx) => {
+      const record = await tx.agentRequest.findFirst({
+        where: {
+          id,
+          userId,
+          state: 'failed',
+          actualMicros: 0,
+          day: new Date().toISOString().slice(0, 10),
+          generations: { none: {} },
+        },
+      });
+      if (!record) return false;
+      const global = await tx.agentBudget.findUniqueOrThrow({
+        where: { scope_day: { scope: record.globalScope, day: record.day } },
+      });
+      const user = await tx.agentBudget.findUniqueOrThrow({
+        where: { scope_day: { scope: record.userScope, day: record.day } },
+      });
+      if (
+        user.requests >= this.policy.requestsPerUser ||
+        global.heldMicros + global.spentMicros + record.reservedMicros > this.policy.dailyCapMicros
+      )
+        return false;
+      await tx.agentRequest.update({
+        where: { id },
+        data: { state: 'reserved', actualMicros: null, inputTokens: null, outputTokens: null },
+      });
+      for (const scope of [record.globalScope, record.userScope])
+        await tx.agentBudget.update({
+          where: { scope_day: { scope, day: record.day } },
+          data: { heldMicros: { increment: record.reservedMicros }, requests: { increment: 1 } },
+        });
+      return true;
+    });
+  }
+
   async markUncertain(userId: string, id: string) {
     // Keep the entire reservation: a timeout does not prove the provider charged nothing.
     await this.db.agentRequest.updateMany({

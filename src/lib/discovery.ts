@@ -1,4 +1,45 @@
 import { z } from 'zod';
+import { shoppingPreferencesSchema } from './experience';
+export const searchPreferencesSchema = shoppingPreferencesSchema.omit({ region: true });
+export type SearchPreferences = z.infer<typeof searchPreferencesSchema>;
+
+export const shoppingRequestSchema = z
+  .object({
+    agent: z.literal('shop'),
+    detectionId: z.string().min(1).max(80),
+    itemIndex: z.number().int().min(0).max(5),
+    country: z.enum(['US', 'GB', 'CA', 'AU']),
+    description: z.string().trim().min(3).max(400).optional(),
+    preferences: searchPreferencesSchema.optional(),
+  })
+  .strict();
+
+export function shoppingResultKey(
+  detectionId: string,
+  itemIndex: number,
+  country: string,
+  description = '',
+  preferences?: SearchPreferences,
+) {
+  return JSON.stringify([
+    detectionId,
+    itemIndex,
+    country,
+    description.trim(),
+    preferences ? [preferences.currency, preferences.maxPrice, preferences.sizes] : null,
+  ]);
+}
+
+export function shoppingItem(item: DetectedItem, description?: string): DetectedItem {
+  if (!description) return item;
+  return {
+    ...item,
+    name: 'User-described garment',
+    description,
+    visibleBrand: null,
+    uncertainty: 'User-supplied search description; brand and product identity are unverified.',
+  };
+}
 
 export const detectedItemSchema = z
   .object({
@@ -57,6 +98,12 @@ export type ProductEvidence = {
 };
 export type ShoppingResult = {
   id: string;
+  searchContext?: {
+    detectionId: string;
+    itemIndex: number;
+    description?: string;
+    preferences?: SearchPreferences;
+  };
   searchedAt: string;
   country: string;
   listings: {

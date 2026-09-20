@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { User } from '@/lib/types';
 import { api, Modal } from './ui';
 import { googleIdentityToken } from '@/lib/google-signin';
+import ShoppingPreferences from './ShoppingPreferences';
 
 export default function AccountSettings({
   user,
@@ -100,6 +101,7 @@ export default function AccountSettings({
           </form>
         ) : (
           <>
+            <ShoppingPreferences />
             <form
               className="stack"
               onSubmit={(event) => {

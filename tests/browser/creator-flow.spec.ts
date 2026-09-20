@@ -41,6 +41,21 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
       expect(saved.status()).toBe(201);
     }
     await page.goto('/');
+    await page.getByRole('button', { name: 'Account settings', exact: true }).click();
+    await page.getByText('Shopping preferences', { exact: true }).click();
+    await expect(
+      page.getByRole('combobox', { name: 'Shopping region', exact: true }),
+    ).toBeEnabled();
+    await page.getByRole('combobox', { name: 'Shopping region', exact: true }).selectOption('GB');
+    await page.getByLabel('Budget per piece', { exact: true }).fill('80');
+    await page.getByRole('combobox', { name: 'Currency', exact: true }).selectOption('GBP');
+    await page.getByLabel('Preferred sizes', { exact: true }).fill('Tops M');
+    await page.getByRole('button', { name: 'Save preferences', exact: true }).click();
+    await expect(
+      page.getByText('Preferences saved. New searches use these defaults.'),
+    ).toBeVisible();
+    await page.screenshot({ path: '../mvp-preferences-mobile.png', fullPage: true });
+    await page.getByRole('button', { name: 'Close dialog' }).click();
     await page.getByRole('navigation').getByRole('button', { name: 'Closet', exact: true }).click();
     await expect(page.getByRole('button', { name: 'All (4)', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -55,6 +70,19 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
     await expect(page.locator('.blind-grid .locked')).toHaveText(lockedName);
     await page.getByRole('button', { name: 'Style this on canvas' }).click();
     await expect(page.locator('.canvas-piece')).toHaveCount(3);
+    await page.getByRole('button', { name: 'Save draft layout', exact: true }).click();
+    await expect(
+      page.getByText('Draft layout saved. Resume it from Spotter on any device.'),
+    ).toBeVisible();
+    await page.reload();
+    await page.getByRole('button', { name: 'Resume draft · 3 pieces', exact: true }).click();
+    await expect(page.locator('.canvas-piece')).toHaveCount(3);
+    await page.getByRole('button', { name: 'Theme: system. Switch to light' }).click();
+    await page.getByRole('button', { name: 'Theme: light. Switch to dark' }).click();
+    await page.screenshot({ path: '../mvp-draft-dark-mobile.png', fullPage: true });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
     await page.getByLabel('Look name', { exact: true }).fill('QA creator look');
     await page.getByRole('button', { name: 'Save look', exact: true }).click();
     await expect(page.getByText('Look saved to your collection.')).toBeVisible();

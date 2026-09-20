@@ -14,6 +14,8 @@ export default function Spotter({
   onUse,
   initialPhoto,
   onPhotoReceived,
+  onOpenCloset,
+  onStyleSaved,
 }: {
   garments: Garment[];
   references: Reference[];
@@ -23,6 +25,8 @@ export default function Spotter({
   onUse: (pieces: Piece[]) => void;
   initialPhoto?: File | null;
   onPhotoReceived?: () => void;
+  onOpenCloset?: () => void;
+  onStyleSaved?: (id: string) => void;
 }) {
   const [matching, setMatching] = useState<Reference | null>(null),
     [inspirationImage, setInspirationImage] = useState<{ url: string; key: number }>();
@@ -39,6 +43,8 @@ export default function Spotter({
         authenticated={authenticated}
         onAuth={onAuth}
         onRefresh={onRefresh}
+        onOpenCloset={onOpenCloset}
+        onStyleSaved={onStyleSaved}
       />
       <details className="secondary-inspiration">
         <summary>Recreate a look with my closet</summary>

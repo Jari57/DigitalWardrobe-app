@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { shoppingRequestSchema } from '@/lib/discovery';
 
 /** Product contracts only; provider calls and budget enforcement are separate launch work. */
 export const agentPolicy = Object.freeze({
@@ -20,14 +21,7 @@ const uniqueIds = z
 
 export const agentRequestSchema = z.discriminatedUnion('agent', [
   z.object({ agent: z.literal('detect'), imageId: id }).strict(),
-  z
-    .object({
-      agent: z.literal('shop'),
-      detectionId: id,
-      itemIndex: z.number().int().min(0).max(5),
-      country: z.enum(['US', 'GB', 'CA', 'AU']),
-    })
-    .strict(),
+  shoppingRequestSchema,
   z.object({ agent: z.literal('capture'), imageId: id }).strict(),
   z.object({ agent: z.literal('spotter'), imageId: id, candidateIds: uniqueIds }).strict(),
   z

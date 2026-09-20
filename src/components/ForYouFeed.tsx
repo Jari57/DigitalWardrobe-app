@@ -39,13 +39,15 @@ export default function ForYouFeed({
   onAuth,
   onStyle,
   onIdentify,
+  initialMode = 'for-you',
 }: {
   onAuth: () => void;
   onStyle: (aesthetic: string) => void;
   onIdentify: (photo: File) => void;
+  initialMode?: string;
 }) {
   const [data, setData] = useState<Response>();
-  const [mode, setMode] = useState('for-you'),
+  const [mode, setMode] = useState(initialMode),
     [revision, setRevision] = useState(0);
   const [preferences, setPreferences] = useState<Preferences>(defaultPreferences);
   const [editing, setEditing] = useState(false),

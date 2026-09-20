@@ -1,26 +1,31 @@
 import { withAgentUsage } from '@/server/agents/usage';
+import { recordJourney } from '@/server/journey';
 import { z } from 'zod';
-import { createHash } from 'node:crypto';
+import { discoveryRequestKey } from '@/server/agents/discovery-key';
 import type { Prisma } from '@prisma/client';
 import { requireUser, rateLimit } from '@/server/auth';
 import { db } from '@/server/db';
 import { ApiError, checkOrigin, handleError, json, readJson } from '@/server/http';
 import { AgentLedger, configuredAgentBudget } from '@/server/agents/ledger';
 import { detectClothes, findClothes } from '@/server/agents/discovery';
-import { captureSummary, detectionSchema } from '@/lib/discovery';
+import {
+  captureSummary,
+  detectionSchema,
+  shoppingRequestSchema,
+  shoppingItem,
+} from '@/lib/discovery';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
 const inputSchema = z.discriminatedUnion('agent', [
-  z.object({ agent: z.literal('detect'), imageId: z.string().min(1).max(80) }).strict(),
   z
     .object({
-      agent: z.literal('shop'),
-      detectionId: z.string().min(1).max(80),
-      itemIndex: z.number().int().min(0).max(5),
-      country: z.enum(['US', 'GB', 'CA', 'AU']),
+      agent: z.literal('detect'),
+      imageId: z.string().min(1).max(80),
+      retry: z.boolean().optional(),
     })
     .strict(),
+  shoppingRequestSchema.extend({ retry: z.boolean().optional() }),
 ]);
 
 export async function GET() {
@@ -31,8 +36,26 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
       take: 12,
     });
+    const searches = records.length
+      ? await db.agentRequest.findMany({
+          where: {
+            userId: user.id,
+            agent: 'shop',
+            OR: records.map((record) => ({
+              result: { path: ['searchContext', 'detectionId'], equals: record.id },
+            })),
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 36,
+          select: { id: true, result: true },
+        })
+      : [];
     return json({
       enabled: process.env.AI_ENABLED === 'true',
+      searches: searches.map((record) => ({
+        ...(record.result as Prisma.JsonObject),
+        id: record.id,
+      })),
       detections: records
         .filter((r) => r.result)
         .map((r) => {
@@ -50,11 +73,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  let dispatched: { ledger: AgentLedger; userId: string; id: string } | undefined;
+  let dispatched: { ledger: AgentLedger; userId: string; id: string; agent: string } | undefined;
   try {
     checkOrigin(request);
     const user = await requireUser();
-    const input = await readJson(request, inputSchema);
+    const { retry, ...input } = await readJson(request, inputSchema);
     await rateLimit(`discovery:${user.id}`, 20, 3600);
     if (process.env.AI_ENABLED !== 'true')
       throw new ApiError(503, 'Clothing discovery is not enabled on this deployment yet.');
@@ -81,14 +104,7 @@ export async function POST(request: Request) {
     const item = input.agent === 'shop' ? parsed?.items[input.itemIndex] : null;
     if (input.agent === 'shop' && !item)
       throw new ApiError(404, 'Detected piece not found. Scan a photo first.');
-    const key = createHash('sha256')
-      .update(
-        (input.agent === 'shop' ? 'shopping-evidence-v2:' : 'capture-v2:') +
-          JSON.stringify(input) +
-          ':' +
-          new Date().toISOString().slice(0, 10),
-      )
-      .digest('hex');
+    const key = discoveryRequestKey(input);
     const ledger = new AgentLedger(db, configuredAgentBudget());
     let reservation;
     try {
@@ -97,19 +113,57 @@ export async function POST(request: Request) {
       throw new ApiError(429, 'Today’s discovery allowance is used up. Please try again tomorrow.');
     }
     const record = reservation.request;
-    if (record.result) return json({ ...(record.result as object), id: record.id });
+    if (record.result) {
+      // Attach context to older cached shopping results without generating again.
+      const cached = record.result as Prisma.JsonObject;
+      if (input.agent === 'shop' && !cached.searchContext) {
+        const value = {
+          ...cached,
+          searchContext: {
+            detectionId: input.detectionId,
+            itemIndex: input.itemIndex,
+            ...(input.description ? { description: input.description } : {}),
+            ...(input.preferences ? { preferences: input.preferences } : {}),
+          },
+        };
+        await db.agentRequest.updateMany({
+          where: { id: record.id, userId: user.id },
+          data: { result: value },
+        });
+        return json({ ...value, id: record.id });
+      }
+      return json({ ...cached, id: record.id });
+    }
+    if (retry && record.state === 'failed') await ledger.retryRejected(user.id, record.id);
     if (!(await ledger.claim(user.id, record.id)))
       throw new ApiError(
         409,
         'This scan or search is already processing or was interrupted. Check your recent scans before trying again tomorrow.',
       );
-    dispatched = { ledger, userId: user.id, id: record.id };
+    dispatched = { ledger, userId: user.id, id: record.id, agent: input.agent };
     const result = await withAgentUsage(user.id, record.id, async () =>
       image
         ? await detectClothes(image.data, image.mimeType)
-        : await findClothes(item!, input.agent === 'shop' ? input.country : 'US'),
+        : await findClothes(
+            shoppingItem(item!, input.agent === 'shop' ? input.description : undefined),
+            input.agent === 'shop' ? input.country : 'US',
+            input.agent === 'shop' ? input.preferences : undefined,
+          ),
     );
-    const value = { ...result.value, ...(image ? { imageUrl: `/api/images/${image.id}` } : {}) };
+    const value = {
+      ...result.value,
+      ...(image ? { imageUrl: `/api/images/${image.id}` } : {}),
+      ...(input.agent === 'shop'
+        ? {
+            searchContext: {
+              detectionId: input.detectionId,
+              itemIndex: input.itemIndex,
+              ...(input.description ? { description: input.description } : {}),
+              ...(input.preferences ? { preferences: input.preferences } : {}),
+            },
+          }
+        : {}),
+    };
     if (result.cost === null) {
       // Preserve useful results but keep the entire budget hold until cost can be reconciled.
       await db.agentRequest.updateMany({
@@ -130,14 +184,33 @@ export async function POST(request: Request) {
         result: value,
       });
     }
+    if (input.agent === 'detect') await recordJourney(user.id, 'identification');
+    else if ('listings' in value && Array.isArray(value.listings) && value.listings.length)
+      await recordJourney(user.id, 'shopping_results');
     return json({ ...value, id: record.id });
   } catch (error) {
     if (dispatched) {
+      await recordJourney(dispatched.userId, 'service_failure');
       await dispatched.ledger.markUncertain(dispatched.userId, dispatched.id).catch(() => {});
       const status =
         error && typeof error === 'object' && 'statusCode' in error
           ? Number(error.statusCode)
           : undefined;
+      // Only single-stage detection rejections can prove no previous call succeeded.
+      // Shopping may complete a stage without a receipt ID; always retain its hold.
+      const initialRejected =
+        dispatched.agent === 'detect' &&
+        [402, 403, 429].includes(status ?? 0) &&
+        error instanceof Error &&
+        error.name === 'AI_APICallError' &&
+        (await db.agentGeneration.count({ where: { requestId: dispatched.id } })) === 0;
+      if (initialRejected)
+        await dispatched.ledger.settle(dispatched.userId, dispatched.id, {
+          state: 'failed',
+          actualMicros: 0,
+          inputTokens: 0,
+          outputTokens: 0,
+        });
       console.error('Discovery provider failed', {
         name: error instanceof Error ? error.name : 'UnknownError',
         status,
@@ -146,8 +219,9 @@ export async function POST(request: Request) {
       if (status === 429)
         return json(
           {
-            error:
-              'The AI provider is at its usage limit. Your photo is saved, but this scan could not finish. Please try again later.',
+            error: initialRejected
+              ? 'The provider rejected this request before generation. Your photo is saved. Retry manually when service capacity returns; a retry uses a new allowance reservation.'
+              : 'The AI provider is at its usage limit. Your photo is saved. This interrupted request remains held until its cost is known.',
           },
           429,
         );

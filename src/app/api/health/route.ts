@@ -6,6 +6,8 @@ export async function GET() {
     await db.$queryRaw`SELECT 1`;
     // Probe an application table too: an empty, unmigrated database is not ready.
     await db.user.count();
+    await db.userExperience.findFirst({ select: { userId: true } });
+    await db.journeyMetric.findFirst({ select: { userId: true } });
     return json({
       ok: true,
       database: 'ready',

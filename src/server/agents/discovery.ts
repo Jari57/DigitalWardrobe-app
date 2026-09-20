@@ -79,7 +79,11 @@ export async function detectClothes(image: Uint8Array, mimeType: string) {
   };
 }
 
-export async function findClothes(item: DetectedItem, country: 'US' | 'GB' | 'CA' | 'AU') {
+export async function findClothes(
+  item: DetectedItem,
+  country: 'US' | 'GB' | 'CA' | 'AU',
+  preferences?: import('@/lib/discovery').SearchPreferences,
+) {
   const searchAgent = new ToolLoopAgent({
     ...settings,
     maxOutputTokens: 500,
@@ -99,6 +103,7 @@ export async function findClothes(item: DetectedItem, country: 'US' | 'GB' | 'CA
     prompt: JSON.stringify({
       garment: item,
       country,
+      preferences,
       task: 'Find retailer product listings to buy this clothing or a visually similar alternative.',
     }),
     abortSignal: AbortSignal.timeout(45_000),
@@ -147,6 +152,7 @@ export async function findClothes(item: DetectedItem, country: 'US' | 'GB' | 'CA
   const ranked = await rankingAgent.generate({
     prompt: JSON.stringify({
       garment: item,
+      preferences,
       sources: sources.map((source, sourceIndex) => ({ sourceIndex, ...source })),
     }),
     abortSignal: AbortSignal.timeout(45_000),

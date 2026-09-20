@@ -66,7 +66,9 @@ test('guest screenshot survives sign-in and private scan state clears on sign-ou
   await expect(dialog).toHaveCount(0);
   await expect(page.getByAltText('Your selected screenshot')).toBeVisible();
   await page.getByLabel('Recent scans').selectOption('private-scan');
-  await expect(page.getByText('Owner-only clothing description')).toBeVisible();
+  await expect(
+    page.getByRole('paragraph').filter({ hasText: 'Owner-only clothing description' }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Account settings', exact: true }).click();
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Upload screenshot', exact: true })).toBeVisible();

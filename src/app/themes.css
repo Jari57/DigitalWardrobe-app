@@ -520,6 +520,43 @@ html[data-theme='dark'] .scan-steps [aria-current='step'] {
 .search-recovery p {
   margin: 6px 0;
 }
+.search-details summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.search-details form {
+  padding: 12px 0;
+}
+.preference-panel,
+.resume-studio {
+  padding: 18px;
+  border: 1px solid var(--action-border);
+  border-radius: 18px;
+  background: linear-gradient(135deg, #e7cbd410, #25d9d008);
+}
+.preference-panel summary {
+  cursor: pointer;
+  min-height: 44px;
+  font-weight: 700;
+}
+.preference-panel .row > label {
+  flex: 1;
+  min-width: 0;
+}
+.resume-studio {
+  margin-top: 20px;
+}
+.resume-studio .eyebrow {
+  color: var(--polish-rose);
+  font-size: 10px;
+}
+[hidden] {
+  display: none !important;
+}
 :root {
   --polish-line: #b8869b35;
   --polish-shadow: 0 12px 32px #40263509;

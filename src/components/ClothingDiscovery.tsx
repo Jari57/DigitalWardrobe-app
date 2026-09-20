@@ -1,7 +1,9 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { ScanLine, ArrowUpRight } from 'lucide-react';
-import type { Detection, DetectedItem, ShoppingResult } from '@/lib/discovery';
+import type { Detection, DetectedItem, ShoppingResult, SearchPreferences } from '@/lib/discovery';
+import type { ShoppingPreferences } from '@/lib/experience';
+import { shoppingResultKey } from '@/lib/discovery';
 import { api, categories, Modal, upload } from './ui';
 
 export default function ClothingDiscovery({
@@ -11,6 +13,8 @@ export default function ClothingDiscovery({
   inspirationImage,
   initialPhoto,
   onPhotoReceived,
+  onOpenCloset,
+  onStyleSaved,
 }: {
   authenticated: boolean;
   onAuth: () => void;
@@ -18,13 +22,22 @@ export default function ClothingDiscovery({
   inspirationImage?: string;
   initialPhoto?: File | null;
   onPhotoReceived?: () => void;
+  onOpenCloset?: () => void;
+  onStyleSaved?: (id: string) => void;
 }) {
   const [recent, setRecent] = useState<Detection[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
   const [detection, setDetection] = useState<Detection | null>(null);
   const [shopping, setShopping] = useState<Record<string, ShoppingResult>>({});
+  const [descriptions, setDescriptions] = useState<Record<string, string>>({});
+  const [searchHistory, setSearchHistory] = useState<ShoppingResult[]>([]);
+  const [preferences, setPreferences] = useState<SearchPreferences>();
+  const [searchSettings, setSearchSettings] = useState<
+    Record<string, SearchPreferences | undefined>
+  >({});
   const [searchErrors, setSearchErrors] = useState<Record<string, string>>({});
   const [country, setCountry] = useState('US');
+  const countryChosen = useRef(false);
   const [availableOnly, setAvailableOnly] = useState(false);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
@@ -50,7 +63,31 @@ export default function ClothingDiscovery({
   const [uploaded, setUploaded] = useState('');
   const [edit, setEdit] = useState<DetectedItem | null>(null);
   const [saved, setSaved] = useState('');
+  const [savedGarmentId, setSavedGarmentId] = useState<string>();
   const [enabled, setEnabled] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!authenticated) return;
+    let active = true;
+    const load = () =>
+      api<{ preferences: ShoppingPreferences }>('/api/experience')
+        .then(({ preferences: p }) => {
+          if (active) {
+            setPreferences(
+              p.maxPrice || p.sizes
+                ? { currency: p.currency, maxPrice: p.maxPrice, sizes: p.sizes }
+                : undefined,
+            );
+            if (!countryChosen.current) setCountry(p.region);
+          }
+        })
+        .catch(() => {});
+    void load();
+    window.addEventListener('shopping-preferences-updated', load);
+    return () => {
+      active = false;
+      window.removeEventListener('shopping-preferences-updated', load);
+    };
+  }, [authenticated]);
   useEffect(() => {
     const token = new URL(location.href).searchParams.get('share');
     if (!token) return;
@@ -96,11 +133,44 @@ export default function ClothingDiscovery({
   useEffect(() => {
     let current = true;
     if (authenticated)
-      api<{ detections: Detection[]; enabled: boolean }>('/api/discovery')
+      api<{ detections: Detection[]; enabled: boolean; searches?: ShoppingResult[] }>(
+        '/api/discovery',
+      )
         .then((data) => {
           if (current) {
             setRecent(data.detections);
             setEnabled(data.enabled);
+            const restored: Record<string, ShoppingResult> = {};
+            const defaults: Record<string, string> = {};
+            const settings: Record<string, SearchPreferences | undefined> = {};
+            for (const result of data.searches ?? []) {
+              const context = result.searchContext;
+              if (!context) continue;
+              const base = shoppingResultKey(
+                context.detectionId,
+                context.itemIndex,
+                result.country,
+              );
+              const key = shoppingResultKey(
+                context.detectionId,
+                context.itemIndex,
+                result.country,
+                context.description,
+                context.preferences,
+              );
+              if (!(key in restored)) restored[key] = result;
+              if (!(base in defaults)) defaults[base] = context.description ?? '';
+              if (!(base in settings)) settings[base] = context.preferences;
+            }
+            setShopping((previous) => ({ ...restored, ...previous }));
+            setDescriptions((previous) => ({ ...defaults, ...previous }));
+            setSearchSettings((previous) => ({ ...settings, ...previous }));
+            setSearchHistory((previous) => [
+              ...previous,
+              ...(data.searches ?? []).filter(
+                (entry) => !previous.some((existing) => existing.id === entry.id),
+              ),
+            ]);
           }
         })
         .catch(() => {
@@ -128,6 +198,7 @@ export default function ClothingDiscovery({
       setUploaded(imageUrl);
       const result = await api<Detection>('/api/discovery', 'POST', {
         agent: 'detect',
+        retry: true,
         imageId: imageUrl.split('/').pop(),
       });
       setDetection(result);
@@ -141,20 +212,42 @@ export default function ClothingDiscovery({
     }
   }
 
-  async function search(index: number) {
+  function reopen(entry: Detection | null) {
+    setDetection(entry);
+    setSaved('');
+    setError('');
+    const last = searchHistory.find((result) => result.searchContext?.detectionId === entry?.id);
+    if (last) {
+      countryChosen.current = true;
+      setCountry(last.country);
+    }
+  }
+
+  async function search(index: number, description?: string) {
     if (!detection) return;
-    const key = `${detection.id}:${index}:${country}`;
+    const base = shoppingResultKey(detection.id, index, country);
+    const query = (description ?? descriptions[base] ?? '').trim();
+    const key = shoppingResultKey(detection.id, index, country, query, preferences);
+    setSearchSettings((previous) => ({ ...previous, [base]: preferences }));
+    setDescriptions((previous) => ({ ...previous, [base]: query }));
     setBusy(`Finding ${detection.items[index].name.toLowerCase()}…`);
     setError('');
     setSearchErrors((previous) => ({ ...previous, [key]: '' }));
     try {
       const result = await api<ShoppingResult>('/api/discovery', 'POST', {
         agent: 'shop',
+        retry: true,
         detectionId: detection.id,
         itemIndex: index,
         country,
+        ...(query ? { description: query } : {}),
+        ...(preferences ? { preferences } : {}),
       });
       setShopping((previous) => ({ ...previous, [key]: result }));
+      setSearchHistory((previous) => [
+        result,
+        ...previous.filter((entry) => entry.id !== result.id),
+      ]);
     } catch (e) {
       setSearchErrors((previous) => ({ ...previous, [key]: (e as Error).message }));
     } finally {
@@ -262,16 +355,59 @@ export default function ClothingDiscovery({
           {error}
         </p>
       )}
-      {saved && <p role="status">{saved}</p>}
+      {saved && (
+        <div className="stack">
+          <p role="status">{saved}</p>
+          {savedGarmentId && onStyleSaved && (
+            <button
+              className="primary"
+              disabled={!!busy}
+              onClick={async () => {
+                setBusy('Opening your styling studio…');
+                try {
+                  await onRefresh();
+                  onStyleSaved(savedGarmentId);
+                } catch {
+                  setSaved(
+                    'Your piece is saved. The closet could not refresh yet. Try styling again.',
+                  );
+                } finally {
+                  setBusy('');
+                }
+              }}
+            >
+              Style with my closet
+            </button>
+          )}
+          {onOpenCloset && (
+            <button
+              disabled={!!busy}
+              onClick={async () => {
+                setBusy('Opening your closet…');
+                try {
+                  await onRefresh();
+                  onOpenCloset();
+                } catch {
+                  setSaved(
+                    'Your piece is saved. The closet could not refresh yet. Try opening it again.',
+                  );
+                } finally {
+                  setBusy('');
+                }
+              }}
+            >
+              Open my closet
+            </button>
+          )}
+        </div>
+      )}
       {recent.length > 0 && (
         <div className="stack">
           {!detection && !photo && !uploaded && (
             <button
               className="resume-scan"
               onClick={() => {
-                setDetection(recent[0]);
-                setError('');
-                setSaved('');
+                reopen(recent[0]);
               }}
             >
               <span>Continue your latest scan</span>
@@ -286,9 +422,7 @@ export default function ClothingDiscovery({
               value={detection?.id ?? ''}
               disabled={!!busy}
               onChange={(event) => {
-                setDetection(recent.find((entry) => entry.id === event.target.value) ?? null);
-                setSaved('');
-                setError('');
+                reopen(recent.find((entry) => entry.id === event.target.value) ?? null);
               }}
             >
               <option value="">Choose a scan</option>
@@ -341,7 +475,10 @@ export default function ClothingDiscovery({
               <select
                 value={country}
                 disabled={!!busy}
-                onChange={(event) => setCountry(event.target.value)}
+                onChange={(event) => {
+                  countryChosen.current = true;
+                  setCountry(event.target.value);
+                }}
               >
                 <option value="US">United States</option>
                 <option value="GB">United Kingdom</option>
@@ -350,8 +487,21 @@ export default function ClothingDiscovery({
               </select>
             </label>
           )}
+          {preferences && (preferences.maxPrice || preferences.sizes) && (
+            <p className="note">
+              New searches use{' '}
+              {preferences.maxPrice
+                ? `a budget of ${preferences.currency} ${preferences.maxPrice} per piece`
+                : 'no budget limit'}
+              {preferences.sizes ? ` and sizes: ${preferences.sizes}` : ''}. Change these in Account
+              settings. Availability is not guaranteed.
+            </p>
+          )}
           {detection.items.map((item, index) => {
-            const key = `${detection.id}:${index}:${country}`;
+            const base = shoppingResultKey(detection.id, index, country);
+            const description = descriptions[base] ?? '';
+            const settings = searchSettings[base];
+            const key = shoppingResultKey(detection.id, index, country, description, settings);
             const result = shopping[key];
             const searchError = searchErrors[key];
             return (
@@ -380,6 +530,48 @@ export default function ClothingDiscovery({
                     I own this · save
                   </button>
                 </div>
+                <details className="search-details" key={`${base}:${description}`}>
+                  <summary>Edit search details</summary>
+                  <form
+                    className="stack"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      const value = String(
+                        new FormData(event.currentTarget).get('description') ?? '',
+                      ).trim();
+                      if (value.length >= 3) void search(index, value);
+                    }}
+                  >
+                    <label>
+                      Describe the piece to find
+                      <textarea
+                        name="description"
+                        required
+                        minLength={3}
+                        maxLength={400}
+                        defaultValue={description || item.description}
+                        disabled={!!busy}
+                      />
+                    </label>
+                    <small>
+                      Describe color, cut or material. Your changes guide the search; they do not
+                      verify a brand or exact match. Searching may use one AI action.
+                    </small>
+                    <button disabled={!!busy} type="submit">
+                      Search with these details
+                    </button>
+                    {description && (
+                      <button
+                        disabled={!!busy}
+                        type="button"
+                        onClick={() => setDescriptions((previous) => ({ ...previous, [base]: '' }))}
+                      >
+                        Use original details
+                      </button>
+                    )}
+                  </form>
+                </details>
+                {description && <p>Searching for: {description}</p>}
                 {searchError && (
                   <div className="search-recovery" role="alert">
                     <strong>Search couldn’t finish</strong>
@@ -393,6 +585,17 @@ export default function ClothingDiscovery({
                 )}
                 {result && (
                   <div className="stack" aria-label={`Shopping results for ${item.name}`}>
+                    <p>
+                      Saved results · reopening does not run a new search. Prices and availability
+                      may have changed; confirm with the retailer.
+                    </p>
+                    {result.searchContext?.preferences?.maxPrice && (
+                      <small>
+                        Search budget: {result.searchContext.preferences.currency}{' '}
+                        {result.searchContext.preferences.maxPrice}. Unknown or different-currency
+                        prices need retailer confirmation.
+                      </small>
+                    )}
                     <small>
                       Searched {new Date(result.searchedAt).toLocaleDateString()} · Search region is
                       a preference, not confirmed shipping coverage.
@@ -406,6 +609,11 @@ export default function ClothingDiscovery({
                         <a
                           className="shopping-link"
                           href={listing.url}
+                          onClick={() => {
+                            void api('/api/journey', 'POST', { event: 'retailer_click' }).catch(
+                              () => {},
+                            );
+                          }}
                           key={listing.url}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -493,7 +701,7 @@ export default function ClothingDiscovery({
               setBusy('Saving piece…');
               setError('');
               try {
-                await api('/api/garments', 'POST', {
+                const response = await api<{ garment?: { id: string } }>('/api/garments', 'POST', {
                   name: form.get('name'),
                   brand: form.get('brand'),
                   category: form.get('category'),
@@ -501,6 +709,7 @@ export default function ClothingDiscovery({
                   price: null,
                   imageUrl: detection.imageUrl,
                 });
+                setSavedGarmentId(response.garment?.id);
                 setSaved('Piece saved to your closet.');
                 setEdit(null);
                 try {

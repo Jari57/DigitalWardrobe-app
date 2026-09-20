@@ -11,14 +11,20 @@ export default function BlindFit({
   onClose,
   onUse,
   initialAesthetic = 'Minimal',
+  initialLockedId,
 }: {
   garments: Garment[];
   onClose: () => void;
   onUse: (pieces: Piece[]) => void;
   initialAesthetic?: string;
+  initialLockedId?: string;
 }) {
-  const [chosen, setChosen] = useState<Garment[]>([]);
-  const [locks, setLocks] = useState<string[]>([]);
+  const [chosen, setChosen] = useState<Garment[]>(() =>
+    garments.filter((g) => g.id === initialLockedId),
+  );
+  const [locks, setLocks] = useState<string[]>(() =>
+    garments.filter((g) => g.id === initialLockedId).map((g) => g.id),
+  );
   const [occasion, setOccasion] = useState('Everyday');
   const [aesthetic, setAesthetic] = useState(initialAesthetic);
   const [busy, setBusy] = useState(false);

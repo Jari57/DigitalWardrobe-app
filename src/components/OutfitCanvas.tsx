@@ -120,11 +120,13 @@ export default function OutfitCanvas({
   pieces,
   setPieces,
   onSaved,
+  onSaveDraft,
 }: {
   garments: Garment[];
   pieces: Piece[];
   setPieces: (p: Piece[]) => void;
   onSaved: () => Promise<void>;
+  onSaveDraft?: () => Promise<void>;
 }) {
   const [selected, setSelected] = useState<string>(),
     [name, setName] = useState(''),
@@ -161,6 +163,22 @@ export default function OutfitCanvas({
         selected={selected}
         onSelect={setSelected}
       />
+      {onSaveDraft && (
+        <div className="row wrap">
+          <button
+            disabled={busy}
+            onClick={() =>
+              run(async () => {
+                await onSaveDraft();
+                setMessage('Draft layout saved. Resume it from Spotter on any device.');
+              })
+            }
+          >
+            Save draft layout
+          </button>
+          <small>Save your layout before leaving or reloading.</small>
+        </div>
+      )}
       {piece && (
         <div className="toolbar">
           <label>

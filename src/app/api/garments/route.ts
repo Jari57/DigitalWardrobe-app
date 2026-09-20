@@ -3,6 +3,7 @@ import { db } from '@/server/db';
 import { checkOrigin, handleError, json, readJson, ApiError } from '@/server/http';
 import { ownImage, serializeGarment } from '@/server/records';
 import { garmentSchema } from '@/server/validation';
+import { recordJourney } from '@/server/journey';
 export async function POST(request: Request) {
   try {
     checkOrigin(request);
@@ -15,6 +16,7 @@ export async function POST(request: Request) {
         throw new ApiError(409, 'Your closet has reached its 1,000-item limit.');
       return tx.garment.create({ data: { ...input, imageId, userId: user.id } });
     });
+    await recordJourney(user.id, 'piece_saved');
     return json({ garment: serializeGarment(garment) }, 201);
   } catch (error) {
     return handleError(error);

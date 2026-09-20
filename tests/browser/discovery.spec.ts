@@ -169,7 +169,7 @@ test('discovery UI reviews sourced results, saves to the real closet, and shows 
     await page.getByRole('button', { name: 'Find where to buy', exact: true }).click();
     await expect(
       page.getByRole('region', { name: 'Clothing discovery' }).getByRole('alert'),
-    ).toHaveText('The AI provider is at its usage limit.');
+    ).toContainText('The AI provider is at its usage limit.');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );

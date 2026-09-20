@@ -2,6 +2,7 @@ import { requireUser, rateLimit } from '@/server/auth';
 import { db } from '@/server/db';
 import { checkOrigin, handleError, json, ApiError } from '@/server/http';
 import { normalizeImage, uploadFile } from '@/server/images';
+import { recordJourney } from '@/server/journey';
 export const runtime = 'nodejs';
 export async function POST(request: Request) {
   try {
@@ -39,6 +40,7 @@ export async function POST(request: Request) {
         throw new ApiError(409, 'Your photo storage is full. Remove items you no longer need.');
       return tx.image.create({ data: { ...normalized, userId: user.id }, select: { id: true } });
     });
+    await recordJourney(user.id, 'upload');
     return json({ imageUrl: `/api/images/${image.id}` }, 201);
   } catch (error) {
     return handleError(error);

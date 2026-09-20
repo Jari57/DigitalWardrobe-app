@@ -12,43 +12,43 @@ Updated September 20, 2026. Fashion discovery and wardrobe product. This sequenc
 - [x] Remove duplicated inspiration photos after identification.
 - [x] Verify production build, formatting, and four browser checks: scoped failures, free resume/navigation, save-refresh recovery, and existing screenshot/sign-out flows. No paid provider calls.
 - [x] Publish ca47e0a and verify fitstalker.com, www.fitstalker.com and the original Vercel address report the matching version and healthy database. Inspect the live entry screen in the browser.
-- [ ] Add editable search descriptions with validated, owner-scoped inputs and distinct cache keys. User corrections must never imply verified branding.
-- [ ] Restore persisted shopping results when reopening scans, with source and freshness labels.
-- [ ] Implement deliberate retry only for backend states proven safe; preserve uncertain budget holds and prevent duplicate dispatch.
-- [ ] Evaluate a small real-photo set for detection, shopping relevance, empty results, latency and cost. Record misses and limitations.
+- [x] Add editable search descriptions with validated, owner-scoped inputs and distinct cache keys. User corrections must never imply verified branding.
+- [x] Restore persisted shopping results when reopening scans, with source and freshness labels.
+- [x] Implement deliberate retry only for backend states proven safe; preserve uncertain budget holds and prevent duplicate dispatch.
+- [x] Evaluate a small real-photo set for detection, shopping relevance, empty results, latency and cost. Record misses and limitations.
 
 Acceptance: a user selects a piece, receives evidence-qualified results or an actionable failure, retains their scan, and saves successfully without duplicate writes caused by refresh failure.
 
 ## 2. Connect inspiration and closet styling
 
-- [ ] Make saved For You inspiration easy to reopen and identify.
-- [ ] Add an explicit closet handoff after saving an owned piece.
-- [ ] Add “Style with my closet” using saved owned IDs and existing styling tools.
-- [ ] Preserve selected inspiration across sign-in and navigation; clear private content on sign-out.
-- [ ] Verify reload persistence, ownership isolation and empty-closet alternatives.
+- [x] Make saved For You inspiration easy to reopen and identify.
+- [x] Add an explicit closet handoff after saving an owned piece.
+- [x] Add “Style with my closet” using saved owned IDs and existing styling tools.
+- [x] Preserve selected inspiration across sign-in and navigation; clear private content on sign-out.
+- [x] Verify reload persistence, ownership isolation and empty-closet alternatives.
 
 Acceptance: discovery leads to a saved piece or inspiration and then to an editable outfit without re-uploading the same photo or inventing owned items.
 
 ## 3. Lightweight personalization and return visits
 
-- [ ] Extend existing account preferences with region, optional budget and size preferences.
-- [ ] Validate and persist preferences per account; include deletion and cross-account tests.
-- [ ] Apply region and budget transparently. Never imply size stock or delivery eligibility is verified.
-- [ ] Add a compact resume area for recent scans, saved inspiration and unfinished looks; keep upload prominent.
-- [ ] Keep onboarding skippable and preferences editable.
+- [x] Extend existing account preferences with region, optional budget and size preferences.
+- [x] Validate and persist preferences per account; include deletion and cross-account tests.
+- [x] Apply region and budget transparently. Never imply size stock or delivery eligibility is verified.
+- [x] Add a compact resume area for recent scans, saved inspiration and unfinished looks; keep upload prominent.
+- [x] Keep onboarding skippable and preferences editable.
 
 Acceptance: preferences survive sign-in and reload, influence the relevant action, and cannot leak between accounts.
 
 ## 4. Release verification and measurement
 
-- [ ] Measure upload, completed identification, useful result, retailer click/save and return journeys without private image contents or descriptions in analytics.
+- [x] Measure upload, completed identification, useful result, retailer click/save and return journeys without private image contents or descriptions in analytics.
 - [ ] Check production errors and establish alerts with a tested destination.
 - [ ] Verify working support mailbox/forwarding and delivery.
-- [ ] Confirm backup retention and perform isolated restore rehearsal.
-- [ ] Confirm provider spending controls and alerts.
+- [x] Confirm backup retention and perform isolated restore rehearsal.
+- [x] Configure provider spending controls and alert thresholds; actual email delivery remains unverified.
 - [ ] Owner completes Google login and verifies administrator access.
 - [ ] Physical iPhone and Android: uploads, install, native sharing, keyboard, themes, update with unsaved work.
-- [ ] Verify account deletion, expired sessions, safe retries and allowance recovery.
+- [x] Verify account deletion, expired sessions, safe retries and allowance recovery.
 - [ ] Record release commit, rollback deployment and remaining limitations.
 
 Acceptance: complete new and returning user journeys on the release candidate; document real-device evidence and operational recovery, not percentage-based readiness claims.
@@ -66,3 +66,7 @@ Deferred: gamified streaks/achievements, extra agent personas, large dashboards,
 First batch runtime: ca47e0a. Local build, formatting and four focused browser regressions passed. Tests used provider fixtures and made no paid AI calls. Previous bare-domain rollback: digital-wardrobe-on0fhg4d8-almonjs-projects.vercel.app (8626b9d). Previous www alias: digital-wardrobe-pl8847955-almonjs-projects.vercel.app. Domain aliases were manually pinned and must be verified on each release. Backend retry safety, fresh provider quality and physical-device acceptance remain open.
 
 Published deployment: digital-wardrobe-hi8s4oymb-almonjs-projects.vercel.app. All three public addresses now point to it. The prior premium visual polish (a1b880a) is included in this verified public release.
+
+
+Full MVP implementation and operations evidence: see MVP_RELEASE_VERIFICATION.md. Remaining unchecked launch gates need a support/alert destination, the owner's Google sign-in or physical devices. Photo evaluation is a small-case review, not a quality guarantee. No percentage readiness claim is made.
+

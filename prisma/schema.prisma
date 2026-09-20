@@ -23,6 +23,8 @@ model User {
   agentRequests AgentRequest[]
   trendPreference TrendPreference?
   trendFeedback TrendFeedback[]
+  experience UserExperience?
+  journeyMetrics JourneyMetric[]
 }
 
 model Session {
@@ -226,4 +228,25 @@ model TrendRefresh {
   lastAttempt DateTime?
   lastSuccess DateTime?
   failedSources String[]
+}
+
+model UserExperience {
+  userId String @id
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  region String @default("US")
+  currency String @default("USD")
+  maxPrice Int?
+  sizes String @default("")
+  draft Json?
+  updatedAt DateTime @updatedAt
+}
+
+model JourneyMetric {
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day String
+  event String
+  count Int @default(1)
+  @@id([userId, day, event])
+  @@index([day, event])
 }
