@@ -145,6 +145,18 @@ export default function WardrobeApp({
           </button>
         </div>
       </header>
+      <nav className="bottom-nav" aria-label="Main navigation">
+        {tabs.map(({ id, icon: Icon }) => (
+          <button
+            key={id}
+            aria-current={tab === id ? 'page' : undefined}
+            onClick={() => setTab(id)}
+          >
+            <Icon size={21} strokeWidth={tab === id ? 2.4 : 1.7} />
+            <span>{id === 'Looks' ? 'My fits' : id}</span>
+          </button>
+        ))}
+      </nav>
       <main id="main-content" className="main-content">
         {user && tab !== 'Spotter' && <AiAllowance key={user.id} />}
         {user && tab !== 'Spotter' && (
@@ -562,18 +574,7 @@ export default function WardrobeApp({
           </>
         )}
       </main>
-      <nav className="bottom-nav" aria-label="Main navigation">
-        {tabs.map(({ id, icon: Icon }) => (
-          <button
-            key={id}
-            aria-current={tab === id ? 'page' : undefined}
-            onClick={() => setTab(id)}
-          >
-            <Icon size={21} strokeWidth={tab === id ? 2.4 : 1.7} />
-            <span>{id === 'Looks' ? 'My fits' : id}</span>
-          </button>
-        ))}
-      </nav>
+
       {account &&
         (accountMode === 'settings' && user ? (
           <AccountSettings

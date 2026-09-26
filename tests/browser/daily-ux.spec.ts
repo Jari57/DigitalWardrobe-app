@@ -1,4 +1,55 @@
 import { test, expect } from '@playwright/test';
+test('desktop uses wide navigation and a responsive multi-column feed', async ({ page }) => {
+  await page.route('**/api/**', (route) => {
+    const path = new URL(route.request().url()).pathname;
+    return route.fulfill({
+      json:
+        path === '/api/for-you'
+          ? {
+              authenticated: false,
+              preferences: { categories: [], aesthetics: [], region: 'US' },
+              sources: [],
+              items: Array.from({ length: 6 }, (_, i) => ({
+                id: String(i),
+                title: `Style story ${i}`,
+                url: 'https://www.elle.com/fashion/',
+                publisher: 'ELLE',
+                publishedAt: new Date().toISOString(),
+                categories: ['tops'],
+                aesthetics: [],
+                reason: 'Style idea',
+              })),
+            }
+          : { user: null },
+    });
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+  const nav = page.getByRole('navigation', { name: 'Main navigation' });
+  await expect(page.getByRole('button', { name: /Put a fit together From/ })).toBeVisible();
+  expect((await page.locator('.app-shell').boundingBox())!.width).toBeGreaterThan(1200);
+  expect((await nav.boundingBox())!.y).toBeLessThan(200);
+  await page.screenshot({ path: 'test-results/desktop-spotter.png', fullPage: true });
+  await nav.getByRole('button', { name: 'For You', exact: true }).click();
+  await expect(page.getByRole('article')).toHaveCount(6);
+  const cards = page.getByRole('article');
+  const first = (await cards.nth(0).boundingBox())!;
+  const third = (await cards.nth(2).boundingBox())!;
+  expect(third.y).toBe(first.y);
+  expect(third.x).toBeGreaterThan(first.x);
+  await page.screenshot({ path: 'test-results/desktop-feed.png', fullPage: true });
+  await page.setViewportSize({ width: 820, height: 1000 });
+  expect((await cards.nth(1).boundingBox())!.y).toBe((await cards.nth(0).boundingBox())!.y);
+  expect((await cards.nth(2).boundingBox())!.y).toBeGreaterThan(
+    (await cards.nth(0).boundingBox())!.y,
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect((await cards.nth(1).boundingBox())!.y).toBeGreaterThan(
+    (await cards.nth(0).boundingBox())!.y,
+  );
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await nav.evaluate((el) => getComputedStyle(el).position)).toBe('fixed');
+});
 import {
   fetchFashionSource,
   feedSources,

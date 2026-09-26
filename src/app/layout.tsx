@@ -4,6 +4,7 @@ import InstallApp from '@/components/InstallApp';
 import LegalLinks from '@/components/LegalLinks';
 import './globals.css';
 import './themes.css';
+import './responsive.css';
 export const metadata: Metadata = {
   metadataBase: new URL('https://fitstalker.com'),
   title: 'FitStalker — See the fit. Find the pieces.',
