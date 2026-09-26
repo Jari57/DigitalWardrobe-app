@@ -425,3 +425,34 @@ test('shopping shows simple links and opens editing when no alternatives remain'
     'Blue cotton shirt',
   );
 });
+
+test('guide explains all four sections and remains readable on mobile', async ({ page }) => {
+  await page.goto('/how-it-works');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Your style.');
+  for (const id of ['spotter', 'for-you', 'closet', 'my-fits']) {
+    const section = page.locator(`#${id}`);
+    await expect(section.getByRole('listitem')).toHaveCount(3);
+    await expect(section.getByText('A little tip')).toBeVisible();
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: 'test-results/how-it-works-mobile.png', fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.screenshot({ path: 'test-results/how-it-works-desktop.png', fullPage: true });
+  await page.route('**/api/**', (route) => route.fulfill({ json: { user: null } }));
+  await page.getByRole('link', { name: 'Open FitStalker' }).click();
+  await expect(page.getByRole('link', { name: 'How Spotter works' })).toHaveAttribute(
+    'href',
+    '/how-it-works#spotter',
+  );
+  await page
+    .getByRole('navigation', { name: 'Main navigation' })
+    .getByRole('button', { name: 'Closet', exact: true })
+    .click();
+  await expect(page.getByRole('link', { name: 'How Closet works' })).toHaveAttribute(
+    'target',
+    '_blank',
+  );
+  await expect(
+    page.getByText('Start with a clear photo of one item you own.', { exact: false }),
+  ).toBeVisible();
+});

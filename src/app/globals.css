@@ -1131,3 +1131,21 @@ legend {
   font-size: 11px;
   padding: 9px 4px;
 }
+
+.section-tip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 18px;
+  margin: 12px 0 20px;
+  font-size: 12px;
+}
+.section-tip span {
+  opacity: 0.75;
+}
+.section-tip a {
+  color: inherit;
+  text-underline-offset: 4px;
+  padding: 10px 0;
+}

@@ -1,6 +1,9 @@
 export default function LegalLinks() {
   return (
     <footer className="legal-links" aria-label="Site information">
+      <a href="/how-it-works" target="_blank" rel="noopener noreferrer">
+        How FitStalker works
+      </a>
       <a href="/privacy" target="_blank" rel="noopener noreferrer">
         Privacy
       </a>

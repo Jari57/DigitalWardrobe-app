@@ -25,6 +25,7 @@ import Spotter from './Spotter';
 import ForYouFeed from './ForYouFeed';
 import StudioResume from './StudioResume';
 import EditorialLanding from './EditorialLanding';
+import SectionTip from './SectionTip';
 import { api, categories, Empty } from './ui';
 const blank: Wardrobe = { garments: [], outfits: [], references: [] };
 const tabs = [
@@ -185,6 +186,7 @@ export default function WardrobeApp({
           </div>
         ) : (
           <>
+            <SectionTip tab={tab} />
             {tab === 'Spotter' && (
               <EditorialLanding
                 onStyle={() => {
@@ -303,8 +305,8 @@ export default function WardrobeApp({
                       </button>
                     }
                   >
-                    Your favorites deserve more than a hanger. Add a photo, build a look, and get
-                    ready for your next GRWM.
+                    Start with a clear photo of one item you own. Add a top, bottoms and shoes to
+                    put your first fit together.
                   </Empty>
                 ) : !visible.length ? (
                   <Empty
