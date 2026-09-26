@@ -7,7 +7,6 @@ import {
   SlidersHorizontal,
   Sparkles,
   ArrowUpRight,
-  Shirt,
   RefreshCw,
 } from 'lucide-react';
 import { api } from './ui';
@@ -32,23 +31,17 @@ type Response = {
   attemptedAt?: string | null;
   sources?: { name: string; status: string }[];
 };
-function Photo({ item }: { item: FeedItem }) {
-  const [failed, setFailed] = useState(false);
-  return item.imageUrl && !failed ? (
+function Photo({ item, onFailure }: { item: FeedItem; onFailure: () => void }) {
+  return (
     <img
       className="feed-photo"
-      src={item.imageUrl}
+      src={item.imageUrl ?? undefined}
       alt=""
       loading="lazy"
       decoding="async"
       referrerPolicy="no-referrer"
-      onError={() => setFailed(true)}
+      onError={onFailure}
     />
-  ) : (
-    <div className="feed-photo feed-photo-fallback">
-      <Shirt size={56} strokeWidth={1} />
-      <span>Explore the look</span>
-    </div>
   );
 }
 export default function ForYouFeed({
@@ -76,19 +69,21 @@ export default function ForYouFeed({
   const [refreshFailed, setRefreshFailed] = useState(false);
   const feedRequest = useRef(0);
   const [audienceOverride, setAudienceOverride] = useState<StyleAudience>();
+  const [failedPhotos, setFailedPhotos] = useState<Set<string>>(() => new Set());
+  const hasPhoto = (item: FeedItem) => !!item.imageUrl && !failedPhotos.has(item.imageUrl);
+  const visibleItems = (data?.items ?? []).filter((item) => mode === 'saved' || hasPhoto(item));
   const feedUrl = `/api/for-you?mode=${mode}${audienceOverride ? `&audience=${audienceOverride}` : ''}`;
   async function chooseAudience(audience: StyleAudience) {
     setRefreshFailed(false);
     const next = setAudience(preferences, audience);
     setBusy(true);
     setError('');
+    setPreferences(next);
+    setAudienceOverride(audience);
     try {
       if (data?.authenticated) await api('/api/for-you/preferences', 'PUT', next);
-      setPreferences(next);
-      setAudienceOverride(audience);
-      setRevision((value) => value + 1);
     } catch (e) {
-      setError((e as Error).message);
+      setError('Your feed is filtered, but your preference could not be saved.');
     } finally {
       setBusy(false);
     }
@@ -126,6 +121,7 @@ export default function ForYouFeed({
       const next = await api<Response>(feedUrl);
       if (requestId !== feedRequest.current) return;
       const selection = refreshedSelection(data?.items ?? [], next.items, mode);
+      setFailedPhotos(new Set());
       setData({ ...next, items: selection.items });
       setRefreshNote(
         selection.added
@@ -243,7 +239,9 @@ export default function ForYouFeed({
                 key={value}
                 className="feed-chip"
                 disabled={loading || busy || refreshing}
-                aria-pressed={selectedAudience(preferences) === value}
+                aria-pressed={
+                  (audienceOverride ?? selectedAudience(preferences) ?? 'all-styles') === value
+                }
                 onClick={() => chooseAudience(value)}
               >
                 {label}
@@ -425,36 +423,49 @@ export default function ForYouFeed({
           </button>
         </p>
       )}
-      {loading && !data ? (
+      {loading ? (
         <div className="feed-loading" role="status">
-          Finding your next look…
+          {audienceOverride === 'menswear'
+            ? 'Finding menswear…'
+            : audienceOverride === 'womenswear'
+              ? 'Finding womenswear…'
+              : 'Finding your next look…'}
         </div>
-      ) : !data?.items.length ? (
+      ) : !visibleItems.length ? (
         <div className="empty">
           <Bookmark size={28} />
           <h3>
-            {mode === 'saved' ? 'Your next obsessions live here' : 'Fresh ideas are on their way'}
+            {mode === 'saved'
+              ? 'Your next obsessions live here'
+              : 'No looks available for this filter'}
           </h3>
           <p>
             {mode === 'saved'
               ? 'Save a find to come back to it.'
-              : 'Try Latest or adjust your interests.'}
+              : 'Try Both or refresh for more looks.'}
           </p>
         </div>
       ) : (
-        data.items.map((item) => (
+        visibleItems.map((item) => (
           <article className="feed-card" key={item.id}>
             <div className="feed-image-wrap">
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Read ${item.title}`}
-              >
-                <Photo item={item} />
-              </a>
+              {hasPhoto(item) && (
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Read ${item.title}`}
+                >
+                  <Photo
+                    item={item}
+                    onFailure={() =>
+                      setFailedPhotos((previous) => new Set([...previous, item.imageUrl!]))
+                    }
+                  />
+                </a>
+              )}
               <button
-                className="feed-save icon-button"
+                className={`${hasPhoto(item) ? 'feed-save' : 'feed-save-compact'} icon-button`}
                 aria-label={item.saved ? 'Unsave idea' : 'Save idea'}
                 aria-pressed={item.saved}
                 disabled={busy || refreshing || loading}
@@ -505,7 +516,7 @@ export default function ForYouFeed({
                 </button>
                 <button
                   className="primary compact"
-                  disabled={busy || refreshing || loading || !item.imageUrl}
+                  disabled={busy || refreshing || loading || !hasPhoto(item)}
                   onClick={() => identify(item)}
                 >
                   {busy ? 'Opening…' : 'Identify this look'} <ArrowUpRight size={14} />

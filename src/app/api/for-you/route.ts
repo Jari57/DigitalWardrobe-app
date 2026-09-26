@@ -9,7 +9,7 @@ import {
   tasteSignals,
 } from '@/lib/for-you';
 import { checkOrigin, handleError, json } from '@/server/http';
-import { refreshTrends } from '@/server/trend-feed';
+import { refreshTrends, safeFeedImage } from '@/server/trend-feed';
 import { feedSources, balancePublishers } from '@/lib/feed-sources';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -83,7 +83,10 @@ export async function GET(request: Request) {
     const combined = [
       ...new Map([...feedback, ...visibleFeedback].map((entry) => [entry.itemId, entry])).values(),
     ];
-    const ranked = rankFeed(items, preferences, combined, mode);
+    const visualItems = items
+      .map((item) => ({ ...item, imageUrl: safeFeedImage(item.imageUrl) }))
+      .filter((item) => mode === 'saved' || item.imageUrl);
+    const ranked = rankFeed(visualItems, preferences, combined, mode);
     return json({
       taste: [...tasteSignals(combined)]
         .filter(([, weight]) => weight > 0)

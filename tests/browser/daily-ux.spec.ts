@@ -12,6 +12,7 @@ test('desktop uses wide navigation and a responsive multi-column feed', async ({
               items: Array.from({ length: 6 }, (_, i) => ({
                 id: String(i),
                 title: `Style story ${i}`,
+                imageUrl: '/icons/icon-192.png',
                 url: 'https://www.elle.com/fashion/',
                 publisher: 'ELLE',
                 publishedAt: new Date().toISOString(),
@@ -125,7 +126,7 @@ test('clothing preference is explicit, mutually exclusive, and never hides saved
     rankFeed(items, preferences, [], 'latest', now)
       .map((item) => item.id)
       .sort(),
-  ).toEqual(['men', 'shared']);
+  ).toEqual(['men']);
   expect(rankFeed(items, setAudience(preferences, 'all-styles'), [], 'latest', now)).toHaveLength(
     3,
   );
@@ -282,6 +283,7 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
           {
             id: refreshes ? 'new' : 'old',
             title: refreshes ? 'New weekend loafers' : 'Classic white shirts',
+            imageUrl: '/icons/icon-192.png',
             url: 'https://www.elle.com/fashion/example',
             publisher: 'ELLE',
             publishedAt: new Date().toISOString(),
@@ -498,6 +500,7 @@ test('refresh handles a cooldown and retries the failed action', async ({ page }
   const items = Array.from({ length: 8 }, (_, i) => ({
     id: String(i),
     title: `Idea ${i}`,
+    imageUrl: '/icons/icon-192.png',
     url: `https://www.elle.com/fashion/${i}`,
     publisher: 'ELLE',
     publishedAt: new Date().toISOString(),

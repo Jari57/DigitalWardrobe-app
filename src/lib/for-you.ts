@@ -146,11 +146,7 @@ export function rankFeed(
   return items
     .filter((item) => !byId.get(item.id)?.hidden && (mode !== 'saved' || byId.get(item.id)?.saved))
     .filter(
-      (item) =>
-        mode === 'saved' ||
-        audience === 'all-styles' ||
-        storyAudience(item) === 'all-styles' ||
-        storyAudience(item) === audience,
+      (item) => mode === 'saved' || audience === 'all-styles' || storyAudience(item) === audience,
     )
     .filter((item) => {
       if (mode === 'saved') return true;

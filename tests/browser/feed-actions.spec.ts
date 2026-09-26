@@ -55,6 +55,7 @@ test('live feed controls persist likes, saves, hide undo and interests', async (
       'aria-pressed',
       'true',
     );
+    await expect(page.getByRole('button', { name: 'Menswear', exact: true })).toBeEnabled();
     const saved = await context.request.get('/api/for-you');
     expect((await saved.json()).preferences.aesthetics).toContain('menswear');
     await page.getByRole('button', { name: 'Both', exact: true }).click();

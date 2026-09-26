@@ -7,7 +7,7 @@ export { feedSources } from '@/lib/feed-sources';
 export function safeFeedImage(value: unknown) {
   if (typeof value !== 'string' || value.length > 2000) return null;
   try {
-    const url = new URL(value);
+    const url = new URL(value.replace(/&amp;|&#0*38;|&#x0*26;/gi, '&'));
     return url.protocol === 'https:' &&
       !url.username &&
       !url.password &&
