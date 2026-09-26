@@ -29,7 +29,27 @@ test('desktop uses wide navigation and a responsive multi-column feed', async ({
   await expect(page.getByRole('button', { name: /Put a fit together From/ })).toBeVisible();
   expect((await page.locator('.app-shell').boundingBox())!.width).toBeGreaterThan(1200);
   expect((await nav.boundingBox())!.y).toBeLessThan(200);
+  const heroImage = page.getByRole('img', { name: /Two people in relaxed street style/ });
+  await expect(heroImage).toBeVisible();
+  await expect
+    .poll(() => heroImage.evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBeGreaterThan(0);
   await page.screenshot({ path: 'test-results/desktop-spotter.png', fullPage: true });
+  await page.getByText('See how it works', { exact: false }).click();
+  await expect(page.getByRole('heading', { name: 'See a look you love.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Next step', exact: true }).click();
+  await expect(page.getByText('Brown blazer', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Next step', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Make it your own.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Try your own screenshot' }).click();
+  await expect(
+    page.getByRole('button', { name: 'Upload screenshot', exact: true }),
+  ).toBeInViewport();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: 'test-results/editorial-mobile.png', fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await nav.getByRole('button', { name: 'For You', exact: true }).click();
   await expect(page.getByRole('article')).toHaveCount(6);
   const cards = page.getByRole('article');

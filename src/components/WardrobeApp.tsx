@@ -24,6 +24,7 @@ import ThemeToggle from './ThemeToggle';
 import Spotter from './Spotter';
 import ForYouFeed from './ForYouFeed';
 import StudioResume from './StudioResume';
+import EditorialLanding from './EditorialLanding';
 import { api, categories, Empty } from './ui';
 const blank: Wardrobe = { garments: [], outfits: [], references: [] };
 const tabs = [
@@ -184,7 +185,24 @@ export default function WardrobeApp({
           </div>
         ) : (
           <>
-            {['Spotter', 'For You', 'Closet'].includes(tab) && (
+            {tab === 'Spotter' && (
+              <EditorialLanding
+                onStyle={() => {
+                  if (user) setBlind(true);
+                  else {
+                    setPendingStyle(true);
+                    setAccountMode('auth');
+                    setAccount(true);
+                  }
+                }}
+                onStalk={() =>
+                  document
+                    .getElementById('stalk-fit')
+                    ?.scrollIntoView({ behavior: 'auto', block: 'start' })
+                }
+              />
+            )}
+            {['For You', 'Closet'].includes(tab) && (
               <section
                 className={`daily-style${tab === 'For You' ? ' compact-intents' : ''}`}
                 aria-label="Your style shortcuts"
