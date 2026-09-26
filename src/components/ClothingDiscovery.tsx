@@ -2,7 +2,8 @@
 import { matchVerdict } from '@/lib/match-verifier';
 import AgentFeedback from './AgentFeedback';
 import { useEffect, useRef, useState } from 'react';
-import { ScanLine, ArrowUpRight } from 'lucide-react';
+import { ScanLine } from 'lucide-react';
+import ShoppingResults from './ShoppingResults';
 import type { Detection, DetectedItem, ShoppingResult, SearchPreferences } from '@/lib/discovery';
 import type { ShoppingPreferences } from '@/lib/experience';
 import { shoppingResultKey } from '@/lib/discovery';
@@ -457,7 +458,7 @@ export default function ClothingDiscovery({
             src={detection.imageUrl}
             alt="Your scanned clothing photo"
           />
-          <p>{detection.note}</p>
+
           <AgentFeedback id={detection.id} agent="detect" />
           {!detection.items.length && (
             <p>No clothing was identified. Try a clearer photo with the whole garment visible.</p>
@@ -510,8 +511,10 @@ export default function ClothingDiscovery({
               >
                 <div>
                   <h3>{item.name}</h3>
-                  <p>{item.description}</p>
                 </div>
+                {result && listings.length > 0 && (
+                  <ShoppingResults item={item} result={result} listings={listings} />
+                )}
                 <div className="discovery-actions">
                   <button className="primary" disabled={!!busy} onClick={() => search(index)}>
                     Find where to buy
@@ -569,38 +572,11 @@ export default function ClothingDiscovery({
                     )}
                   </form>
                 </details>
-                {description && <p>Searching for: {description}</p>}
+
                 {searchError && (
                   <div className="search-recovery" role="alert">
                     <strong>Search couldn’t finish</strong>
                     <p>{searchError}</p>
-                  </div>
-                )}
-                {result && listings.length > 0 && (
-                  <div className="stack" aria-label={`Shopping results for ${item.name}`}>
-                    {listings.map((listing) => (
-                      <a
-                        className="shopping-link"
-                        href={listing.url}
-                        onClick={() => {
-                          void api('/api/journey', 'POST', { event: 'retailer_click' }).catch(
-                            () => {},
-                          );
-                        }}
-                        key={listing.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <span className="eyebrow">
-                          {matchVerdict(item, listing).tier === 3 ? 'Match found' : 'Alternative'}
-                        </span>
-                        <strong>
-                          {listing.title}
-                          <ArrowUpRight size={16} />
-                        </strong>
-                        <span>{listing.retailer}</span>
-                      </a>
-                    ))}
                   </div>
                 )}
               </article>

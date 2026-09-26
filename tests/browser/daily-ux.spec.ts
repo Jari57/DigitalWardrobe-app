@@ -351,7 +351,7 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
   expect(stylistCalls).toBe(1);
 });
 
-test('shopping shows simple links and opens editing when no alternatives remain', async ({
+test('shopping shows photo cards and opens editing when no alternatives remain', async ({
   page,
 }) => {
   const piece = {
@@ -365,6 +365,12 @@ test('shopping shows simple links and opens editing when no alternatives remain'
   let searches = 0;
   await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path === '/api/discovery/photo') {
+      return route.fulfill({
+        contentType: 'image/svg+xml',
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="400" viewBox="0 0 320 400"><rect width="320" height="400" fill="#eeeae2"/><path d="M110 70 L60 100 L35 185 L80 200 L95 160 L95 335 L225 335 L225 160 L240 200 L285 185 L260 100 L210 70 L185 90 L135 90 Z" fill="#698eaa"/><path d="M160 90 V335" stroke="#4b708e" stroke-width="3"/></svg>',
+      });
+    }
     let body: unknown = {};
     if (path === '/api/session') body = { user: { id: 'owner', username: 'tester' } };
     if (path === '/api/wardrobe') body = { garments: [], outfits: [], references: [] };
@@ -414,6 +420,23 @@ test('shopping shows simple links and opens editing when no alternatives remain'
     'https://shop.example/products/blue-shirt',
   );
   await expect(results).toContainText('Alternative');
+  const productPhoto = results.getByRole('img', { name: 'Cotton blue shirt' });
+  await expect(productPhoto).toBeVisible();
+  await expect
+    .poll(() => productPhoto.evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .toBeGreaterThan(0);
+  await expect(results).toContainText('Shop this piece');
+  await results.screenshot({ path: 'test-results/shopping-cards-mobile.png' });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await results.screenshot({ path: 'test-results/shopping-cards-desktop.png' });
+  await page.setViewportSize({ width: 320, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await productPhoto.dispatchEvent('error');
+  await expect(results.getByText('Photo unavailable')).toBeVisible();
+  await expect(results.getByRole('link')).toHaveAttribute(
+    'href',
+    'https://shop.example/products/blue-shirt',
+  );
   await expect(page.getByText('Hidden provider explanation')).toHaveCount(0);
   await expect(page.getByText('Hidden ranking rationale')).toHaveCount(0);
   await page.getByRole('button', { name: 'Find where to buy' }).click();

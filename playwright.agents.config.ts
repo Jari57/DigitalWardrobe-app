@@ -7,6 +7,7 @@ export default defineConfig({
     'shopping-quality.spec.ts',
     'product-evidence.spec.ts',
     'discovery-pillars.spec.ts',
+    'shopping-photo.spec.ts',
   ],
   workers: 1,
   retries: 0,
