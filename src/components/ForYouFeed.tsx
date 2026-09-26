@@ -232,7 +232,11 @@ export default function ForYouFeed({
               </button>
             ))}
           </div>
-          <small>Choose your style interests. You can change this anytime.</small>
+          <small>
+            {data?.authenticated
+              ? 'Used for For You, outfit suggestions and shopping. Change it anytime.'
+              : 'Try a preference here. Sign in to save it for outfits and shopping.'}
+          </small>
         </fieldset>
       )}
       {editing && (

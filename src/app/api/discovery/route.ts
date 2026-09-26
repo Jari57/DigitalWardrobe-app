@@ -1,4 +1,5 @@
 import { loadAgentMemory } from '@/server/agents/memory';
+import { loadClothingPreference } from '@/server/agents/clothing-preference';
 import { withAgentUsage } from '@/server/agents/usage';
 import { reviewShoppingResult } from '@/lib/shopping-quality';
 import type { ShoppingResult } from '@/lib/discovery';
@@ -110,6 +111,8 @@ export async function POST(request: Request) {
     if (input.agent === 'shop' && !item)
       throw new ApiError(404, 'Detected piece not found. Scan a photo first.');
     const memory = await loadAgentMemory(user.id, input.agent);
+    const clothingPreference =
+      input.agent === 'shop' ? await loadClothingPreference(user.id) : 'all-styles';
     const photoPath = detection?.result && (detection.result as Prisma.JsonObject).imageUrl;
     const photoId =
       typeof photoPath === 'string'
@@ -118,7 +121,7 @@ export async function POST(request: Request) {
     const shoppingPhoto = photoId
       ? await db.image.findFirst({ where: { id: photoId, userId: user.id } })
       : null;
-    const key = discoveryRequestKey(input, undefined, memory.version);
+    const key = discoveryRequestKey(input, undefined, memory.version, clothingPreference);
     const ledger = new AgentLedger(db, configuredAgentBudget());
     let reservation;
     try {
@@ -166,7 +169,7 @@ export async function POST(request: Request) {
             shoppingItem(item!, input.agent === 'shop' ? input.description : undefined),
             input.agent === 'shop' ? input.country : 'US',
             input.agent === 'shop' ? input.preferences : undefined,
-            { memory, ...(shoppingPhoto ? { photo: shoppingPhoto } : {}) },
+            { memory, clothingPreference, ...(shoppingPhoto ? { photo: shoppingPhoto } : {}) },
           ),
     );
     const value = {

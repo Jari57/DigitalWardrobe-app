@@ -1,4 +1,5 @@
 import { loadAgentMemory } from '@/server/agents/memory';
+import { loadClothingPreference } from '@/server/agents/clothing-preference';
 import { withAgentUsage } from '@/server/agents/usage';
 import { createHash } from 'node:crypto';
 import { requireUser, rateLimit } from '@/server/auth';
@@ -40,12 +41,16 @@ export async function POST(request: Request) {
       lockedIds: [...input.lockedIds].sort(),
     };
     // Include saved details so editing a piece invalidates an earlier recommendation.
-    const memory = await loadAgentMemory(user.id, 'stylist');
+    const [memory, clothingPreference] = await Promise.all([
+      loadAgentMemory(user.id, 'stylist'),
+      loadClothingPreference(user.id),
+    ]);
     const key = createHash('sha256')
       .update(
         JSON.stringify({
           version: 'stylist-quality-v2',
           memoryVersion: memory.version,
+          clothingPreference,
           input: normalized,
           candidates,
           day: new Date().toISOString().slice(0, 10),
@@ -68,7 +73,14 @@ export async function POST(request: Request) {
       );
     dispatched = { ledger, userId: user.id, id: record.id };
     const result = await withAgentUsage(user.id, record.id, () =>
-      styleOwnedWardrobe(candidates, input.lockedIds, input.occasion, input.aesthetic, memory),
+      styleOwnedWardrobe(
+        candidates,
+        input.lockedIds,
+        input.occasion,
+        input.aesthetic,
+        memory,
+        clothingPreference,
+      ),
     );
     if (result.cost === null)
       await db.agentRequest.updateMany({

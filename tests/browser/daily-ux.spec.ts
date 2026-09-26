@@ -6,6 +6,25 @@ import {
   safeFeedImage,
 } from '../../src/server/trend-feed';
 import { balancePublishers } from '../../src/lib/feed-sources';
+import { discoveryRequestKey } from '../../src/server/agents/discovery-key';
+import { clothingPreferenceContext } from '../../src/lib/clothing-preference';
+
+test('shopping cache changes with clothing preference while the same photo scan stays reusable', () => {
+  const day = '2026-09-26';
+  const shop = { agent: 'shop', detectionId: 'scan', itemIndex: 0, country: 'US' };
+  expect(discoveryRequestKey(shop, day, 'none', 'menswear')).not.toBe(
+    discoveryRequestKey(shop, day, 'none', 'womenswear'),
+  );
+  expect(discoveryRequestKey(shop, day, 'none', 'all-styles')).not.toBe(
+    discoveryRequestKey(shop, day, 'none', 'menswear'),
+  );
+  const scan = { agent: 'detect', imageId: 'photo' };
+  expect(discoveryRequestKey(scan, day, 'none', 'menswear')).toBe(
+    discoveryRequestKey(scan, day, 'none', 'womenswear'),
+  );
+  expect(clothingPreferenceContext().department).toContain('unisex');
+  expect(clothingPreferenceContext('menswear').department).toBe('menswear');
+});
 import {
   defaultPreferences,
   preferenceSchema,
