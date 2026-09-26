@@ -104,12 +104,33 @@ export function parseFashionFeed(
     });
 }
 async function readFeed(url: string) {
-  const response = await fetch(url, {
-    redirect: 'error',
-    signal: AbortSignal.timeout(10000),
-    cache: 'no-store',
-    headers: { Accept: 'application/rss+xml, application/xml, text/xml' },
-  });
+  const original = new URL(url);
+  const signal = AbortSignal.timeout(10000);
+  let current = original;
+  let response: Response | undefined;
+  for (let hop = 0; hop <= 3; hop++) {
+    response = await fetch(current, {
+      redirect: 'manual',
+      signal,
+      cache: 'no-store',
+      headers: { Accept: 'application/rss+xml, application/xml, text/xml' },
+    });
+    if (![301, 302, 303, 307, 308].includes(response.status)) break;
+    const location = response.headers.get('location');
+    await response.body?.cancel();
+    if (!location || hop === 3) throw new Error('Invalid feed redirect');
+    const next = new URL(location, current);
+    if (
+      next.protocol !== 'https:' ||
+      next.username ||
+      next.password ||
+      next.port ||
+      next.hostname.replace(/^www\./, '') !== original.hostname.replace(/^www\./, '')
+    )
+      throw new Error('Unsafe feed redirect');
+    current = next;
+  }
+  if (!response) throw new Error('Feed unavailable');
   if (!response.ok || !response.body) throw new Error('Feed unavailable');
   const reader = response.body.getReader(),
     parts: Uint8Array[] = [];
@@ -125,6 +146,11 @@ async function readFeed(url: string) {
     parts.push(value);
   }
   return Buffer.concat(parts).toString('utf8');
+}
+export async function fetchFashionSource(source: (typeof feedSources)[number], now: Date) {
+  const items = parseFashionFeed(await readFeed(source.url), source, now);
+  if (!items.length) throw new Error('No current fashion coverage');
+  return items;
 }
 export async function refreshTrends(force = false) {
   const now = new Date();
@@ -147,7 +173,7 @@ export async function refreshTrends(force = false) {
   if (!claim.count) return { skipped: true };
   try {
     const results = await Promise.allSettled(
-      feedSources.map(async (source) => parseFashionFeed(await readFeed(source.url), source, now)),
+      feedSources.map((source) => fetchFashionSource(source, now)),
     );
     const failedSources = feedSources
       .filter((_, index) => results[index].status === 'rejected')

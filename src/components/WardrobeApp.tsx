@@ -9,7 +9,6 @@ import {
   Plus,
   Search,
   Shirt,
-  Shuffle,
   Sparkles,
   UserRound,
 } from 'lucide-react';
@@ -21,7 +20,6 @@ import AccountSettings from './AccountSettings';
 import GarmentDialog from './GarmentDialog';
 import OutfitCanvas, { Board } from './OutfitCanvas';
 import BlindFit from './BlindFit';
-import CreatorStart from './CreatorStart';
 import ThemeToggle from './ThemeToggle';
 import Spotter from './Spotter';
 import ForYouFeed from './ForYouFeed';
@@ -32,9 +30,7 @@ const tabs = [
   { id: 'Spotter', icon: Camera },
   { id: 'For You', icon: Sparkles },
   { id: 'Closet', icon: Shirt },
-  { id: 'Canvas', icon: Layers },
   { id: 'Looks', icon: Grid2X2 },
-  { id: 'Stats', icon: BarChart3 },
 ] as const;
 export default function WardrobeApp({
   initialAccountOpen = false,
@@ -62,6 +58,13 @@ export default function WardrobeApp({
   const [creatorAesthetic, setCreatorAesthetic] = useState('Minimal');
   const [styleLock, setStyleLock] = useState<string>();
   const [feedMode, setFeedMode] = useState('for-you');
+  const [pendingStyle, setPendingStyle] = useState(false);
+  useEffect(() => {
+    if (pendingStyle && user && !account) {
+      setPendingStyle(false);
+      setBlind(true);
+    }
+  }, [pendingStyle, user, account]);
   const refresh = useCallback(async () => {
     const wardrobe = await api<Wardrobe>('/api/wardrobe');
     setData(wardrobe);
@@ -169,20 +172,60 @@ export default function WardrobeApp({
           </div>
         ) : (
           <>
+            {['Spotter', 'For You', 'Closet'].includes(tab) && (
+              <section
+                className={`daily-style${tab === 'For You' ? ' compact-intents' : ''}`}
+                aria-label="Your style shortcuts"
+              >
+                <div>
+                  <span className="eyebrow">MAKE GETTING DRESSED EASIER</span>
+                  <h2>Your day. Your outfit.</h2>
+                  <p>Plans first. A look from your closet next.</p>
+                </div>
+                <div className="daily-actions">
+                  <button
+                    className="primary"
+                    onClick={() => {
+                      if (user) setBlind(true);
+                      else {
+                        setPendingStyle(true);
+                        setAccountMode('auth');
+                        setAccount(true);
+                      }
+                    }}
+                  >
+                    <Sparkles size={18} />
+                    <span>
+                      Style me<small>For whatever is on today</small>
+                    </span>
+                  </button>
+                  <button onClick={() => setTab('Looks')}>
+                    <Grid2X2 size={18} />
+                    <span>
+                      My fits<small>Saved and ready to wear</small>
+                    </span>
+                  </button>
+                  <button onClick={add}>
+                    <Plus size={18} />
+                    <span>
+                      Add a piece<small>Build your closet</small>
+                    </span>
+                  </button>
+                </div>
+              </section>
+            )}
             {tab === 'Closet' && (
               <>
-                {user && data.outfits.length === 0 && (
-                  <CreatorStart
-                    key={user.id}
-                    garmentCount={data.garments.length}
-                    hasComposition={pieces.length > 0}
-                    aesthetic={creatorAesthetic}
-                    onAesthetic={setCreatorAesthetic}
-                    onImport={add}
-                    onStyle={() => setBlind(true)}
-                    onCanvas={() => setTab('Canvas')}
-                  />
-                )}
+                <div className="row wrap">
+                  <button onClick={() => setTab('Canvas')}>
+                    <Layers size={16} />
+                    Outfit canvas
+                  </button>
+                  <button onClick={() => setTab('Stats')}>
+                    <BarChart3 size={16} />
+                    Closet stats
+                  </button>
+                </div>
                 <div className="search-box">
                   <Search size={17} />
                   <input
@@ -213,14 +256,6 @@ export default function WardrobeApp({
                       ))}
                   </select>
                 </div>
-                <button className="challenge-banner" onClick={() => setBlind(true)}>
-                  <div>
-                    <span className="eyebrow">THE BLIND FIT CHALLENGE</span>
-                    <strong>Let your closet surprise you.</strong>
-                    <span>Shuffle a look. Style it. Share it.</span>
-                  </div>
-                  <Shuffle size={25} />
-                </button>
                 {!data.garments.length ? (
                   <Empty
                     title="Great fits start with your closet"
@@ -392,9 +427,11 @@ export default function WardrobeApp({
                 {!data.outfits.length ? (
                   <Empty
                     title="Meet your future favorites"
-                    action={<button onClick={() => setTab('Canvas')}>Create a look</button>}
+                    action={
+                      <button onClick={() => (user ? setBlind(true) : add())}>Style me</button>
+                    }
                   >
-                    Save a composition from Canvas and find it here whenever you need it.
+                    Get a suggestion with Style me and save it here, ready for your next day out.
                   </Empty>
                 ) : (
                   data.outfits.map((o) => (
@@ -524,7 +561,7 @@ export default function WardrobeApp({
             onClick={() => setTab(id)}
           >
             <Icon size={21} strokeWidth={tab === id ? 2.4 : 1.7} />
-            <span>{id}</span>
+            <span>{id === 'Looks' ? 'My fits' : id}</span>
           </button>
         ))}
       </nav>
@@ -572,6 +609,11 @@ export default function WardrobeApp({
       )}
       {blind && (
         <BlindFit
+          onSaved={refresh}
+          onAdd={() => {
+            setBlind(false);
+            add();
+          }}
           initialLockedId={styleLock}
           initialAesthetic={creatorAesthetic}
           garments={data.garments}

@@ -51,7 +51,10 @@ test('saved-look creator supports edits, feedback, cache reuse and private owner
     expect(saved.status()).toBe(201);
     const outfit = (await saved.json()).outfit;
     await page.goto('/');
-    await page.getByRole('navigation').getByRole('button', { name: 'Looks', exact: true }).click();
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: 'My fits', exact: true })
+      .click();
     await page.getByRole('button', { name: 'Create content', exact: true }).click();
     const resultPromise = page.waitForResponse((r) => r.url().endsWith('/api/creator'));
     await page.getByRole('button', { name: 'Draft with AI', exact: true }).click();

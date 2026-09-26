@@ -1,6 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Bookmark, Heart, SlidersHorizontal, Sparkles, ArrowUpRight, Shirt } from 'lucide-react';
+import {
+  Bookmark,
+  Heart,
+  SlidersHorizontal,
+  Sparkles,
+  ArrowUpRight,
+  Shirt,
+  RefreshCw,
+} from 'lucide-react';
 import { api } from './ui';
 import {
   defaultPreferences,
@@ -15,6 +23,8 @@ type Response = {
   authenticated: boolean;
   checkedAt: string | null;
   sourcesUnavailable: boolean;
+  stale?: boolean;
+  attemptedAt?: string | null;
 };
 function Photo({ item }: { item: FeedItem }) {
   const [failed, setFailed] = useState(false);
@@ -55,6 +65,52 @@ export default function ForYouFeed({
     [loading, setLoading] = useState(true),
     [error, setError] = useState('');
   const [hidden, setHidden] = useState<string>();
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshNote, setRefreshNote] = useState('');
+  useEffect(() => {
+    let lastCheck = Date.now();
+    const check = () => {
+      if (
+        !editing &&
+        !busy &&
+        !refreshing &&
+        document.visibilityState === 'visible' &&
+        Date.now() - lastCheck > 60000
+      ) {
+        lastCheck = Date.now();
+        setRevision((n) => n + 1);
+      }
+    };
+    document.addEventListener('visibilitychange', check);
+    const timer = window.setInterval(check, 5 * 60000);
+    return () => {
+      document.removeEventListener('visibilitychange', check);
+      window.clearInterval(timer);
+    };
+  }, [editing, busy, refreshing]);
+  async function refreshFeed() {
+    setRefreshing(true);
+    setError('');
+    setRefreshNote('');
+    try {
+      if (data?.authenticated) await api('/api/for-you', 'POST');
+      const next = await api<Response>(`/api/for-you?mode=${mode}`);
+      const previousIds = new Set(data?.items.map((item) => item.id));
+      const added = next.items.filter((item) => !previousIds.has(item.id)).length;
+      setData(next);
+      setRefreshNote(
+        next.sourcesUnavailable || next.stale
+          ? 'Some publishers are unavailable. Your saved ideas are still here.'
+          : added
+            ? `${added} new ideas added.`
+            : 'You are up to date. No new stories since your last check.',
+      );
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setRefreshing(false);
+    }
+  }
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -214,13 +270,33 @@ export default function ForYouFeed({
             key={value}
             className="feed-chip"
             aria-pressed={mode === value}
-            disabled={busy}
+            disabled={busy || refreshing}
             onClick={() => setMode(value)}
           >
             {label}
           </button>
         ))}
       </div>
+      {mode !== 'saved' && (
+        <div className="row between feed-refresh">
+          <small>
+            {data?.stale
+              ? 'Updates delayed'
+              : data?.checkedAt
+                ? `Updated ${new Date(data.checkedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`
+                : 'Checking for fresh ideas'}
+          </small>
+          <button
+            className="compact"
+            disabled={refreshing || loading || busy}
+            onClick={refreshFeed}
+          >
+            <RefreshCw size={15} />
+            {refreshing ? 'Refreshing…' : 'Refresh feed'}
+          </button>
+        </div>
+      )}
+      {refreshNote && <p role="status">{refreshNote}</p>}
       {!data?.authenticated && !loading && (
         <button className="text-button" onClick={onAuth}>
           Sign in to make this feed yours
@@ -239,7 +315,7 @@ export default function ForYouFeed({
           </button>
         </p>
       )}
-      {loading ? (
+      {loading && !data ? (
         <div className="feed-loading" role="status">
           Finding your next look…
         </div>

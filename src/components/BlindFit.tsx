@@ -18,12 +18,16 @@ export default function BlindFit({
   onUse,
   initialAesthetic = 'Minimal',
   initialLockedId,
+  onSaved,
+  onAdd,
 }: {
   garments: Garment[];
   onClose: () => void;
   onUse: (pieces: Piece[]) => void;
   initialAesthetic?: string;
   initialLockedId?: string;
+  onSaved?: () => Promise<void>;
+  onAdd?: () => void;
 }) {
   const [chosen, setChosen] = useState<Garment[]>(() =>
     garments.filter((g) => g.id === initialLockedId),
@@ -36,6 +40,7 @@ export default function BlindFit({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
+  const [saved, setSaved] = useState(false);
 
   function shuffle() {
     const result = chosen.filter((item) => locks.includes(item.id));
@@ -55,6 +60,7 @@ export default function BlindFit({
     }
     setChosen(result);
     setRecommendation(null);
+    setSaved(false);
     setError('');
   }
 
@@ -82,6 +88,7 @@ export default function BlindFit({
         throw new Error('Your closet changed. Refresh and try again.');
       setChosen(selected as Garment[]);
       setRecommendation(result);
+      setSaved(false);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -91,7 +98,7 @@ export default function BlindFit({
 
   return (
     <Modal
-      title="Blind Fit Challenge"
+      title="Style me"
       dark
       onClose={() => {
         if (!busy) onClose();
@@ -99,18 +106,19 @@ export default function BlindFit({
     >
       <div className="stack">
         <div className="blind-intro">
-          <span className="eyebrow">LET YOUR CLOSET COOK</span>
-          <h3>
-            A little surprise.
-            <br />A little styling instinct.
-          </h3>
-          <p>
-            Reveal a random look or let AI style your saved pieces. Lock your favorites to keep them
-            in the outfit.
-          </p>
+          <span className="eyebrow">YOUR CLOSET. YOUR PLANS.</span>
+          <h3>What are you dressing for?</h3>
+          <p>Tell us your plans. Get a look from pieces you own, then save it here.</p>
         </div>
         {!garments.length ? (
-          <p>Add pieces to your closet to start the challenge.</p>
+          <div className="stack">
+            <p>Add a few pieces so your recommendations come from your own closet.</p>
+            {onAdd && (
+              <button className="primary" onClick={onAdd}>
+                Add a piece
+              </button>
+            )}
+          </div>
         ) : (
           <>
             <div className="blind-grid">
@@ -127,6 +135,7 @@ export default function BlindFit({
                         : [...previous, item.id],
                     );
                     setRecommendation(null);
+                    setSaved(false);
                   }}
                 >
                   <img src={item.imageUrl} alt={item.name} />
@@ -135,23 +144,23 @@ export default function BlindFit({
                 </button>
               ))}
             </div>
-            <button className="fuchsia" disabled={busy} onClick={shuffle}>
-              <Shuffle size={18} />
-              {chosen.length ? 'Shuffle unlocked pieces' : 'Reveal my fit'}
-            </button>
             <fieldset className="stack">
-              <legend>AI stylist</legend>
+              <legend>Your plans</legend>
               <div className="form-grid">
                 <label>
                   Occasion
-                  <select
+                  <input
                     value={occasion}
+                    list="style-occasions"
+                    maxLength={120}
+                    placeholder="Client meeting, then dinner. Comfortable shoes."
                     disabled={busy}
                     onChange={(event) => {
                       setOccasion(event.target.value);
                       setRecommendation(null);
                     }}
-                  >
+                  />
+                  <datalist id="style-occasions">
                     {[
                       'Everyday',
                       'Work',
@@ -162,7 +171,7 @@ export default function BlindFit({
                     ].map((value) => (
                       <option key={value}>{value}</option>
                     ))}
-                  </select>
+                  </datalist>
                 </label>
                 <label>
                   Style
@@ -193,7 +202,7 @@ export default function BlindFit({
                 Uses saved names, categories and colors—not photo analysis. Up to 40 pieces per
                 suggestion; locked pieces are always included. Uses your daily AI allowance.
               </small>
-              <button className="fuchsia" disabled={busy} onClick={style}>
+              <button className="fuchsia" disabled={busy || !occasion.trim()} onClick={style}>
                 <Sparkles size={18} />
                 {busy ? 'Styling your pieces…' : 'Style with AI'}
               </button>
@@ -215,10 +224,38 @@ export default function BlindFit({
               </div>
             )}
             {chosen.length > 0 && (
-              <button disabled={busy} onClick={() => onUse(arrange(chosen))}>
-                Style this on canvas
-              </button>
+              <div className="stack">
+                <button
+                  className="primary"
+                  disabled={busy || saved}
+                  onClick={async () => {
+                    setBusy(true);
+                    setError('');
+                    try {
+                      await api('/api/outfits', 'POST', {
+                        name: `${occasion.trim() || 'Everyday'} fit`.slice(0, 100),
+                        pieces: arrange(chosen),
+                      });
+                      setSaved(true);
+                      await onSaved?.();
+                    } catch (e) {
+                      setError((e as Error).message);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  {saved ? 'Saved to My fits' : 'Save this fit'}
+                </button>
+                <button disabled={busy} onClick={() => onUse(arrange(chosen))}>
+                  Edit on canvas
+                </button>
+              </div>
             )}
+            <button className="text-button" disabled={busy} onClick={shuffle}>
+              <Shuffle size={16} />
+              {chosen.length ? 'Shuffle unlocked pieces' : 'Surprise me without AI'}
+            </button>
           </>
         )}
       </div>

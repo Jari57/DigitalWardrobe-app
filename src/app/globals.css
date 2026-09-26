@@ -1059,3 +1059,75 @@ legend {
   padding: 0;
   flex: 0 0 20px;
 }
+
+.daily-style {
+  margin: 0 0 24px;
+  padding: 22px;
+  border: 1px solid #a78bfa44;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #a78bfa18, #e8c98b12);
+}
+.daily-style h2 {
+  margin: 6px 0;
+  font-size: 26px;
+  letter-spacing: -1px;
+}
+.daily-style p {
+  margin: 0 0 18px;
+}
+.daily-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.daily-actions button {
+  justify-content: flex-start;
+  text-align: left;
+  padding: 13px;
+  min-width: 0;
+}
+.daily-actions button:first-child {
+  grid-column: 1 / -1;
+}
+.daily-actions span {
+  display: flex;
+  flex-direction: column;
+}
+.daily-actions small {
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+.feed-refresh {
+  flex-wrap: wrap;
+}
+.bottom-nav button {
+  font-size: 11px;
+}
+
+.compact-intents {
+  padding: 14px;
+  margin-bottom: 18px;
+}
+.compact-intents .eyebrow,
+.compact-intents p,
+.compact-intents small {
+  display: none;
+}
+.compact-intents h2 {
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+.compact-intents .daily-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.compact-intents .daily-actions button:first-child {
+  grid-column: auto;
+}
+.compact-intents .daily-actions button {
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  font-size: 11px;
+  padding: 9px 4px;
+}

@@ -101,13 +101,11 @@ test('Blind Fit preserves locks, explains a real AI outfit, reuses it and hands 
     }
     await page.goto('/');
     await page.getByRole('button', { name: 'Closet', exact: true }).click();
-    await page.locator('.challenge-banner').click();
-    await page.getByRole('button', { name: 'Reveal my fit', exact: true }).click();
+    await page.getByRole('button', { name: /Style me For whatever/ }).click();
+    await page.getByRole('button', { name: 'Surprise me without AI', exact: true }).click();
     const lockedName = await page.locator('.blind-grid button').first().innerText();
     await page.locator('.blind-grid button').first().click();
-    await page
-      .getByRole('combobox', { name: 'Occasion', exact: true })
-      .selectOption('Content shoot');
+    await page.getByRole('combobox', { name: 'Occasion', exact: true }).fill('Content shoot');
     await page.getByRole('combobox', { name: 'Style', exact: true }).selectOption('Streetwear');
     const responsePromise = page.waitForResponse(
       (r) => r.url().endsWith('/api/stylist') && r.request().method() === 'POST',
@@ -139,7 +137,7 @@ test('Blind Fit preserves locks, explains a real AI outfit, reuses it and hands 
     await page.getByRole('button', { name: 'Style with AI', exact: true }).click();
     await expect(page.getByRole('dialog').getByRole('alert')).toContainText('allowance');
     expect(await page.locator('.blind-grid button').allTextContents()).toEqual(names);
-    await page.getByRole('button', { name: 'Style this on canvas', exact: true }).click();
+    await page.getByRole('button', { name: 'Edit on canvas', exact: true }).click();
     await expect(page.locator('.canvas-piece')).toHaveCount(result.garmentIds.length);
   } finally {
     test.setTimeout(test.info().timeout + 15_000);
