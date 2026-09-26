@@ -6,8 +6,23 @@ import {
   type ShoppingResult,
 } from '../../src/lib/discovery';
 import { parseProductEvidence } from '../../src/server/agents/product-evidence';
-import { qualityShoppingListings } from '../../src/lib/shopping-quality';
+import { qualityShoppingListings, storefrontRegion } from '../../src/lib/shopping-quality';
 import { matchVerdict } from '../../src/lib/match-verifier';
+
+test('retailer underscore locales cannot slip into another shopping region', () => {
+  expect(storefrontRegion('https://www2.hm.com/en_in/productpage.1293067003.html', 'US')).toBe(
+    'conflicting',
+  );
+  expect(storefrontRegion('https://www2.hm.com/en_us/productpage.1321677001.html', 'US')).toBe(
+    'matching',
+  );
+  expect(storefrontRegion('https://www2.hm.com/en_gb/productpage.1321677001.html', 'US')).toBe(
+    'conflicting',
+  );
+  expect(storefrontRegion('https://www2.hm.com/en_gb/productpage.1321677001.html', 'GB')).toBe(
+    'matching',
+  );
+});
 
 test('retailer SKU URLs survive unavailable metadata without becoming verified matches', () => {
   const urls = [

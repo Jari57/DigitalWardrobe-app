@@ -49,11 +49,12 @@ export function storefrontRegion(
   const hostCountry = url.hostname.match(/\.(uk|ca|au|de|fr|it|es|jp|cn|in|nz|us)$/)?.[1];
   if (hostCountry) signals.push(aliases[hostCountry]);
   const languages = new Set(['en', 'fr', 'de', 'es', 'it', 'ja', 'zh', 'pt', 'ko', 'nl']);
-  for (const part of [
+  for (const rawPart of [
     url.hostname.split('.')[0],
     segments[0] ?? '',
     ...(languages.has(segments[0]) ? [segments[1] ?? ''] : []),
   ]) {
+    const part = rawPart.replace(/_/g, '-');
     const locale = part.match(/^(?:[a-z]{2}-([a-z]{2})|([a-z]{2})-[a-z]{2})$/);
     // en-us and il-en are both common; never interpret a plain language code as a country.
     const region =
