@@ -21,6 +21,7 @@ import {
   type StyleAudience,
 } from '@/lib/for-you';
 type Response = {
+  taste?: string[];
   items: FeedItem[];
   preferences: Preferences;
   authenticated: boolean;
@@ -328,6 +329,14 @@ export default function ForYouFeed({
           </button>
         ))}
       </div>
+      {mode === 'for-you' && data?.authenticated && (
+        <small>
+          {data.taste?.length
+            ? `Learning from your saves and likes: ${data.taste.join(', ')}. `
+            : 'Save or like ideas to shape your feed. '}
+          Recent feedback matters more; fresh ideas get room alongside familiar styles.
+        </small>
+      )}
       {mode !== 'saved' && (
         <div className="row between feed-refresh">
           <small>

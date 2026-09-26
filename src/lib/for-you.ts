@@ -106,8 +106,20 @@ type Feedback = {
   liked: boolean;
   saved: boolean;
   hidden: boolean;
+  updatedAt?: Date;
   item: { categories: string[]; aesthetics: string[] };
 };
+export function tasteSignals(feedback: Feedback[], now = new Date()) {
+  const weights = new Map<string, number>();
+  for (const entry of feedback) {
+    const age = entry.updatedAt ? Math.max(0, (+now - +entry.updatedAt) / 86400000) : 0;
+    const decay = Math.pow(0.5, age / 30);
+    const signal = (entry.hidden ? -2 : (entry.liked ? 1 : 0) + (entry.saved ? 2 : 0)) * decay;
+    for (const tag of new Set([...entry.item.categories, ...entry.item.aesthetics]))
+      weights.set(tag, Math.max(-8, Math.min(8, (weights.get(tag) ?? 0) + signal)));
+  }
+  return weights;
+}
 export function storyAudience(item: { title: string; publisher: string }): StyleAudience {
   const women = /\b(womenswear|women(?:'s|’s)?|female)\b/i.test(item.title);
   const men = /\b(menswear|men(?:'s|’s)?|male)\b/i.test(item.title);
@@ -129,14 +141,8 @@ export function rankFeed(
 ): FeedItem[] {
   const byId = new Map(feedback.map((entry) => [entry.itemId, entry]));
   const audience = selectedAudience(preferences) ?? 'all-styles';
-  const weights = new Map<string, number>();
-  for (const entry of feedback)
-    for (const tag of [...entry.item.categories, ...entry.item.aesthetics])
-      weights.set(
-        tag,
-        (weights.get(tag) ?? 0) +
-          (entry.hidden ? -2 : (entry.liked ? 1 : 0) + (entry.saved ? 2 : 0)),
-      );
+  const weights = tasteSignals(feedback, now);
+  const seenUrls = new Set<string>();
   return items
     .filter((item) => !byId.get(item.id)?.hidden && (mode !== 'saved' || byId.get(item.id)?.saved))
     .filter(
@@ -146,6 +152,19 @@ export function rankFeed(
         storyAudience(item) === 'all-styles' ||
         storyAudience(item) === audience,
     )
+    .filter((item) => {
+      if (mode === 'saved') return true;
+      let key = item.url;
+      try {
+        const url = new URL(item.url);
+        key = url.origin + url.pathname.replace(/\/$/, '');
+      } catch {
+        /* Keep an invalid URL distinct; ingestion handles URL validation. */
+      }
+      if (seenUrls.has(key)) return false;
+      seenUrls.add(key);
+      return true;
+    })
     .map((item) => {
       const tags = [...item.categories, ...item.aesthetics];
       const matches = [...preferences.categories, ...preferences.aesthetics].filter((tag) =>
@@ -155,11 +174,15 @@ export function rankFeed(
         (sum, tag) => sum + Math.max(-4, Math.min(4, weights.get(tag) ?? 0)),
         0,
       );
-      const freshness = Math.max(0, 14 - (now.getTime() - item.publishedAt.getTime()) / 86400000);
+      const freshness = Math.max(
+        0,
+        Math.min(14, 14 - (now.getTime() - item.publishedAt.getTime()) / 86400000),
+      );
+      const familiar = byId.get(item.id)?.saved ? 5 : byId.get(item.id)?.liked ? 2 : 0;
       const score =
         mode === 'latest' || mode === 'saved'
           ? item.publishedAt.getTime()
-          : matches.length * 8 + learned + freshness;
+          : matches.length * 8 + Math.max(-6, Math.min(6, learned)) + freshness - familiar;
       const reason = matches.length
         ? `Matches your ${matches.slice(0, 2).join(' and ')} interests`
         : learned > 0

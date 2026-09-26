@@ -6,6 +6,7 @@ import {
   rankFeed,
   audienceSchema,
   setAudience,
+  tasteSignals,
 } from '@/lib/for-you';
 import { checkOrigin, handleError, json } from '@/server/http';
 import { refreshTrends } from '@/server/trend-feed';
@@ -84,6 +85,11 @@ export async function GET(request: Request) {
     ];
     const ranked = rankFeed(items, preferences, combined, mode);
     return json({
+      taste: [...tasteSignals(combined)]
+        .filter(([, weight]) => weight > 0)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([tag]) => tag),
       items: mode === 'for-you' ? balancePublishers(ranked, 60) : ranked.slice(0, 60),
       sources: feedSources.map((source) => ({
         name: source.name,

@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     const key = createHash('sha256')
       .update(
         JSON.stringify({
-          version: 'stylist-quality-v2',
+          version: 'stylist-day-v3',
           memoryVersion: memory.version,
           clothingPreference,
           input: normalized,
@@ -80,6 +80,7 @@ export async function POST(request: Request) {
         input.aesthetic,
         memory,
         clothingPreference,
+        input.dayContext,
       ),
     );
     if (result.cost === null)

@@ -1,5 +1,6 @@
 'use client';
 import AgentFeedback from './AgentFeedback';
+import { outfitGaps, outfitSwaps } from '@/lib/outfit-assistant';
 import { useState } from 'react';
 import { Lock, Unlock, Shuffle, Sparkles } from 'lucide-react';
 import type { Garment, Piece } from '@/lib/types';
@@ -36,6 +37,7 @@ export default function BlindFit({
     garments.filter((g) => g.id === initialLockedId).map((g) => g.id),
   );
   const [occasion, setOccasion] = useState('Everyday');
+  const [dayContext, setDayContext] = useState('');
   const [aesthetic, setAesthetic] = useState(initialAesthetic);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -82,6 +84,7 @@ export default function BlindFit({
         lockedIds: locks,
         occasion,
         aesthetic,
+        dayContext,
       });
       const selected = result.garmentIds.map((id) => garments.find((item) => item.id === id));
       if (selected.some((item) => !item) || locks.some((id) => !result.garmentIds.includes(id)))
@@ -198,6 +201,22 @@ export default function BlindFit({
                   </select>
                 </label>
               </div>
+              <label>
+                Anything to plan around?
+                <input
+                  value={dayContext}
+                  maxLength={240}
+                  disabled={busy}
+                  placeholder="Lots of walking, cool evening, smart casual…"
+                  onChange={(event) => {
+                    setDayContext(event.target.value);
+                    setRecommendation(null);
+                  }}
+                />
+              </label>
+              <small>
+                Tell us the weather if it matters. We do not look up your location or forecast.
+              </small>
               <small>
                 Uses saved names, categories and colors—not photo analysis. Up to 40 pieces per
                 suggestion; locked pieces are always included. Uses your daily AI allowance.
@@ -225,6 +244,81 @@ export default function BlindFit({
             )}
             {chosen.length > 0 && (
               <div className="stack">
+                <details>
+                  <summary>Swap a piece from my closet</summary>
+                  <div className="stack">
+                    {chosen.map((piece) => {
+                      const swaps = outfitSwaps(piece, garments, chosen, locks);
+                      return (
+                        <label key={piece.id}>
+                          {piece.name}
+                          {locks.includes(piece.id) ? ' · Locked' : ''}
+                          <select
+                            value=""
+                            disabled={busy || !swaps.length}
+                            aria-label={`Swap ${piece.name}`}
+                            onChange={(event) => {
+                              const replacement = garments.find(
+                                (item) => item.id === event.target.value,
+                              );
+                              if (!replacement || !swaps.some((item) => item.id === replacement.id))
+                                return;
+                              setChosen((current) =>
+                                current.map((item) => (item.id === piece.id ? replacement : item)),
+                              );
+                              setRecommendation(null);
+                              setSaved(false);
+                            }}
+                          >
+                            <option value="">
+                              {swaps.length ? 'Choose an owned alternative' : 'No available swap'}
+                            </option>
+                            {swaps.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </details>
+                {outfitGaps(chosen, garments).map((gap) => (
+                  <div className="note" key={gap.category}>
+                    <strong>
+                      {gap.owned.length
+                        ? `You already own ${gap.category} for this step`
+                        : `Closet gap: ${gap.category}`}
+                    </strong>
+                    <p>
+                      {gap.pairsWith.length
+                        ? `Complete the outfit around ${gap.pairsWith.join(' and ')}. `
+                        : ''}
+                      Category guidance only; check color, fit and occasion.
+                    </p>
+                    {gap.owned.length
+                      ? gap.owned.map((piece) => (
+                          <button
+                            key={piece.id}
+                            disabled={busy || chosen.length >= 12}
+                            onClick={() => {
+                              const owned = garments.find((item) => item.id === piece.id);
+                              if (owned) setChosen((current) => [...current, owned]);
+                              setRecommendation(null);
+                              setSaved(false);
+                            }}
+                          >
+                            Use {piece.name}
+                          </button>
+                        ))
+                      : onAdd && (
+                          <button disabled={busy} onClick={onAdd}>
+                            Add {gap.category} to my closet
+                          </button>
+                        )}
+                  </div>
+                ))}
                 <button
                   className="primary"
                   disabled={busy || saved}

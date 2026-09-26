@@ -15,6 +15,7 @@ import {
   type DetectedItem,
 } from '@/lib/discovery';
 import { productEvidence } from './product-evidence';
+import { verifiedListings } from '@/lib/match-verifier';
 import { generationCost, recordStepUsage } from './usage';
 import {
   qualityShoppingListings,
@@ -199,11 +200,12 @@ export async function findClothes(
     item.name === 'User-described garment' ? undefined : item.category,
   );
   const visual = await reviewProductPhotos(item, qualified, context.photo);
+  const verified = verifiedListings(item, visual.listings);
   const costs = [searchCost, rankingCost, visual.cost];
   return {
     value: {
-      listings: visual.listings,
-      note: visual.listings.length
+      listings: verified,
+      note: verified.length
         ? ranking.note
         : 'No product passed the relevance, storefront and budget checks. Edit the garment details, adjust your budget or choose another region to search again.',
       searchedAt: new Date().toISOString(),

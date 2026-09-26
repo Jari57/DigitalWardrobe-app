@@ -15,6 +15,7 @@ export async function styleOwnedWardrobe(
   aesthetic: string,
   memory: AgentMemory = emptyAgentMemory,
   clothingPreference: StyleAudience = 'all-styles',
+  dayContext = '',
 ) {
   const agent = new ToolLoopAgent({
     model: gateway('google/gemini-2.5-flash'),
@@ -46,6 +47,9 @@ export async function styleOwnedWardrobe(
       aesthetic,
       personalMemory: memory,
       clothingPreference: clothingPreferenceContext(clothingPreference),
+      dayContext,
+      dayGuidance:
+        'Use explicitly supplied activity, dress code and weather to explain practical choices. Do not invent a forecast, location, fabric property, shoe comfort or waterproofing. If saved descriptions cannot establish suitability, state that limitation. Preserve locks even when they conflict, and explain the tradeoff.',
     }),
     abortSignal: AbortSignal.timeout(40_000),
   });

@@ -5,24 +5,8 @@ import type { DetectedItem, ShoppingResult } from '@/lib/discovery';
 import { fetchProductPhoto } from './product-photo';
 import { generationCost, recordStepUsage } from './usage';
 export type AgentPhoto = { data: Uint8Array; mimeType: string };
-export function verifiedIdentityEvidence(
-  item: DetectedItem,
-  listing: ShoppingResult['listings'][number],
-) {
-  const code = (value: string | null | undefined) =>
-    (value ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  const observed = code(item.visibleModelCode),
-    retail = code(listing.evidence?.modelCode);
-  const brand = (value: string | null | undefined) => (value ?? '').trim().toLowerCase();
-  return observed.length >= 5 &&
-    /[0-9]/.test(observed) &&
-    observed === retail &&
-    !!brand(item.visibleBrand) &&
-    brand(item.visibleBrand) === brand(listing.evidence?.brand) &&
-    listing.visualReview?.status === 'consistent'
-    ? ('matching-code-and-visuals' as const)
-    : ('unverified' as const);
-}
+import { verifiedIdentityEvidence } from '@/lib/match-verifier';
+export { verifiedIdentityEvidence } from '@/lib/match-verifier';
 export async function reviewProductPhotos(
   item: DetectedItem,
   listings: ShoppingResult['listings'],

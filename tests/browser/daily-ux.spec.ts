@@ -236,7 +236,12 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
     const path = new URL(route.request().url()).pathname;
     let body: unknown = {};
     if (path === '/api/session') body = { user: { id: 'owner', username: 'tester' } };
-    if (path === '/api/wardrobe') body = { garments: [piece], outfits, references: [] };
+    if (path === '/api/wardrobe')
+      body = {
+        garments: [piece, { ...piece, id: 'blue-shirt', name: 'Blue shirt' }],
+        outfits,
+        references: [],
+      };
     if (path === '/api/discovery') body = { detections: [], searches: [] };
     if (path === '/api/experience') body = { draft: [], recent: [] };
     if (path === '/api/for-you/preferences') {
@@ -245,6 +250,7 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
     }
     if (path === '/api/stylist') {
       stylistCalls++;
+      expect(route.request().postDataJSON().dayContext).toBe('Lots of walking; cool evening');
       expect(route.request().postDataJSON().occasion).toBe(
         'Client meeting, then dinner. Comfortable shoes.',
       );
@@ -300,9 +306,17 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
   await page.getByRole('button', { name: /Put a fit together From your closet/ }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Occasion').fill('Client meeting, then dinner. Comfortable shoes.');
+  await dialog.getByLabel('Anything to plan around?').fill('Lots of walking; cool evening');
   await dialog.getByRole('button', { name: 'Style with AI' }).click();
+  await expect(dialog.getByText('Closet gap: shoes', { exact: true })).toBeVisible();
+  await dialog.getByText('Swap a piece from my closet', { exact: true }).click();
+  await expect(dialog.getByLabel('Swap White shirt', { exact: true })).toBeEnabled();
   await dialog.getByRole('button', { name: 'Save this fit', exact: true }).click();
   await expect(dialog.getByRole('button', { name: 'Saved to My fits' })).toBeDisabled();
+  await dialog.getByLabel('Swap White shirt', { exact: true }).selectOption('blue-shirt');
+  await expect(dialog.getByRole('button', { name: 'Save this fit', exact: true })).toBeEnabled();
+  await dialog.getByRole('button', { name: 'Blue shirt Blue shirt', exact: true }).click();
+  await expect(dialog.getByLabel('Swap Blue shirt', { exact: true })).toBeDisabled();
   expect(stylistCalls).toBe(1);
   await page.keyboard.press('Escape');
   await page.getByRole('navigation').getByRole('button', { name: 'My fits' }).click();

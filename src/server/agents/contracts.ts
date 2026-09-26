@@ -31,6 +31,7 @@ export const agentRequestSchema = z.discriminatedUnion('agent', [
       lockedIds: uniqueIds,
       occasion: z.string().trim().min(1).max(120),
       aesthetic: z.string().trim().max(120),
+      dayContext: z.string().trim().max(240).optional(),
     })
     .strict(),
   z

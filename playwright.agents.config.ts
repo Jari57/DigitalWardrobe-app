@@ -1,0 +1,8 @@
+import { defineConfig } from '@playwright/test';
+export default defineConfig({
+  testDir: './tests/browser',
+  testMatch: ['agent-improvements.spec.ts', 'agent-contracts.spec.ts', 'shopping-quality.spec.ts'],
+  workers: 1,
+  retries: 0,
+  reporter: 'list',
+});

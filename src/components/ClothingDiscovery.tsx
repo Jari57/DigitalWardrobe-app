@@ -1,4 +1,5 @@
 'use client';
+import { matchVerdict, verifiedIdentityEvidence } from '@/lib/match-verifier';
 import AgentFeedback from './AgentFeedback';
 import { useEffect, useRef, useState } from 'react';
 import { ScanLine, ArrowUpRight } from 'lucide-react';
@@ -616,6 +617,7 @@ export default function ClothingDiscovery({
                       confirm size, delivery and returns with the retailer.
                     </small>
                     {result.listings
+                      .filter((listing) => matchVerdict(item, listing).tier > 0)
                       .filter(
                         (listing) =>
                           !availableOnly || listing.evidence?.availability === 'in-stock',
@@ -633,17 +635,14 @@ export default function ClothingDiscovery({
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <span className="eyebrow">
-                            {listing.match === 'possible-exact'
-                              ? 'Possible exact match · unverified'
-                              : 'Similar alternative'}
-                          </span>
+                          <span className="eyebrow">{matchVerdict(item, listing).label}</span>
                           <strong>
                             {listing.title}
                             <ArrowUpRight size={16} />
                           </strong>
                           <span>{listing.retailer}</span>
                           <small>{listing.reason}</small>
+                          <small>{matchVerdict(item, listing).note}</small>
                           {listing.visualReview && (
                             <small>
                               {listing.visualReview.status === 'not-reviewed'
@@ -652,7 +651,8 @@ export default function ClothingDiscovery({
                               - {listing.visualReview.note}
                             </small>
                           )}
-                          {listing.identityEvidence === 'matching-code-and-visuals' && (
+                          {verifiedIdentityEvidence(item, listing) ===
+                            'matching-code-and-visuals' && (
                             <small>
                               Observed model code matches retailer metadata; visible details agree.
                               Authenticity and exact variant still need checking.
@@ -701,7 +701,7 @@ export default function ClothingDiscovery({
                           <button onClick={() => setAvailableOnly(false)}>Show all results</button>
                         </div>
                       )}
-                    {!result.listings.length && (
+                    {!result.listings.some((listing) => matchVerdict(item, listing).tier > 0) && (
                       <p>
                         No supported product matches found for this piece. Try another region or a
                         closer photo.

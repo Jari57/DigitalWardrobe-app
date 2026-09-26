@@ -10,6 +10,7 @@
     "format": "prettier --write src tests scripts public/*.js",
     "format:check": "prettier --check src tests scripts public/*.js",
     "test": "playwright test",
+    "test:agent-quality": "playwright test --config playwright.agents.config.ts",
     "test:flows": "node scripts/check-flows.mjs",
     "db:migrate": "node scripts/migrate.mjs",
     "db:generate": "prisma generate"
