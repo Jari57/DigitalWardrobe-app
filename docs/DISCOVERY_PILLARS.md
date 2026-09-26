@@ -5,7 +5,7 @@ Keep the interface simple: found links, useful alternatives, or edit search.
 
 ## Implemented in this change
 
-- Capture requests garment bounds; retailer comparison uses the selected garment crop, with validated bounds and full-image fallback for older scans.
+- Capture requests garment bounds; retailer comparison receives the selected garment crop plus the full reference. Keeping full-image context is necessary because live scans show imperfect predicted boxes. Older scans use the full reference alone.
 - Editing the search clears crop/brand/code assumptions.
 - Product pages without usable JSON-LD photos can supply an unambiguous OpenGraph photo. This does not provide stock, price, brand or product identity. Existing URL, DNS, redirect and image checks still apply.
 - Cache versions changed so new scans/searches use the new pipeline.
