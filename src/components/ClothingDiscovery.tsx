@@ -1,5 +1,5 @@
 'use client';
-import { matchVerdict, verifiedIdentityEvidence } from '@/lib/match-verifier';
+import { matchVerdict } from '@/lib/match-verifier';
 import AgentFeedback from './AgentFeedback';
 import { useEffect, useRef, useState } from 'react';
 import { ScanLine, ArrowUpRight } from 'lucide-react';
@@ -40,7 +40,6 @@ export default function ClothingDiscovery({
   const [searchErrors, setSearchErrors] = useState<Record<string, string>>({});
   const [country, setCountry] = useState('US');
   const countryChosen = useRef(false);
-  const [availableOnly, setAvailableOnly] = useState(false);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
@@ -439,16 +438,6 @@ export default function ClothingDiscovery({
         </div>
       )}
       {detection && (
-        <label className="delete-confirmation">
-          <input
-            type="checkbox"
-            checked={availableOnly}
-            onChange={(event) => setAvailableOnly(event.target.checked)}
-          />
-          Only retailer-reported in-stock results
-        </label>
-      )}
-      {detection && (
         <>
           {!!detection.items.length && (
             <div className="stack">
@@ -508,6 +497,10 @@ export default function ClothingDiscovery({
             const key = shoppingResultKey(detection.id, index, country, description, settings);
             const result = shopping[key];
             const searchError = searchErrors[key];
+            const listings = (result?.listings ?? [])
+              .filter((listing) => matchVerdict(item, listing).tier > 0)
+              .sort((a, b) => matchVerdict(item, b).tier - matchVerdict(item, a).tier);
+            const noResults = !!result && listings.length === 0;
             return (
               <article
                 id={`detected-piece-${index}`}
@@ -518,15 +511,6 @@ export default function ClothingDiscovery({
                 <div>
                   <h3>{item.name}</h3>
                   <p>{item.description}</p>
-                  {item.uncertainty && <small>{item.uncertainty}</small>}
-                  {!!item.readableText?.length && (
-                    <small>Readable image text: {item.readableText.join(' / ')}</small>
-                  )}
-                  {item.visibleModelCode && (
-                    <small>
-                      Observed model code: {item.visibleModelCode} - check the original label
-                    </small>
-                  )}
                 </div>
                 <div className="discovery-actions">
                   <button className="primary" disabled={!!busy} onClick={() => search(index)}>
@@ -542,8 +526,13 @@ export default function ClothingDiscovery({
                     I own this · save
                   </button>
                 </div>
-                <details className="search-details" key={`${base}:${description}`}>
+                <details
+                  className="search-details"
+                  open={noResults || undefined}
+                  key={`${key}:${result?.id ?? 'new'}`}
+                >
                   <summary>Edit search details</summary>
+                  {noResults && <p role="status">Items not found. Please edit your search.</p>}
                   <form
                     className="stack"
                     onSubmit={(event) => {
@@ -565,10 +554,7 @@ export default function ClothingDiscovery({
                         disabled={!!busy}
                       />
                     </label>
-                    <small>
-                      Describe color, cut or material. Your changes guide the search; they do not
-                      verify a brand or exact match. Searching may use one AI action.
-                    </small>
+                    <small>Try the color and type of clothing.</small>
                     <button disabled={!!busy} type="submit">
                       Search with these details
                     </button>
@@ -588,127 +574,33 @@ export default function ClothingDiscovery({
                   <div className="search-recovery" role="alert">
                     <strong>Search couldn’t finish</strong>
                     <p>{searchError}</p>
-                    <small>
-                      Your scan is still here. No search is repeated automatically. You can search
-                      another piece or region; interrupted requests may remain unavailable until
-                      their status is resolved.
-                    </small>
                   </div>
                 )}
-                {result && (
+                {result && listings.length > 0 && (
                   <div className="stack" aria-label={`Shopping results for ${item.name}`}>
-                    <p>
-                      Saved results · reopening does not run a new search. Prices and availability
-                      may have changed; confirm with the retailer.
-                    </p>
-                    {result.searchContext?.preferences?.maxPrice && (
-                      <small>
-                        Search budget: {result.searchContext.preferences.currency}{' '}
-                        {result.searchContext.preferences.maxPrice}. Unknown or different-currency
-                        prices need retailer confirmation.
-                      </small>
-                    )}
-                    <small>
-                      Searched {new Date(result.searchedAt).toLocaleDateString()} · Search region is
-                      a preference, not confirmed shipping coverage.
-                    </small>
-                    <small>
-                      Compare the details before buying. A sourced link is not a seller endorsement;
-                      confirm size, delivery and returns with the retailer.
-                    </small>
-                    {result.listings
-                      .filter((listing) => matchVerdict(item, listing).tier > 0)
-                      .filter(
-                        (listing) =>
-                          !availableOnly || listing.evidence?.availability === 'in-stock',
-                      )
-                      .map((listing) => (
-                        <a
-                          className="shopping-link"
-                          href={listing.url}
-                          onClick={() => {
-                            void api('/api/journey', 'POST', { event: 'retailer_click' }).catch(
-                              () => {},
-                            );
-                          }}
-                          key={listing.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <span className="eyebrow">{matchVerdict(item, listing).label}</span>
-                          <strong>
-                            {listing.title}
-                            <ArrowUpRight size={16} />
-                          </strong>
-                          <span>{listing.retailer}</span>
-                          <small>{listing.reason}</small>
-                          <small>{matchVerdict(item, listing).note}</small>
-                          {listing.visualReview && (
-                            <small>
-                              {listing.visualReview.status === 'not-reviewed'
-                                ? 'Photo comparison unavailable'
-                                : 'Photo comparison: ' + listing.visualReview.status}{' '}
-                              - {listing.visualReview.note}
-                            </small>
-                          )}
-                          {verifiedIdentityEvidence(item, listing) ===
-                            'matching-code-and-visuals' && (
-                            <small>
-                              Observed model code matches retailer metadata; visible details agree.
-                              Authenticity and exact variant still need checking.
-                            </small>
-                          )}
-                          <span>
-                            {listing.evidence?.availability === 'in-stock'
-                              ? 'Retailer reports: In stock'
-                              : listing.evidence?.availability === 'out-of-stock'
-                                ? 'Retailer reports: Unavailable'
-                                : 'Availability unknown'}
-                          </span>
-                          {listing.evidence && (
-                            <>
-                              <small>
-                                {listing.evidence.price !== undefined && listing.evidence.currency
-                                  ? listing.evidence.currency +
-                                    ' ' +
-                                    listing.evidence.price.toFixed(2) +
-                                    ' · '
-                                  : ''}
-                                Checked {new Date(listing.evidence.checkedAt).toLocaleString()}
-                              </small>
-                              <small>
-                                {listing.evidence.productName &&
-                                  'Retailer product: ' + listing.evidence.productName + '. '}
-                                {listing.evidence.note}
-                              </small>
-                              <small>
-                                Evidence source: {new URL(listing.evidence.sourceUrl).hostname}
-                              </small>
-                            </>
-                          )}
-                        </a>
-                      ))}
-                    {availableOnly &&
-                      result.listings.length > 0 &&
-                      !result.listings.some(
-                        (listing) => listing.evidence?.availability === 'in-stock',
-                      ) && (
-                        <div className="stack">
-                          <p>
-                            No retailer-confirmed in-stock offers in these results. Turn off the
-                            filter to see unchecked alternatives.
-                          </p>
-                          <button onClick={() => setAvailableOnly(false)}>Show all results</button>
-                        </div>
-                      )}
-                    {!result.listings.some((listing) => matchVerdict(item, listing).tier > 0) && (
-                      <p>
-                        No supported product matches found for this piece. Try another region or a
-                        closer photo.
-                      </p>
-                    )}
-                    {result.note && <small>{result.note}</small>}
-                    <AgentFeedback id={result.id} agent="shop" />
+                    {listings.map((listing) => (
+                      <a
+                        className="shopping-link"
+                        href={listing.url}
+                        onClick={() => {
+                          void api('/api/journey', 'POST', { event: 'retailer_click' }).catch(
+                            () => {},
+                          );
+                        }}
+                        key={listing.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span className="eyebrow">
+                          {matchVerdict(item, listing).tier === 3 ? 'Match found' : 'Alternative'}
+                        </span>
+                        <strong>
+                          {listing.title}
+                          <ArrowUpRight size={16} />
+                        </strong>
+                        <span>{listing.retailer}</span>
+                      </a>
+                    ))}
                   </div>
                 )}
               </article>

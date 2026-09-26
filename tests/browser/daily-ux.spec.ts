@@ -352,3 +352,76 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
   ).toHaveAttribute('aria-current', 'page');
   expect(stylistCalls).toBe(1);
 });
+
+test('shopping shows simple links and opens editing when no alternatives remain', async ({
+  page,
+}) => {
+  const piece = {
+    name: 'Blue shirt',
+    description: 'Blue cotton shirt',
+    category: 'tops',
+    color: '#446688',
+    visibleBrand: null,
+    uncertainty: 'Hidden technical detail',
+  };
+  let searches = 0;
+  await page.route('**/api/**', async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    let body: unknown = {};
+    if (path === '/api/session') body = { user: { id: 'owner', username: 'tester' } };
+    if (path === '/api/wardrobe') body = { garments: [], outfits: [], references: [] };
+    if (path === '/api/experience') body = { draft: [], recent: [] };
+    if (path === '/api/discovery') {
+      body =
+        route.request().method() === 'GET'
+          ? {
+              enabled: true,
+              searches: [],
+              detections: [
+                {
+                  id: 'scan',
+                  imageUrl: '/icons/icon-192.png',
+                  items: [piece],
+                  note: '1 piece identified',
+                },
+              ],
+            }
+          : {
+              id: `result-${++searches}`,
+              country: 'US',
+              searchedAt: new Date().toISOString(),
+              note: 'Hidden provider explanation',
+              listings:
+                searches === 1
+                  ? [
+                      {
+                        title: 'Cotton blue shirt',
+                        url: 'https://shop.example/products/blue-shirt',
+                        retailer: 'shop.example',
+                        match: 'similar',
+                        reason: 'Hidden ranking rationale',
+                      },
+                    ]
+                  : [],
+            };
+    }
+    await route.fulfill({ json: body });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: /Continue your latest scan/ }).click();
+  await page.getByRole('button', { name: 'Find where to buy' }).click();
+  const results = page.getByLabel('Shopping results for Blue shirt');
+  await expect(results.getByRole('link')).toHaveAttribute(
+    'href',
+    'https://shop.example/products/blue-shirt',
+  );
+  await expect(results).toContainText('Alternative');
+  await expect(page.getByText('Hidden provider explanation')).toHaveCount(0);
+  await expect(page.getByText('Hidden ranking rationale')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Find where to buy' }).click();
+  await expect(page.getByText('Items not found. Please edit your search.')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Describe the piece to find' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Describe the piece to find' })).toHaveValue(
+    'Blue cotton shirt',
+  );
+});
