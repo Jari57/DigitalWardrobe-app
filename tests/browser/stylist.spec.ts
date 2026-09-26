@@ -101,7 +101,7 @@ test('Blind Fit preserves locks, explains a real AI outfit, reuses it and hands 
     }
     await page.goto('/');
     await page.getByRole('button', { name: 'Closet', exact: true }).click();
-    await page.getByRole('button', { name: /Style me For whatever/ }).click();
+    await page.getByRole('button', { name: /Put a fit together From your closet/ }).click();
     await page.getByRole('button', { name: 'Surprise me without AI', exact: true }).click();
     const lockedName = await page.locator('.blind-grid button').first().innerText();
     await page.locator('.blind-grid button').first().click();

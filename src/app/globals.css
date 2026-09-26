@@ -1087,7 +1087,7 @@ legend {
   min-width: 0;
 }
 .daily-actions button:first-child {
-  grid-column: 1 / -1;
+  grid-column: auto;
 }
 .daily-actions span {
   display: flex;
@@ -1119,7 +1119,7 @@ legend {
   margin: 0 0 12px;
 }
 .compact-intents .daily-actions {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .compact-intents .daily-actions button:first-child {
   grid-column: auto;

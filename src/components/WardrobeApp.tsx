@@ -179,8 +179,8 @@ export default function WardrobeApp({
               >
                 <div>
                   <span className="eyebrow">MAKE GETTING DRESSED EASIER</span>
-                  <h2>Your day. Your outfit.</h2>
-                  <p>Plans first. A look from your closet next.</p>
+                  <h2>Make a fit. Or stalk one.</h2>
+                  <p>Use what you own, or find the look you want.</p>
                 </div>
                 <div className="daily-actions">
                   <button
@@ -196,19 +196,22 @@ export default function WardrobeApp({
                   >
                     <Sparkles size={18} />
                     <span>
-                      Style me<small>For whatever is on today</small>
+                      Put a fit together<small>From your closet, for your plans</small>
                     </span>
                   </button>
-                  <button onClick={() => setTab('Looks')}>
-                    <Grid2X2 size={18} />
+                  <button
+                    onClick={() => {
+                      setTab('Spotter');
+                      requestAnimationFrame(() =>
+                        document
+                          .getElementById('stalk-fit')
+                          ?.scrollIntoView({ behavior: 'auto', block: 'start' }),
+                      );
+                    }}
+                  >
+                    <Search size={18} />
                     <span>
-                      My fits<small>Saved and ready to wear</small>
-                    </span>
-                  </button>
-                  <button onClick={add}>
-                    <Plus size={18} />
-                    <span>
-                      Add a piece<small>Build your closet</small>
+                      Stalk a fit<small>Find a look or shop its pieces</small>
                     </span>
                   </button>
                 </div>
@@ -217,6 +220,10 @@ export default function WardrobeApp({
             {tab === 'Closet' && (
               <>
                 <div className="row wrap">
+                  <button className="primary" onClick={add}>
+                    <Plus size={16} />
+                    Add a piece
+                  </button>
                   <button onClick={() => setTab('Canvas')}>
                     <Layers size={16} />
                     Outfit canvas
@@ -350,7 +357,7 @@ export default function WardrobeApp({
                 }}
               />
             )}
-            <div hidden={tab !== 'Spotter'}>
+            <div id="stalk-fit" hidden={tab !== 'Spotter'}>
               <Spotter
                 key={spotterSession}
                 onStyleSaved={(id) => {
@@ -428,10 +435,12 @@ export default function WardrobeApp({
                   <Empty
                     title="Meet your future favorites"
                     action={
-                      <button onClick={() => (user ? setBlind(true) : add())}>Style me</button>
+                      <button onClick={() => (user ? setBlind(true) : add())}>
+                        Put a fit together
+                      </button>
                     }
                   >
-                    Get a suggestion with Style me and save it here, ready for your next day out.
+                    Put a fit together and save it here, ready for your next day out.
                   </Empty>
                 ) : (
                   data.outfits.map((o) => (

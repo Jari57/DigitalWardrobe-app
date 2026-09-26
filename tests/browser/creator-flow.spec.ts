@@ -61,7 +61,7 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    await page.getByRole('button', { name: /Style me For whatever/ }).click();
+    await page.getByRole('button', { name: /Put a fit together From your closet/ }).click();
     await page.getByRole('button', { name: 'Surprise me without AI' }).click();
     await expect(page.locator('.blind-grid button')).toHaveCount(3);
     const lockedName = await page.locator('.blind-grid button').first().innerText();

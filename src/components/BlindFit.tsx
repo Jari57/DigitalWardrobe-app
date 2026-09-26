@@ -98,7 +98,7 @@ export default function BlindFit({
 
   return (
     <Modal
-      title="Style me"
+      title="Put a fit together"
       dark
       onClose={() => {
         if (!busy) onClose();

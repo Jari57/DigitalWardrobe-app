@@ -102,9 +102,12 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
   });
   await page.goto('/');
   await expect(
+    page.getByRole('region', { name: 'Your style shortcuts' }).getByRole('button'),
+  ).toHaveCount(2);
+  await expect(
     page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button'),
   ).toHaveCount(4);
-  await page.getByRole('button', { name: /Style me For whatever/ }).click();
+  await page.getByRole('button', { name: /Put a fit together From your closet/ }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Occasion').fill('Client meeting, then dinner. Comfortable shoes.');
   await dialog.getByRole('button', { name: 'Style with AI' }).click();
@@ -130,4 +133,9 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
     true,
   );
   await page.screenshot({ path: 'test-results/daily-ux.png', fullPage: true });
+  await page.getByRole('button', { name: 'Stalk a fit', exact: true }).click();
+  await expect(
+    page.getByRole('navigation').getByRole('button', { name: 'Spotter' }),
+  ).toHaveAttribute('aria-current', 'page');
+  expect(stylistCalls).toBe(1);
 });
