@@ -10,7 +10,7 @@ export function discoveryRequestKey(
 ) {
   return createHash('sha256')
     .update(
-      (input.agent === 'shop' ? 'shopping-verifier-v5:' : 'capture-evidence-v3:') +
+      (input.agent === 'shop' ? 'shopping-recall-v6:' : 'capture-evidence-v3:') +
         JSON.stringify(input) +
         ':' +
         day +

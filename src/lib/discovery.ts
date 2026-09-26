@@ -166,7 +166,23 @@ export function shoppingPageKind(value: string): 'excluded' | 'product-path' | '
   )
     return 'product-path';
   // A collection may contain a direct product URL, so check that first.
+  if (/(^|\.)hm\.com$/.test(host) && /\/products\//.test(path)) return 'excluded';
   if (/\/(?:products?|dp|pd|p)\/[^/]+/.test(path) || /\/[^/]+-p\d+\.html$/.test(path))
+    return 'product-path';
+  // Retailers often use SKU routes rather than /product/. Keep these host-scoped
+  // so a blog or category page cannot become a product merely by containing digits.
+  const retailerRoutes: [RegExp, RegExp][] = [
+    [/(^|\.)nordstrom\.com$/, /^\/s\/(?:[^/]+\/)?\d+\/?$/],
+    [/(^|\.)asos\.com$/, /\/prd\/\d+\/?$/],
+    [/(^|\.)nike\.com$/, /\/t\/[^/]+\/[^/]+\/?$/],
+    [/(^|\.)hm\.com$/, /\/productpage\.\d+\.html$/],
+    [/(^|\.)uniqlo\.com$/, /\/products\/[^/]+/],
+    [/(^|\.)(gap|oldnavy|bananarepublic)\.(com|ca)$/, /\/browse\/product\.do$/],
+    [/(^|\.)(macys|bloomingdales)\.com$/, /\/shop\/product\/[^/]+/],
+    [/(^|\.)walmart\.(com|ca)$/, /\/ip\/(?:[^/]+\/)?\d+\/?$/],
+    [/(^|\.)farfetch\.com$/, /-item-\d+\.aspx$/],
+  ];
+  if (retailerRoutes.some(([domain, route]) => domain.test(host) && route.test(path)))
     return 'product-path';
   if (
     /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/?)?$/.test(path) ||

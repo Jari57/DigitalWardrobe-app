@@ -6,6 +6,68 @@ import {
   type ShoppingResult,
 } from '../../src/lib/discovery';
 import { parseProductEvidence } from '../../src/server/agents/product-evidence';
+import { qualityShoppingListings } from '../../src/lib/shopping-quality';
+import { matchVerdict } from '../../src/lib/match-verifier';
+
+test('retailer SKU URLs survive unavailable metadata without becoming verified matches', () => {
+  const urls = [
+    'https://www.nordstrom.com/s/oversized-blazer/1234567',
+    'https://www.asos.com/brand/navy-blazer/prd/12345678',
+    'https://www.nike.com/t/court-shoes-abc/AB1234-100',
+    'https://www2.hm.com/en_us/productpage.1234567001.html',
+    'https://oldnavy.gap.com/browse/product.do?pid=123456789',
+    'https://www.walmart.com/ip/navy-blazer/123456789',
+    'https://www.farfetch.com/shopping/women/navy-blazer-item-12345678.aspx',
+  ];
+  const item = {
+    name: 'Navy blazer',
+    category: 'outerwear' as const,
+    color: '#000080',
+    description: 'Navy oversized blazer',
+    visibleBrand: null,
+    uncertainty: '',
+  };
+  for (const url of urls) {
+    expect(shoppingPageKind(url), url).toBe('product-path');
+    const listing: ShoppingResult['listings'][number] = {
+      title: 'Navy oversized blazer',
+      url,
+      retailer: new URL(url).hostname,
+      reason: 'Similar color and cut; identity unconfirmed.',
+      match: 'similar',
+      evidence: {
+        availability: 'unknown',
+        sourceUrl: url,
+        checkedAt: new Date().toISOString(),
+        note: 'Metadata unavailable',
+      },
+    };
+    expect(qualityShoppingListings([listing], 'US', undefined, 'outerwear')).toHaveLength(1);
+    expect(matchVerdict(item, listing).label).toContain('needs checking');
+    expect(
+      qualityShoppingListings(
+        [{ ...listing, title: 'White sneakers' }],
+        'US',
+        undefined,
+        'outerwear',
+      ),
+    ).toHaveLength(0);
+    expect(
+      qualityShoppingListings(
+        [{ ...listing, evidence: { ...listing.evidence!, price: 200, currency: 'USD' } }],
+        'US',
+        { maxPrice: 100, currency: 'USD', sizes: '' },
+      ),
+    ).toHaveLength(0);
+  }
+  for (const url of [
+    'https://www.nordstrom.com/browse/women/clothing',
+    'https://www.nordstrom.com.shop.example/s/navy-blazer/1234567',
+    'https://www2.hm.com/en_us/women/products/blazers.html',
+    'https://www.farfetch.com/shopping/women/items.aspx',
+  ])
+    expect(shoppingPageKind(url)).not.toBe('product-path');
+});
 
 test('shopping URL checks remove browsing and social pages without losing nested product links', () => {
   for (const url of [
