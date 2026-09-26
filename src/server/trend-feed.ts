@@ -2,10 +2,8 @@ import { createHash } from 'node:crypto';
 import { XMLParser } from 'fast-xml-parser';
 import { db } from './db';
 import { classifyFashion } from '@/lib/for-you';
-export const feedSources = [
-  { name: 'Who What Wear', url: 'https://www.whowhatwear.com/feeds/all', host: 'whowhatwear.com' },
-  { name: 'ELLE', url: 'https://www.elle.com/rss/fashion.xml', host: 'elle.com' },
-];
+import { feedSources, feedImageHosts, balancePublishers } from '@/lib/feed-sources';
+export { feedSources } from '@/lib/feed-sources';
 export function safeFeedImage(value: unknown) {
   if (typeof value !== 'string' || value.length > 2000) return null;
   try {
@@ -14,7 +12,7 @@ export function safeFeedImage(value: unknown) {
       !url.username &&
       !url.password &&
       !url.port &&
-      ['cdn.mos.cms.futurecdn.net', 'hips.hearstapps.com'].includes(url.hostname)
+      feedImageHosts.includes(url.hostname)
       ? url.href
       : null;
   } catch {
@@ -29,20 +27,31 @@ export function parseFashionFeed(
   if (xml.length > 1_000_000 || /<!DOCTYPE|<!ENTITY/i.test(xml))
     throw new Error('Unsupported feed');
   const parsed = new XMLParser({ ignoreAttributes: false, processEntities: false }).parse(xml);
-  if (!parsed.rss?.channel) throw new Error('Invalid feed');
-  const entries = parsed.rss.channel.item;
+  if (!parsed.rss?.channel && !parsed.feed) throw new Error('Invalid feed');
+  const entries = parsed.rss?.channel?.item ?? parsed.feed?.entry;
+  const textValue = (value: unknown): string | undefined =>
+    typeof value === 'string'
+      ? value
+      : value && typeof value === 'object' && '#text' in value && typeof value['#text'] === 'string'
+        ? value['#text']
+        : undefined;
   return (Array.isArray(entries) ? entries : entries ? [entries] : [])
     .slice(0, 80)
     .flatMap((entry) => {
-      if (
-        typeof entry.title !== 'string' ||
-        typeof entry.link !== 'string' ||
-        typeof entry.pubDate !== 'string'
-      )
-        return [];
+      const rawTitle = textValue(entry.title);
+      const links = Array.isArray(entry.link) ? entry.link : [entry.link];
+      const rawLink =
+        typeof entry.link === 'string'
+          ? entry.link
+          : links.find(
+              (link: { '@_rel'?: string; '@_href'?: string } | undefined) =>
+                link && (!link['@_rel'] || link['@_rel'] === 'alternate'),
+            )?.['@_href'];
+      const rawDate = entry.pubDate ?? entry.published ?? entry.updated ?? entry['dc:date'];
+      if (!rawTitle || typeof rawLink !== 'string' || typeof rawDate !== 'string') return [];
       let url: URL;
       try {
-        url = new URL(entry.link);
+        url = new URL(rawLink);
       } catch {
         return [];
       }
@@ -52,7 +61,7 @@ export function parseFashionFeed(
         url.password ||
         url.port ||
         url.hostname.replace(/^www\./, '') !== source.host ||
-        !url.pathname.startsWith('/fashion/')
+        !source.paths.test(url.pathname)
       )
         return [];
       if (/sponsored|advertorial|paid partnership/i.test(JSON.stringify(entry.category ?? '')))
@@ -65,14 +74,14 @@ export function parseFashionFeed(
         return [];
       url.search = '';
       url.hash = '';
-      const publishedAt = new Date(entry.pubDate);
+      const publishedAt = new Date(rawDate);
       if (
         !Number.isFinite(+publishedAt) ||
         +publishedAt > +now ||
         +publishedAt < +now - 14 * 86400000
       )
         return [];
-      const title = entry.title
+      const title = rawTitle
         .replace(/&amp;/g, '&')
         .replace(/&quot;/g, '"')
         .replace(/&apos;|&#39;/g, "'")
@@ -85,7 +94,19 @@ export function parseFashionFeed(
       const media = Array.isArray(entry['media:content'])
         ? entry['media:content'][0]
         : entry['media:content'];
-      const imageUrl = safeFeedImage(media?.['@_url'] ?? entry['media:thumbnail']?.['@_url']);
+      const description =
+        textValue(entry['content:encoded']) ??
+        textValue(entry.description) ??
+        textValue(entry.summary) ??
+        '';
+      const embeddedImage = description.match(/<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/i)?.[1];
+      const enclosure = entry.enclosure?.['@_type']?.startsWith('image/')
+        ? entry.enclosure['@_url']
+        : undefined;
+      const imageUrl =
+        [media?.['@_url'], entry['media:thumbnail']?.['@_url'], enclosure, embeddedImage]
+          .map(safeFeedImage)
+          .find(Boolean) ?? null;
       const credit = media?.['media:credit'];
       const imageCredit =
         typeof credit === 'string' ? credit.replace(/<[^>]*>/g, '').slice(0, 120) : null;
@@ -183,7 +204,10 @@ export async function refreshTrends(force = false) {
         .flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
         .map((item) => [item.id, item]),
     );
-    const items = [...unique.values()].sort((a, b) => +b.publishedAt - +a.publishedAt).slice(0, 60);
+    const items = balancePublishers(
+      [...unique.values()].sort((a, b) => +b.publishedAt - +a.publishedAt),
+      150,
+    );
     await db.$transaction(
       items.map((item) =>
         db.trendItem.upsert({ where: { id: item.id }, create: item, update: item }),

@@ -3,6 +3,7 @@ import { sessionUser, requireUser, rateLimit } from '@/server/auth';
 import { defaultPreferences, preferenceSchema, rankFeed } from '@/lib/for-you';
 import { checkOrigin, handleError, json } from '@/server/http';
 import { refreshTrends } from '@/server/trend-feed';
+import { feedSources, balancePublishers } from '@/lib/feed-sources';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 export async function GET(request: Request) {
@@ -17,20 +18,34 @@ export async function GET(request: Request) {
       }
     }
     const [items, preference, feedback, refresh] = await Promise.all([
-      db.trendItem.findMany({
-        where: {
-          categories: { isEmpty: false },
-          publishedAt: {
-            lte: new Date(),
-            ...(mode === 'saved' ? {} : { gte: new Date(Date.now() - 14 * 86400000) }),
-          },
-          ...(mode === 'saved'
-            ? { feedback: { some: { userId: user?.id ?? '__no_user__', saved: true } } }
-            : {}),
-        },
-        orderBy: { publishedAt: 'desc' },
-        take: 150,
-      }),
+      mode === 'saved'
+        ? db.trendItem.findMany({
+            where: {
+              categories: { isEmpty: false },
+              publishedAt: {
+                lte: new Date(),
+                ...(mode === 'saved' ? {} : { gte: new Date(Date.now() - 14 * 86400000) }),
+              },
+              ...(mode === 'saved'
+                ? { feedback: { some: { userId: user?.id ?? '__no_user__', saved: true } } }
+                : {}),
+            },
+            orderBy: { publishedAt: 'desc' },
+            take: 150,
+          })
+        : Promise.all(
+            feedSources.map((source) =>
+              db.trendItem.findMany({
+                where: {
+                  publisher: source.name,
+                  categories: { isEmpty: false },
+                  publishedAt: { lte: new Date(), gte: new Date(Date.now() - 14 * 86400000) },
+                },
+                orderBy: { publishedAt: 'desc' },
+                take: 30,
+              }),
+            ),
+          ).then((groups) => groups.flat()),
       user ? db.trendPreference.findUnique({ where: { userId: user.id } }) : null,
       user
         ? db.trendFeedback.findMany({
@@ -59,8 +74,19 @@ export async function GET(request: Request) {
     const combined = [
       ...new Map([...feedback, ...visibleFeedback].map((entry) => [entry.itemId, entry])).values(),
     ];
+    const ranked = rankFeed(items, preferences, combined, mode);
     return json({
-      items: rankFeed(items, preferences, combined, mode).slice(0, 60),
+      items: mode === 'for-you' ? balancePublishers(ranked, 60) : ranked.slice(0, 60),
+      sources: feedSources.map((source) => ({
+        name: source.name,
+        status: !refresh?.lastAttempt
+          ? 'pending'
+          : refresh.failedSources.includes(source.name)
+            ? 'unavailable'
+            : items.some((item) => item.publisher === source.name)
+              ? 'available'
+              : 'no-current-stories',
+      })),
       preferences,
       authenticated: !!user,
       checkedAt: refresh?.lastSuccess,

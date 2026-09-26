@@ -1,5 +1,49 @@
 import { test, expect } from '@playwright/test';
-import { fetchFashionSource, feedSources } from '../../src/server/trend-feed';
+import {
+  fetchFashionSource,
+  feedSources,
+  parseFashionFeed,
+  safeFeedImage,
+} from '../../src/server/trend-feed';
+import { balancePublishers } from '../../src/lib/feed-sources';
+
+test('all ten publisher routes ingest dated garment stories without allowing cross-host links', () => {
+  const now = new Date('2026-09-26T12:00:00Z');
+  const paths = [
+    '/fashion/shoes/test',
+    '/fashion/test',
+    '/fashion/test',
+    '/style/test',
+    '/2026/09/test',
+    '/fashion/2026/sep/26/test',
+    '/2026/9/test',
+    '/p/test/',
+    '/story/test',
+    '/article/test',
+  ];
+  expect(feedSources).toHaveLength(10);
+  feedSources.forEach((source, index) => {
+    const xml = `<rss><channel><item><title>Classic loafers</title><link>https://${source.host}${paths[index]}</link><pubDate>${now.toUTCString()}</pubDate></item></channel></rss>`;
+    expect(parseFashionFeed(xml, source, now)).toHaveLength(1);
+    expect(
+      parseFashionFeed(xml.replace(source.host, source.host + '.evil.example'), source, now),
+    ).toHaveLength(0);
+  });
+  const atom = `<feed><entry><title type="text">Classic loafers</title><link rel="alternate" href="https://www.gq.com/story/test"/><published>${now.toISOString()}</published><summary><![CDATA[<img src="https://media.gq.com/photo.jpg">]]></summary></entry></feed>`;
+  expect(parseFashionFeed(atom, feedSources[8], now)[0].imageUrl).toBe(
+    'https://media.gq.com/photo.jpg',
+  );
+  expect(safeFeedImage('https://media.gq.com.evil.example/photo.jpg')).toBeNull();
+  expect(safeFeedImage('https://media.gq.com:8443/photo.jpg')).toBeNull();
+});
+
+test('publisher diversity preserves within-source ranking and does not discard the remaining stories', () => {
+  const items = [1, 2, 3, 4].map((id) => ({ id, publisher: 'Busy source' }));
+  items.push({ id: 5, publisher: 'Small source' }, { id: 6, publisher: 'Third source' });
+  expect(balancePublishers(items, 4).map((item) => item.id)).toEqual([1, 5, 6, 2]);
+  expect(balancePublishers(items, 60)).toHaveLength(6);
+  expect(balancePublishers([], 60)).toEqual([]);
+});
 
 test('publisher redirects stay on the source host; empty coverage is not a successful refresh', async () => {
   const original = globalThis.fetch;
@@ -82,6 +126,10 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
         checkedAt: new Date().toISOString(),
         stale: false,
         sourcesUnavailable: false,
+        sources: [
+          { name: 'ELLE', status: 'available' },
+          { name: 'GQ', status: 'unavailable' },
+        ],
         items: [
           {
             id: refreshes ? 'new' : 'old',
@@ -121,6 +169,8 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
   ).toBeVisible();
   await page.getByRole('navigation').getByRole('button', { name: 'For You' }).click();
   await expect(page.getByRole('heading', { name: 'Classic white shirts' })).toBeVisible();
+  await page.getByText('Explore our sources (1 with current stories)').click();
+  await expect(page.getByText('GQ — Temporarily unavailable')).toBeVisible();
   await page.getByRole('button', { name: 'Refresh feed' }).click();
   await expect(page.getByRole('heading', { name: 'New weekend loafers' })).toBeVisible();
   await expect(page.getByText('1 new ideas added.')).toBeVisible();

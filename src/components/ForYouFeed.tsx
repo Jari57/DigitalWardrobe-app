@@ -25,6 +25,7 @@ type Response = {
   sourcesUnavailable: boolean;
   stale?: boolean;
   attemptedAt?: string | null;
+  sources?: { name: string; status: string }[];
 };
 function Photo({ item }: { item: FeedItem }) {
   const [failed, setFailed] = useState(false);
@@ -253,7 +254,8 @@ export default function ForYouFeed({
             </select>
           </label>
           <small>
-            Region guides shopping searches. Fashion coverage currently comes from US/UK publishers.
+            Region guides shopping searches. Coverage comes from a mix of international fashion
+            publishers.
           </small>
           <button className="primary" disabled={busy || loading}>
             {busy ? 'Saving…' : 'Save interests'}
@@ -297,6 +299,29 @@ export default function ForYouFeed({
         </div>
       )}
       {refreshNote && <p role="status">{refreshNote}</p>}
+      {data?.sources && mode !== 'saved' && (
+        <details className="feed-sources">
+          <summary>
+            Explore our sources (
+            {data.sources.filter((source) => source.status === 'available').length} with current
+            stories)
+          </summary>
+          <ul>
+            {data.sources.map((source) => (
+              <li key={source.name}>
+                {source.name} —{' '}
+                {source.status === 'available'
+                  ? 'Current stories available'
+                  : source.status === 'unavailable'
+                    ? 'Temporarily unavailable'
+                    : source.status === 'pending'
+                      ? 'First check pending'
+                      : 'No current stories in this selection'}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       {!data?.authenticated && !loading && (
         <button className="text-button" onClick={onAuth}>
           Sign in to make this feed yours
