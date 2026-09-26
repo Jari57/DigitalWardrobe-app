@@ -252,13 +252,13 @@ export const rankingSchema = z
       .array(
         z
           .object({
-            sourceIndex: z.number().int().min(0).max(7),
+            sourceIndex: z.number().int().min(0).max(11),
             reason: z.string().min(1).max(280),
             match: z.enum(['similar', 'possible-exact']),
           })
           .strict(),
       )
-      .max(5),
+      .max(8),
     note: z.string().max(400),
   })
   .strict();
@@ -270,7 +270,7 @@ export const rankingProviderSchema = rankingSchema.extend({
   listings: z.array(
     z
       .object({
-        sourceIndex: z.number().int().min(0).max(7),
+        sourceIndex: z.number().int().min(0).max(11),
         reason: z.string(),
         match: z.enum(['similar', 'possible-exact']),
       })
@@ -281,7 +281,7 @@ export function normalizeRanking(value: z.infer<typeof rankingProviderSchema>) {
   return rankingSchema.parse({
     note: value.note.slice(0, 400),
     listings: value.listings
-      .slice(0, 5)
+      .slice(0, 8)
       .map((item) => ({ ...item, reason: item.reason.slice(0, 280) })),
   });
 }

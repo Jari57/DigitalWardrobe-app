@@ -1,9 +1,48 @@
 import { test, expect } from '@playwright/test';
 import sharp from 'sharp';
 import { garmentReference, garmentRegion } from '../../src/server/agents/garment-crop';
-import { shoppingItem, type DetectedItem } from '../../src/lib/discovery';
+import {
+  shoppingItem,
+  normalizeRanking,
+  groundedListings,
+  type DetectedItem,
+} from '../../src/lib/discovery';
+import { qualityShoppingListings } from '../../src/lib/shopping-quality';
 import { parseProductEvidence } from '../../src/server/agents/product-evidence';
 import { rankRisingFits, type TrendObservation } from '../../src/lib/viral-discovery';
+
+test('validated backup candidates survive when leading retailers redirect to the wrong region', () => {
+  const sources = Array.from({ length: 12 }, (_, i) => ({
+    title: 'Brown blazer',
+    url: `https://shop.example.com/products/blazer-${i}`,
+  }));
+  const ranking = normalizeRanking({
+    note: '',
+    listings: Array.from({ length: 8 }, (_, i) => ({
+      sourceIndex: i + 4,
+      reason: 'Matching brown blazer',
+      match: 'similar' as const,
+    })),
+  });
+  const leads = groundedListings(ranking, sources, null).map((lead, i) => ({
+    ...lead,
+    evidence: {
+      sourceUrl: i < 5 ? 'https://shop.example.com/en-in/products/blazer' : lead.url,
+      checkedAt: new Date().toISOString(),
+      availability: 'unknown' as const,
+      note: '',
+    },
+  }));
+  const kept = qualityShoppingListings(leads, 'US', undefined, 'outerwear');
+  expect(kept).toHaveLength(3);
+  expect(kept[2].url).toBe(sources[11].url);
+  expect(() =>
+    normalizeRanking({
+      note: '',
+      listings: [{ sourceIndex: 12, reason: 'Unsupported', match: 'similar' }],
+    }),
+  ).toThrow();
+});
 
 test('garment crops isolate target pixels and safely fall back for old or invalid detections', async () => {
   const image = await sharp({

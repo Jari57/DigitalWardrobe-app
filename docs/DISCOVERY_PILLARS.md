@@ -9,6 +9,7 @@ Keep the interface simple: found links, useful alternatives, or edit search.
 - Editing the search clears crop/brand/code assumptions.
 - Product pages without usable JSON-LD photos can supply an unambiguous OpenGraph photo. This does not provide stock, price, brand or product identity. Existing URL, DNS, redirect and image checks still apply.
 - Cache versions changed so new scans/searches use the new pipeline.
+- Search retains up to 12 sources and ranks up to 8 candidates before validation, then returns at most 5 links. This leaves backups when retailer redirects or visual conflicts remove leading candidates. The existing single search call, three-photo comparison and request spending limits remain.
 - A tested rising-fit scorer requires timestamped observations, compatible counter definitions, fresh measurements, a same-platform/cohort baseline, garment relevance, and creator/content diversity. It rejects resets and insufficient evidence.
 
 The scorer is a foundation, not a connected social feed. No social provider is configured and the current For You feed remains editorial. Its thresholds are initial heuristics, not a validated definition of virality. Garment bounds are model predictions; fixture tests do not establish real-world detection accuracy.

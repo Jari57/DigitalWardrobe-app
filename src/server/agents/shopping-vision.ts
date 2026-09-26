@@ -70,7 +70,7 @@ export async function reviewProductPhotos(
             .array(
               z
                 .object({
-                  sourceIndex: z.number().int().min(0).max(4),
+                  sourceIndex: z.number().int().min(0).max(7),
                   status: z.enum(['consistent', 'similar', 'different', 'unclear']),
                   note: z.string().max(280),
                 })
