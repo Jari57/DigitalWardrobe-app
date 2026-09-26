@@ -8,7 +8,7 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
 }) => {
   const username = `qa_${randomBytes(7).toString('hex')}`;
   const password = randomBytes(20).toString('hex');
-  const headers = { Origin: 'http://localhost:3100' };
+  const headers = { Origin: process.env.TEST_BASE_URL || 'http://localhost:3100' };
   const signup = await context.request.post('/api/auth', {
     headers,
     data: { action: 'signup', username, password },

@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { refreshedSelection } from '@/lib/feed-refresh';
 import {
   Bookmark,
   Heart,
@@ -72,9 +73,12 @@ export default function ForYouFeed({
   const [hidden, setHidden] = useState<string>();
   const [refreshing, setRefreshing] = useState(false);
   const [refreshNote, setRefreshNote] = useState('');
+  const [refreshFailed, setRefreshFailed] = useState(false);
+  const feedRequest = useRef(0);
   const [audienceOverride, setAudienceOverride] = useState<StyleAudience>();
   const feedUrl = `/api/for-you?mode=${mode}${audienceOverride ? `&audience=${audienceOverride}` : ''}`;
   async function chooseAudience(audience: StyleAudience) {
+    setRefreshFailed(false);
     const next = setAudience(preferences, audience);
     setBusy(true);
     setError('');
@@ -111,41 +115,52 @@ export default function ForYouFeed({
     };
   }, [editing, busy, refreshing]);
   async function refreshFeed() {
+    if (refreshing || busy || loading) return;
+    const requestId = ++feedRequest.current;
     setRefreshing(true);
     setError('');
+    setRefreshFailed(false);
     setRefreshNote('');
     try {
       if (data?.authenticated) await api('/api/for-you', 'POST');
       const next = await api<Response>(feedUrl);
-      const previousIds = new Set(data?.items.map((item) => item.id));
-      const added = next.items.filter((item) => !previousIds.has(item.id)).length;
-      setData(next);
+      if (requestId !== feedRequest.current) return;
+      const selection = refreshedSelection(data?.items ?? [], next.items, mode);
+      setData({ ...next, items: selection.items });
       setRefreshNote(
-        next.sourcesUnavailable || next.stale
-          ? 'Some publishers are unavailable. Your saved ideas are still here.'
-          : added
-            ? `${added} new ideas added.`
-            : 'You are up to date. No new stories since your last check.',
+        selection.added
+          ? `${selection.added} new ${selection.added === 1 ? 'idea' : 'ideas'} added.`
+          : selection.mixed
+            ? 'Feed refreshed. Here’s a different mix.'
+            : next.stale
+              ? 'Updates are delayed. Please try again shortly.'
+              : 'You’re up to date. No new stories yet.',
       );
     } catch (e) {
-      setError((e as Error).message);
+      if (requestId === feedRequest.current) {
+        setError((e as Error).message);
+        setRefreshFailed(true);
+      }
     } finally {
       setRefreshing(false);
     }
   }
   useEffect(() => {
     let active = true;
+    const requestId = ++feedRequest.current;
     setLoading(true);
     setError('');
+    setRefreshNote('');
+    setRefreshFailed(false);
     api<Response>(feedUrl)
       .then((value) => {
-        if (active) {
+        if (active && requestId === feedRequest.current) {
           setData(value);
           setPreferences(value.preferences);
         }
       })
       .catch((e) => {
-        if (active) setError((e as Error).message);
+        if (active && requestId === feedRequest.current) setError((e as Error).message);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -155,6 +170,7 @@ export default function ForYouFeed({
     };
   }, [feedUrl, revision]);
   async function feedback(itemId: string, action: string) {
+    setRefreshFailed(false);
     if (!data?.authenticated) {
       onAuth();
       return;
@@ -172,6 +188,7 @@ export default function ForYouFeed({
     }
   }
   async function identify(item: FeedItem) {
+    setRefreshFailed(false);
     setBusy(true);
     setError('');
     try {
@@ -205,7 +222,7 @@ export default function ForYouFeed({
           className="icon-button"
           aria-label="Edit interests"
           aria-expanded={editing}
-          disabled={loading || busy}
+          disabled={loading || busy || refreshing}
           onClick={() => setEditing(!editing)}
         >
           <SlidersHorizontal size={20} />
@@ -307,7 +324,7 @@ export default function ForYouFeed({
             Region guides shopping searches. Coverage comes from a mix of international fashion
             publishers.
           </small>
-          <button className="primary" disabled={busy || loading}>
+          <button className="primary" disabled={busy || loading || refreshing}>
             {busy ? 'Saving…' : 'Save interests'}
           </button>
         </form>
@@ -387,13 +404,23 @@ export default function ForYouFeed({
       )}
       {error && (
         <p className="error" role="alert">
-          {error} <button onClick={() => setRevision((n) => n + 1)}>Try again</button>
+          {error}{' '}
+          <button
+            disabled={refreshing || loading || busy}
+            onClick={() => (refreshFailed ? void refreshFeed() : setRevision((n) => n + 1))}
+          >
+            Try again
+          </button>
         </p>
       )}
       {hidden && (
         <p role="status">
           Hidden from your feed.{' '}
-          <button className="text-button" disabled={busy} onClick={() => feedback(hidden, 'show')}>
+          <button
+            className="text-button"
+            disabled={busy || refreshing || loading}
+            onClick={() => feedback(hidden, 'show')}
+          >
             Undo
           </button>
         </p>
@@ -430,7 +457,7 @@ export default function ForYouFeed({
                 className="feed-save icon-button"
                 aria-label={item.saved ? 'Unsave idea' : 'Save idea'}
                 aria-pressed={item.saved}
-                disabled={busy}
+                disabled={busy || refreshing || loading}
                 onClick={() => feedback(item.id, item.saved ? 'unsave' : 'save')}
               >
                 <Bookmark size={20} fill={item.saved ? 'currentColor' : 'none'} />
@@ -449,7 +476,7 @@ export default function ForYouFeed({
                   className="icon-button"
                   aria-label={item.liked ? 'Unlike idea' : 'Like idea'}
                   aria-pressed={item.liked}
-                  disabled={busy}
+                  disabled={busy || refreshing || loading}
                   onClick={() => feedback(item.id, item.liked ? 'unlike' : 'like')}
                 >
                   <Heart size={20} fill={item.liked ? 'currentColor' : 'none'} />
@@ -478,7 +505,7 @@ export default function ForYouFeed({
                 </button>
                 <button
                   className="primary compact"
-                  disabled={busy || !item.imageUrl}
+                  disabled={busy || refreshing || loading || !item.imageUrl}
                   onClick={() => identify(item)}
                 >
                   {busy ? 'Opening…' : 'Identify this look'} <ArrowUpRight size={14} />
@@ -494,7 +521,7 @@ export default function ForYouFeed({
                 </small>
                 <button
                   className="text-button"
-                  disabled={busy}
+                  disabled={busy || refreshing || loading}
                   onClick={() => feedback(item.id, 'hide')}
                 >
                   Not interested

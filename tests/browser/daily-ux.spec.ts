@@ -336,11 +336,9 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
   await expect(page.getByText('GQ — Temporarily unavailable')).toBeVisible();
   await page.getByRole('button', { name: 'Refresh feed' }).click();
   await expect(page.getByRole('heading', { name: 'New weekend loafers' })).toBeVisible();
-  await expect(page.getByText('1 new ideas added.')).toBeVisible();
+  await expect(page.getByText('1 new idea added.')).toBeVisible();
   await page.getByRole('button', { name: 'Refresh feed' }).click();
-  await expect(
-    page.getByText('You are up to date. No new stories since your last check.'),
-  ).toBeVisible();
+  await expect(page.getByText(/up to date\. No new stories yet\./)).toBeVisible();
   await page.setViewportSize({ width: 320, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
@@ -455,4 +453,78 @@ test('guide explains all four sections and remains readable on mobile', async ({
   await expect(
     page.getByText('Start with a clear photo of one item you own.', { exact: false }),
   ).toBeVisible();
+});
+
+import { refreshedSelection } from '../../src/lib/feed-refresh';
+test('refresh offers a changing mix without claiming old stories are new', () => {
+  const items = Array.from({ length: 15 }, (_, i) => ({ id: String(i) }));
+  const first = refreshedSelection(items, items, 'for-you');
+  const second = refreshedSelection(first.items, items, 'for-you');
+  expect(first.added).toBe(0);
+  expect(first.mixed).toBe(true);
+  expect(first.items[0].id).not.toBe(items[0].id);
+  expect(second.items[0].id).not.toBe(first.items[0].id);
+  expect(new Set(second.items.map((item) => item.id)).size).toBe(15);
+  expect(refreshedSelection(items, items, 'latest').items).toEqual(items);
+  expect(refreshedSelection(items, [{ id: 'new' }, ...items], 'for-you').items[0].id).toBe('new');
+  expect(refreshedSelection(items, [], 'for-you').items).toEqual([]);
+});
+
+test('refresh handles a cooldown and retries the failed action', async ({ page }) => {
+  let posts = 0;
+  const items = Array.from({ length: 8 }, (_, i) => ({
+    id: String(i),
+    title: `Idea ${i}`,
+    url: `https://www.elle.com/fashion/${i}`,
+    publisher: 'ELLE',
+    publishedAt: new Date().toISOString(),
+    categories: ['tops'],
+    aesthetics: [],
+    liked: false,
+    saved: false,
+    reason: 'Style idea',
+  }));
+  await page.route('**/api/**', (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/for-you' && route.request().method() === 'POST') {
+      posts++;
+      return route.fulfill(
+        posts === 2
+          ? { status: 503, json: { error: 'Refresh temporarily unavailable.' } }
+          : { json: { skipped: true } },
+      );
+    }
+    return route.fulfill({
+      json:
+        path === '/api/session'
+          ? { user: { id: 'owner', username: 'tester' } }
+          : path === '/api/wardrobe'
+            ? { garments: [], outfits: [], references: [] }
+            : path === '/api/for-you'
+              ? {
+                  items,
+                  preferences: { categories: [], aesthetics: [], region: 'US' },
+                  authenticated: true,
+                  checkedAt: new Date().toISOString(),
+                  sourcesUnavailable: true,
+                }
+              : { detections: [], searches: [], draft: [] },
+    });
+  });
+  await page.goto('/');
+  await page
+    .getByRole('navigation', { name: 'Main navigation' })
+    .getByRole('button', { name: 'For You', exact: true })
+    .click();
+  await expect(page.locator('.feed-card h3').first()).toHaveText('Idea 0');
+  await page.getByRole('button', { name: 'Refresh feed' }).click();
+  await expect(page.locator('.feed-card h3').first()).toHaveText('Idea 6');
+  await expect(page.getByText(/Feed refreshed.*different mix/)).toBeVisible();
+  await page.getByRole('button', { name: 'Refresh feed' }).click();
+  await expect(page.getByRole('region', { name: 'For You feed' }).getByRole('alert')).toContainText(
+    'Refresh temporarily unavailable.',
+  );
+  await page.getByRole('button', { name: 'Try again', exact: true }).click();
+  await expect(page.locator('.feed-card h3').first()).toHaveText('Idea 4');
+  expect(posts).toBe(3);
 });

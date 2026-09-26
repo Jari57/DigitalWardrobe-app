@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/browser',
-  testMatch: 'daily-ux.spec.ts',
+  testMatch: ['daily-ux.spec.ts', 'screenshot-entry.spec.ts', 'canvas-layout.spec.ts'],
   workers: 1,
   timeout: 30000,
   use: {

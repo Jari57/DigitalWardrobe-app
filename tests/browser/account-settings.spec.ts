@@ -8,7 +8,7 @@ test('signup preserves recovery code, password change invalidates old session, d
   const username = `qa_${randomBytes(7).toString('hex')}`;
   let password = randomBytes(20).toString('hex');
   const nextPassword = randomBytes(20).toString('hex');
-  const headers = { Origin: 'http://localhost:3100' };
+  const headers = { Origin: process.env.TEST_BASE_URL || 'http://localhost:3100' };
   let created = false,
     deleted = false;
   try {
