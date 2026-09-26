@@ -39,6 +39,7 @@ export function shoppingItem(item: DetectedItem, description?: string): Detected
     visibleBrand: null,
     readableText: [],
     visibleModelCode: null,
+    bounds: null,
     uncertainty: 'User-supplied search description; brand and product identity are unverified.',
   };
 }
@@ -58,6 +59,19 @@ export const detectedItemSchema = z
     uncertainty: z.string().max(300),
     readableText: z.array(z.string().max(100)).max(4).optional(),
     visibleModelCode: z.string().max(80).nullable().optional(),
+    bounds: z
+      .object({
+        left: z.number().min(0).max(1),
+        top: z.number().min(0).max(1),
+        right: z.number().min(0).max(1),
+        bottom: z.number().min(0).max(1),
+      })
+      .strict()
+      .nullable()
+      .optional()
+      .describe(
+        'Visible garment rectangle in the image, normalized 0 to 1 from top-left. null when uncertain.',
+      ),
   })
   .strict();
 export const detectionSchema = z

@@ -1,7 +1,13 @@
 import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/browser',
-  testMatch: ['agent-improvements.spec.ts', 'agent-contracts.spec.ts', 'shopping-quality.spec.ts'],
+  testMatch: [
+    'agent-improvements.spec.ts',
+    'agent-contracts.spec.ts',
+    'shopping-quality.spec.ts',
+    'product-evidence.spec.ts',
+    'discovery-pillars.spec.ts',
+  ],
   workers: 1,
   retries: 0,
   reporter: 'list',

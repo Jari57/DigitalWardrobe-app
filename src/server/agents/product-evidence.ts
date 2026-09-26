@@ -2,7 +2,7 @@ import { lookup } from 'node:dns/promises';
 import type { LookupAddress } from 'node:dns';
 import { request } from 'node:https';
 import { isIP } from 'node:net';
-import { safeShoppingUrl, type ProductEvidence } from '@/lib/discovery';
+import { safeShoppingUrl, shoppingPageKind, type ProductEvidence } from '@/lib/discovery';
 
 // IPv4 only: pin the validated address while preserving TLS hostname verification.
 export function publicAddress(ip: string) {
@@ -123,6 +123,53 @@ function samePage(value: unknown, page: string) {
     return false;
   }
 }
+
+function pagePhoto(html: string, sourceUrl: string): string | undefined {
+  // Read only head metadata, never user content or related-product cards.
+  const head = html.match(/<head\b[^>]*>([\s\S]*?)<\/head\s*>/i)?.[1];
+  if (!head) return undefined;
+  const clean = head
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, '');
+  const values = new Map<string, Set<string>>();
+  const decode = (value: string) =>
+    value.replace(/&(?:amp|quot|apos|lt|gt|#\d+|#x[0-9a-f]+);/gi, (entity) => {
+      const named: Record<string, string> = {
+        '&amp;': '&',
+        '&quot;': '"',
+        '&apos;': "'",
+        '&lt;': '<',
+        '&gt;': '>',
+      };
+      if (named[entity.toLowerCase()]) return named[entity.toLowerCase()];
+      const number = entity.toLowerCase().startsWith('&#x')
+        ? parseInt(entity.slice(3, -1), 16)
+        : Number(entity.slice(2, -1));
+      return number > 0 && number <= 0x10ffff ? String.fromCodePoint(number) : '';
+    });
+  for (const tag of [...clean.matchAll(/<meta\b[^>]{0,8192}>/gi)].slice(0, 100)) {
+    const attrs = new Map<string, string>();
+    for (const attr of tag[0].matchAll(/([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g))
+      attrs.set(attr[1].toLowerCase(), decode(attr[2] ?? attr[3] ?? attr[4]));
+    const key = (attrs.get('property') ?? attrs.get('name'))?.toLowerCase();
+    const content = attrs.get('content');
+    if (key && content && ['og:image', 'og:url'].includes(key)) {
+      const set = values.get(key) ?? new Set<string>();
+      set.add(content);
+      values.set(key, set);
+    }
+  }
+  const canonical = values.get('og:url');
+  if (canonical && (canonical.size !== 1 || !samePage([...canonical][0], sourceUrl)))
+    return undefined;
+  const photos = values.get('og:image');
+  if (photos?.size !== 1) return undefined;
+  try {
+    return safeShoppingUrl(new URL([...photos][0], sourceUrl).href) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
 export function parseProductEvidence(
   html: string,
   sourceUrl: string,
@@ -167,7 +214,13 @@ export function parseProductEvidence(
       : products.length === 1 && !products[0].url && !products[0]['@id']
         ? products[0]
         : null;
-  if (!product || typeof product.name !== 'string') return unknown;
+  // A social-preview photo can support visual comparison, never identity, stock or price.
+  const fallbackPhoto =
+    (product || products.length === 0) && shoppingPageKind(sourceUrl) === 'product-path'
+      ? pagePhoto(html, sourceUrl)
+      : undefined;
+  if (!product || typeof product.name !== 'string')
+    return { ...unknown, ...(fallbackPhoto ? { imageUrl: fallbackPhoto } : {}) };
   const shortText = (value: unknown) =>
     typeof value === 'string' && value.trim() ? value.trim().slice(0, 120) : undefined;
   const imageValue = Array.isArray(product.image) ? product.image[0] : product.image;
@@ -184,6 +237,7 @@ export function parseProductEvidence(
   } catch {
     /* No usable product image. */
   }
+  imageUrl ??= fallbackPhoto;
   const brand =
     typeof product.brand === 'object' && product.brand
       ? (product.brand as Record<string, unknown>).name

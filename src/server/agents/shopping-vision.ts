@@ -4,6 +4,7 @@ import sharp from 'sharp';
 import type { DetectedItem, ShoppingResult } from '@/lib/discovery';
 import { fetchProductPhoto } from './product-photo';
 import { generationCost, recordStepUsage } from './usage';
+import { garmentReference } from './garment-crop';
 export type AgentPhoto = { data: Uint8Array; mimeType: string };
 import { verifiedIdentityEvidence } from '@/lib/match-verifier';
 export { verifiedIdentityEvidence } from '@/lib/match-verifier';
@@ -49,10 +50,7 @@ export async function reviewProductPhotos(
     )
   ).filter((image) => image !== null);
   if (!images.length) return noCall;
-  const originalBytes = await sharp(original.data)
-    .resize({ width: 1024, height: 1024, fit: 'inside', withoutEnlargement: true })
-    .jpeg({ quality: 82 })
-    .toBuffer();
+  const originalBytes = await garmentReference(original.data, item.bounds);
   const agent = new ToolLoopAgent({
     model: gateway('google/gemini-2.5-flash'),
     maxRetries: 0,
