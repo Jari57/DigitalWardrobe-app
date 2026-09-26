@@ -1,7 +1,12 @@
 import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/browser',
-  testMatch: ['creator-flow.spec.ts', 'account-settings.spec.ts', 'feed-actions.spec.ts'],
+  testMatch: [
+    'creator-flow.spec.ts',
+    'account-settings.spec.ts',
+    'feed-actions.spec.ts',
+    'wardrobe-actions.spec.ts',
+  ],
   workers: 1,
   retries: 0,
   timeout: 120000,
