@@ -16,6 +16,9 @@ import {
   typeChoices,
   type FeedItem,
   type Preferences,
+  selectedAudience,
+  setAudience,
+  type StyleAudience,
 } from '@/lib/for-you';
 type Response = {
   items: FeedItem[];
@@ -68,6 +71,23 @@ export default function ForYouFeed({
   const [hidden, setHidden] = useState<string>();
   const [refreshing, setRefreshing] = useState(false);
   const [refreshNote, setRefreshNote] = useState('');
+  const [audienceOverride, setAudienceOverride] = useState<StyleAudience>();
+  const feedUrl = `/api/for-you?mode=${mode}${audienceOverride ? `&audience=${audienceOverride}` : ''}`;
+  async function chooseAudience(audience: StyleAudience) {
+    const next = setAudience(preferences, audience);
+    setBusy(true);
+    setError('');
+    try {
+      if (data?.authenticated) await api('/api/for-you/preferences', 'PUT', next);
+      setPreferences(next);
+      setAudienceOverride(audience);
+      setRevision((value) => value + 1);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
   useEffect(() => {
     let lastCheck = Date.now();
     const check = () => {
@@ -95,7 +115,7 @@ export default function ForYouFeed({
     setRefreshNote('');
     try {
       if (data?.authenticated) await api('/api/for-you', 'POST');
-      const next = await api<Response>(`/api/for-you?mode=${mode}`);
+      const next = await api<Response>(feedUrl);
       const previousIds = new Set(data?.items.map((item) => item.id));
       const added = next.items.filter((item) => !previousIds.has(item.id)).length;
       setData(next);
@@ -116,7 +136,7 @@ export default function ForYouFeed({
     let active = true;
     setLoading(true);
     setError('');
-    api<Response>(`/api/for-you?mode=${mode}`)
+    api<Response>(feedUrl)
       .then((value) => {
         if (active) {
           setData(value);
@@ -132,7 +152,7 @@ export default function ForYouFeed({
     return () => {
       active = false;
     };
-  }, [mode, revision]);
+  }, [feedUrl, revision]);
   async function feedback(itemId: string, action: string) {
     if (!data?.authenticated) {
       onAuth();
@@ -190,6 +210,31 @@ export default function ForYouFeed({
           <SlidersHorizontal size={20} />
         </button>
       </div>
+      {mode !== 'saved' && (
+        <fieldset className="feed-audience">
+          <legend>What do you want to see?</legend>
+          <div className="row wrap">
+            {(
+              [
+                ['womenswear', 'Womenswear'],
+                ['menswear', 'Menswear'],
+                ['all-styles', 'Both'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                className="feed-chip"
+                disabled={loading || busy || refreshing}
+                aria-pressed={selectedAudience(preferences) === value}
+                onClick={() => chooseAudience(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <small>Choose your style interests. You can change this anytime.</small>
+        </fieldset>
+      )}
       {editing && (
         <form
           className="trend-card stack"

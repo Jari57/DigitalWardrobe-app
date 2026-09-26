@@ -6,6 +6,53 @@ import {
   safeFeedImage,
 } from '../../src/server/trend-feed';
 import { balancePublishers } from '../../src/lib/feed-sources';
+import {
+  defaultPreferences,
+  preferenceSchema,
+  rankFeed,
+  setAudience,
+  selectedAudience,
+} from '../../src/lib/for-you';
+
+test('clothing preference is explicit, mutually exclusive, and never hides saved outfits', () => {
+  const now = new Date();
+  const item = (id: string, title: string, publisher: string) => ({
+    id,
+    title,
+    publisher,
+    url: 'https://example.com/' + id,
+    publishedAt: now,
+    categories: ['shoes'],
+    aesthetics: [],
+  });
+  const items = [
+    item('women', "Women's sneakers", 'GQ'),
+    item('men', "Men's sneakers", 'ELLE'),
+    item('shared', 'Classic sneakers', 'Hypebeast'),
+  ];
+  const preferences = setAudience(defaultPreferences, 'menswear');
+  expect(
+    rankFeed(items, preferences, [], 'latest', now)
+      .map((item) => item.id)
+      .sort(),
+  ).toEqual(['men', 'shared']);
+  expect(rankFeed(items, setAudience(preferences, 'all-styles'), [], 'latest', now)).toHaveLength(
+    3,
+  );
+  expect(selectedAudience(setAudience(preferences, 'womenswear'))).toBe('womenswear');
+  expect(
+    preferenceSchema.safeParse({ ...preferences, aesthetics: ['menswear', 'womenswear'] }).success,
+  ).toBe(false);
+  expect(
+    rankFeed(
+      items,
+      preferences,
+      [{ itemId: 'women', saved: true, liked: false, hidden: false, item: items[0] }],
+      'saved',
+      now,
+    ).map((item) => item.id),
+  ).toEqual(['women']);
+});
 
 test('all ten publisher routes ingest dated garment stories without allowing cross-host links', () => {
   const now = new Date('2026-09-26T12:00:00Z');
@@ -94,6 +141,7 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
   let outfits: unknown[] = [];
   let refreshes = 0;
   let stylistCalls = 0;
+  let interests = { categories: [] as string[], aesthetics: [] as string[], region: 'US' };
   await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
     let body: unknown = {};
@@ -101,6 +149,10 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
     if (path === '/api/wardrobe') body = { garments: [piece], outfits, references: [] };
     if (path === '/api/discovery') body = { detections: [], searches: [] };
     if (path === '/api/experience') body = { draft: [], recent: [] };
+    if (path === '/api/for-you/preferences') {
+      interests = route.request().postDataJSON();
+      body = { ok: true };
+    }
     if (path === '/api/stylist') {
       stylistCalls++;
       expect(route.request().postDataJSON().occasion).toBe(
@@ -122,7 +174,7 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
       if (route.request().method() === 'POST') refreshes++;
       body = {
         authenticated: true,
-        preferences: { categories: [], aesthetics: [], region: 'US' },
+        preferences: interests,
         checkedAt: new Date().toISOString(),
         stale: false,
         sourcesUnavailable: false,
@@ -169,6 +221,13 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
   ).toBeVisible();
   await page.getByRole('navigation').getByRole('button', { name: 'For You' }).click();
   await expect(page.getByRole('heading', { name: 'Classic white shirts' })).toBeVisible();
+  await page.getByRole('button', { name: 'Menswear', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Menswear', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  expect(interests.aesthetics).toEqual(['menswear']);
+  expect(stylistCalls).toBe(1);
   await page.getByText('Explore our sources (1 with current stories)').click();
   await expect(page.getByText('GQ — Temporarily unavailable')).toBeVisible();
   await page.getByRole('button', { name: 'Refresh feed' }).click();

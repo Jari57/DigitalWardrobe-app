@@ -1,6 +1,12 @@
 import { db } from '@/server/db';
 import { sessionUser, requireUser, rateLimit } from '@/server/auth';
-import { defaultPreferences, preferenceSchema, rankFeed } from '@/lib/for-you';
+import {
+  defaultPreferences,
+  preferenceSchema,
+  rankFeed,
+  audienceSchema,
+  setAudience,
+} from '@/lib/for-you';
 import { checkOrigin, handleError, json } from '@/server/http';
 import { refreshTrends } from '@/server/trend-feed';
 import { feedSources, balancePublishers } from '@/lib/feed-sources';
@@ -57,13 +63,15 @@ export async function GET(request: Request) {
         : [],
       db.trendRefresh.findUnique({ where: { id: 'fashion-feeds' } }),
     ]);
-    const preferences = preference
+    let preferences = preference
       ? preferenceSchema.parse({
           categories: preference.categories,
           aesthetics: preference.aesthetics,
           region: preference.region,
         })
       : defaultPreferences;
+    const audience = audienceSchema.safeParse(new URL(request.url).searchParams.get('audience'));
+    if (audience.success) preferences = setAudience(preferences, audience.data);
     // Old saves/hides must remain effective even after more than 500 newer interactions.
     const visibleFeedback = user
       ? await db.trendFeedback.findMany({

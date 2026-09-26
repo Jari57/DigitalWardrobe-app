@@ -8,6 +8,25 @@ export const styleChoices = [
   'bold',
   'romantic',
 ] as const;
+export const audienceChoices = ['womenswear', 'menswear', 'all-styles'] as const;
+export type StyleAudience = (typeof audienceChoices)[number];
+export const audienceSchema = z.enum(audienceChoices);
+export function selectedAudience(preferences: {
+  aesthetics: readonly string[];
+}): StyleAudience | undefined {
+  return audienceChoices.find((value) => preferences.aesthetics.includes(value));
+}
+export function setAudience(preferences: Preferences, audience: StyleAudience): Preferences {
+  return {
+    ...preferences,
+    aesthetics: [
+      ...preferences.aesthetics.filter(
+        (value) => !audienceChoices.includes(value as StyleAudience),
+      ),
+      audience,
+    ],
+  };
+}
 export const typeChoices = [
   'tops',
   'bottoms',
@@ -19,7 +38,15 @@ export const typeChoices = [
 export const preferenceSchema = z
   .object({
     categories: z.array(z.enum(typeChoices)).max(6),
-    aesthetics: z.array(z.enum(styleChoices)).max(7),
+    // Clothing audience is an explicit style-interest tag, not inferred identity.
+    aesthetics: z
+      .array(z.enum([...styleChoices, ...audienceChoices]))
+      .max(8)
+      .refine(
+        (values) =>
+          values.filter((value) => audienceChoices.includes(value as StyleAudience)).length <= 1,
+        'Choose one clothing preference.',
+      ),
     region: z.enum(['US', 'GB', 'CA', 'AU']),
   })
   .strict();
@@ -81,6 +108,18 @@ type Feedback = {
   hidden: boolean;
   item: { categories: string[]; aesthetics: string[] };
 };
+export function storyAudience(item: { title: string; publisher: string }): StyleAudience {
+  const women = /\b(womenswear|women(?:'s|’s)?|female)\b/i.test(item.title);
+  const men = /\b(menswear|men(?:'s|’s)?|male)\b/i.test(item.title);
+  if (women && men) return 'all-styles';
+  if (women) return 'womenswear';
+  if (men) return 'menswear';
+  // Editorial focus is only a broad fallback; no photo, color or body inference.
+  if (['GQ', 'Esquire'].includes(item.publisher)) return 'menswear';
+  if (['Who What Wear', 'ELLE', "Harper's Bazaar", 'Vogue'].includes(item.publisher))
+    return 'womenswear';
+  return 'all-styles';
+}
 export function rankFeed(
   items: Candidate[],
   preferences: Preferences,
@@ -89,6 +128,7 @@ export function rankFeed(
   now = new Date(),
 ): FeedItem[] {
   const byId = new Map(feedback.map((entry) => [entry.itemId, entry]));
+  const audience = selectedAudience(preferences) ?? 'all-styles';
   const weights = new Map<string, number>();
   for (const entry of feedback)
     for (const tag of [...entry.item.categories, ...entry.item.aesthetics])
@@ -99,6 +139,13 @@ export function rankFeed(
       );
   return items
     .filter((item) => !byId.get(item.id)?.hidden && (mode !== 'saved' || byId.get(item.id)?.saved))
+    .filter(
+      (item) =>
+        mode === 'saved' ||
+        audience === 'all-styles' ||
+        storyAudience(item) === 'all-styles' ||
+        storyAudience(item) === audience,
+    )
     .map((item) => {
       const tags = [...item.categories, ...item.aesthetics];
       const matches = [...preferences.categories, ...preferences.aesthetics].filter((tag) =>
