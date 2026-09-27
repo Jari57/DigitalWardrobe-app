@@ -1,9 +1,44 @@
 import { test, expect } from '@playwright/test';
 import { mock } from 'node:test';
+import { storyAudience } from '../../src/lib/for-you';
 import { feedSources, fetchFashionSource, parseFashionFeed } from '../../src/server/trend-feed';
 
+test('replacement feeds use publisher-advertised HTTPS endpoints and trusted photo hosts', () => {
+  expect(feedSources).toHaveLength(10);
+  expect(feedSources.find((source) => source.name === 'Who What Wear')?.url).toBe(
+    'https://www.whowhatwear.com/feeds.xml',
+  );
+  expect(feedSources.some((source) => source.name === 'Hypebeast')).toBe(false);
+  const source = feedSources.find((value) => value.name === 'Dappered')!;
+  expect(source.url).toBe('https://dappered.com/feed/');
+  expect(storyAudience({ title: 'Merino cardigans', publisher: 'Dappered' })).toBe('menswear');
+  expect(storyAudience({ title: "Women's cardigans", publisher: 'Dappered' })).toBe('womenswear');
+  const now = new Date('2026-09-26T23:59:00Z');
+  const xml = `<rss><channel><item><title>Chunky merino cardigans</title><link>https://dappered.com/2026/09/cardigans/</link><pubDate>${now.toUTCString()}</pubDate><content:encoded><![CDATA[<img src="https://dappered.com/wp-content/uploads/2026/09/cardigans.jpg">]]></content:encoded></item></channel></rss>`;
+  expect(parseFashionFeed(xml, source, now)[0]?.imageUrl).toBe(
+    'https://dappered.com/wp-content/uploads/2026/09/cardigans.jpg',
+  );
+  expect(
+    parseFashionFeed(
+      xml.replace('https://dappered.com/2026', 'https://dappered.com.evil.example/2026'),
+      source,
+      now,
+    ),
+  ).toHaveLength(0);
+  expect(
+    parseFashionFeed(
+      xml.replace(
+        'https://dappered.com/wp-content',
+        'https://dappered.com.evil.example/wp-content',
+      ),
+      source,
+      now,
+    )[0]?.imageUrl,
+  ).toBeNull();
+});
+
 test('source failures emit bounded diagnostics without remote content or raw errors', async () => {
-  const source = feedSources.find((value) => value.name === 'Hypebeast')!;
+  const source = feedSources.find((value) => value.name === 'Dappered')!;
   const warnings: string[] = [];
   mock.method(console, 'warn', (value: string) => {
     warnings.push(value);
@@ -69,7 +104,7 @@ test('source failures emit bounded diagnostics without remote content or raw err
       const diagnostic = JSON.parse(warnings[0]);
       expect(diagnostic).toEqual({
         event: 'fashion_feed_failed',
-        source: 'Hypebeast',
+        source: 'Dappered',
         reason: scenario.reason,
         ...(scenario.status ? { httpStatus: scenario.status } : {}),
         elapsedMs: expect.any(Number),

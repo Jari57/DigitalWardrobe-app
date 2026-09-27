@@ -127,7 +127,7 @@ export function storyAudience(item: { title: string; publisher: string }): Style
   if (women) return 'womenswear';
   if (men) return 'menswear';
   // Editorial focus is only a broad fallback; no photo, color or body inference.
-  if (['GQ', 'Esquire'].includes(item.publisher)) return 'menswear';
+  if (['GQ', 'Esquire', 'Dappered'].includes(item.publisher)) return 'menswear';
   if (['Who What Wear', 'ELLE', "Harper's Bazaar", 'Vogue'].includes(item.publisher))
     return 'womenswear';
   return 'all-styles';

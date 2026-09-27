@@ -3,7 +3,8 @@
 export const feedSources = [
   {
     name: 'Who What Wear',
-    url: 'https://www.whowhatwear.com/feeds/all',
+    // Publisher-advertised HTTPS canonical; /feeds/all redirects through HTTP.
+    url: 'https://www.whowhatwear.com/feeds.xml',
     // The publisher's full-content RSS is ~3 MB; retain a source-specific ceiling.
     maxBytes: 4_000_000,
     host: 'whowhatwear.com',
@@ -40,9 +41,9 @@ export const feedSources = [
     paths: /^\/fashion\//,
   },
   {
-    name: 'Hypebeast',
-    url: 'https://hypebeast.com/fashion/feed',
-    host: 'hypebeast.com',
+    name: 'Dappered',
+    url: 'https://dappered.com/feed/',
+    host: 'dappered.com',
     paths: /^\/\d{4}\/\d{1,2}\//,
   },
   {
@@ -69,6 +70,7 @@ export const feedImageHosts = [
   'media.gq.com',
   'www.highsnobiety.com',
   'image-cdn.hypb.st',
+  'dappered.com',
   'i.guim.co.uk',
 ];
 
