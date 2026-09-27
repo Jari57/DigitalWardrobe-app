@@ -25,6 +25,46 @@ const product = {
 const html = (value: unknown) =>
   `<script type="application/ld+json">${JSON.stringify(value)}</script>`;
 
+test('product photos accept ImageObject media URLs and skip unusable entries without borrowing other products', () => {
+  const image = 'https://cdn.example.com/shirt.jpg';
+  for (const images of [
+    { '@type': 'ImageObject', contentUrl: image },
+    ['', null, { url: 'http://cdn.example.com/insecure.jpg' }, { contentUrl: image }],
+    { contentUrl: 'https://127.0.0.1/private', url: image },
+  ]) {
+    expect(parseProductEvidence(html({ ...product, image: images }), url, checked).imageUrl).toBe(
+      image,
+    );
+  }
+  expect(
+    parseProductEvidence(html({ ...product, image: '' }), url, checked).imageUrl,
+  ).toBeUndefined();
+  expect(
+    parseProductEvidence(
+      html({ ...product, image: { contentUrl: '/photos/shirt.jpg' } }),
+      url,
+      checked,
+    ).imageUrl,
+  ).toBe('https://shop.example.com/photos/shirt.jpg');
+  expect(
+    parseProductEvidence(
+      html([
+        { ...product, image: [null] },
+        { ...product, url: url + '-other', image },
+      ]),
+      url,
+      checked,
+    ).imageUrl,
+  ).toBeUndefined();
+  expect(
+    parseProductEvidence(
+      html({ ...product, url: url + '?variant=red', image: { contentUrl: image } }),
+      url + '?variant=blue',
+      checked,
+    ).imageUrl,
+  ).toBeUndefined();
+});
+
 test('tracking links and expired prices do not discard same-product photos; variant query differences still fail', () => {
   const value = { ...product, image: 'https://cdn.example.com/shirt.jpg' };
   expect(parseProductEvidence(html(value), url + '?utm_source=test', checked).imageUrl).toBe(

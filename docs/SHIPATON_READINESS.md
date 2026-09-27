@@ -38,7 +38,7 @@ The original machine report is kept in the workspace at `outputs/shipaton-baseli
 3. Improve retrieval with an authorized image-search/catalog source. Benchmark representative screenshots, lookalikes and supported countries. Require image-first results and usable local purchase links; distinguish identified product, verified exact label and purchase availability.
 4. Connect permitted, timestamped social observations before claiming live viral discovery. Current editorial feed and tested scorer are separate. Do not buy a provider subscription without an agreed spend ceiling.
 5. Run the complete demo on the intended physical device: sign up, upload, select garment, shop, save, build from closet, refresh, sign out/in, delete account. Check poor connectivity, denied photo permission and provider failure. Retest after fixes.
-6. Verify production monitoring, support contact and recovery. Capture real store/device evidence, then complete the submission checklist. Do not label the app certified.
+6. Verify production monitoring and support delivery. Repeat the successful September 20 isolated SQL restore against the current nine-migration schema and exercise application flows; the earlier seven-migration drill did not prove app cutover. Recheck the recorded six-hour history window. Capture real store/device evidence, then complete the submission checklist. Do not label the app certified.
 
 ## Repeatable matching evaluation
 

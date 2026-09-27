@@ -224,19 +224,31 @@ export function parseProductEvidence(
     return { ...unknown, ...(fallbackPhoto ? { imageUrl: fallbackPhoto } : {}) };
   const shortText = (value: unknown) =>
     typeof value === 'string' && value.trim() ? value.trim().slice(0, 120) : undefined;
-  const imageValue = Array.isArray(product.image) ? product.image[0] : product.image;
-  const imageText =
-    typeof imageValue === 'string'
-      ? imageValue
-      : imageValue && typeof imageValue === 'object'
-        ? (imageValue as Record<string, unknown>).url
-        : undefined;
   let imageUrl: string | undefined;
-  try {
-    if (typeof imageText === 'string')
-      imageUrl = safeShoppingUrl(new URL(imageText, sourceUrl).href) ?? undefined;
-  } catch {
-    /* No usable product image. */
+  // Only inspect the selected product's images, preserving its declared order.
+  // An empty first image must not hide usable later images. ImageObject can name
+  // the media file with contentUrl rather than url.
+  const imageValues = Array.isArray(product.image) ? product.image : [product.image];
+  for (const imageValue of imageValues.slice(0, 12)) {
+    const candidates =
+      typeof imageValue === 'string'
+        ? [imageValue]
+        : imageValue && typeof imageValue === 'object'
+          ? [
+              (imageValue as Record<string, unknown>).contentUrl,
+              (imageValue as Record<string, unknown>).url,
+            ]
+          : [];
+    for (const candidate of candidates) {
+      if (typeof candidate !== 'string' || !candidate.trim()) continue;
+      try {
+        imageUrl = safeShoppingUrl(new URL(candidate, sourceUrl).href) ?? undefined;
+      } catch {
+        /* Invalid image metadata is not evidence. */
+      }
+      if (imageUrl) break;
+    }
+    if (imageUrl) break;
   }
   imageUrl ??= fallbackPhoto;
   const brand =

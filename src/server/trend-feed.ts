@@ -24,7 +24,10 @@ export function parseFashionFeed(
   source: (typeof feedSources)[number],
   now = new Date(),
 ) {
-  if (xml.length > 1_000_000 || /<!DOCTYPE|<!ENTITY/i.test(xml))
+  if (
+    Buffer.byteLength(xml, 'utf8') > (source.maxBytes ?? 1_000_000) ||
+    /<!DOCTYPE|<!ENTITY/i.test(xml)
+  )
     throw new Error('Unsupported feed');
   const parsed = new XMLParser({ ignoreAttributes: false, processEntities: false }).parse(xml);
   if (!parsed.rss?.channel && !parsed.feed) throw new Error('Invalid feed');
@@ -124,7 +127,7 @@ export function parseFashionFeed(
       ];
     });
 }
-async function readFeed(url: string) {
+async function readFeed(url: string, maxBytes = 1_000_000) {
   const original = new URL(url);
   const signal = AbortSignal.timeout(10000);
   let current = original;
@@ -160,7 +163,7 @@ async function readFeed(url: string) {
     const { done, value } = await reader.read();
     if (done) break;
     size += value.length;
-    if (size > 1_000_000) {
+    if (size > maxBytes) {
       await reader.cancel();
       throw new Error('Feed too large');
     }
@@ -169,7 +172,7 @@ async function readFeed(url: string) {
   return Buffer.concat(parts).toString('utf8');
 }
 export async function fetchFashionSource(source: (typeof feedSources)[number], now: Date) {
-  const items = parseFashionFeed(await readFeed(source.url), source, now);
+  const items = parseFashionFeed(await readFeed(source.url, source.maxBytes), source, now);
   if (!items.length) throw new Error('No current fashion coverage');
   return items;
 }

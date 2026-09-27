@@ -4,6 +4,8 @@ export const feedSources = [
   {
     name: 'Who What Wear',
     url: 'https://www.whowhatwear.com/feeds/all',
+    // The publisher's full-content RSS is ~3 MB; retain a source-specific ceiling.
+    maxBytes: 4_000_000,
     host: 'whowhatwear.com',
     paths: /^\/fashion\//,
   },
@@ -49,10 +51,10 @@ export const feedSources = [
     host: 'highsnobiety.com',
     paths: /^\/p\//,
   },
-  { name: 'GQ', url: 'https://www.gq.com/feed/style', host: 'gq.com', paths: /^\/story\// },
+  { name: 'GQ', url: 'https://www.gq.com/feed/rss', host: 'gq.com', paths: /^\/story\// },
   {
     name: 'Vogue',
-    url: 'https://www.vogue.com/feed/fashion',
+    url: 'https://www.vogue.com/feed/rss',
     host: 'vogue.com',
     paths: /^\/article\//,
   },

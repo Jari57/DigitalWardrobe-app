@@ -1,13 +1,21 @@
 import { db } from '@/server/db';
+import { serviceControl } from '@/server/service-control';
 export async function checkOperations() {
   const day = new Date().toISOString().slice(0, 10);
-  const [failures, budget] = await Promise.all([
+  const [failures, failedRequests, budget, control] = await Promise.all([
     db.journeyMetric.aggregate({ where: { day, event: 'service_failure' }, _sum: { count: true } }),
+    db.agentRequest.count({ where: { day, state: { in: ['failed', 'uncertain'] } } }),
     db.agentBudget.findUnique({ where: { scope_day: { scope: 'agents-v1:global', day } } }),
+    serviceControl(),
   ]);
-  const cap = Number(process.env.AI_DAILY_CAP_MICROS);
+  const deploymentCap = Number(process.env.AI_DAILY_CAP_MICROS);
+  const cap = Math.min(deploymentCap, control.dailyCapMicros ?? deploymentCap);
   const signals = [
-    ...((failures._sum.count ?? 0) >= 5 ? ['Repeated AI service failures'] : []),
+    // These sources overlap. A threshold on either catches failures outside discovery
+    // without adding the same failure twice.
+    ...(Math.max(failures._sum.count ?? 0, failedRequests) >= 5
+      ? ['Repeated AI service failures']
+      : []),
     ...(budget && cap > 0 && budget.heldMicros + budget.spentMicros >= cap * 0.8
       ? ['AI budget at or above 80%']
       : []),

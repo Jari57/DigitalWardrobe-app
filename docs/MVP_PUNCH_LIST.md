@@ -51,7 +51,8 @@ Acceptance: a refresh delivers eligible fresh items; every viral claim has obser
 ## 5. Reliability and usability
 
 - [ ] Verify critical journeys on physical iOS and Android devices, plus desktop; include poor connectivity and upload failures.
-- [ ] Connect and test operational alert delivery and run a documented backup restore drill.
+- [ ] Connect and acknowledge operational alert delivery; add independent uptime/dead-cron monitoring and durable delivery status.
+- [ ] Repeat recovery against the current nine-migration schema and exercise isolated application flows. The September 20 isolated SQL restore already passed with seven migrations; it did not test app cutover. Recheck the previously recorded six-hour recovery window.
 - [ ] Add source-specific monitoring and agent latency instrumentation if current outcome/cost signals show problems.
 - [ ] Improve admin account search/pagination when the first 50-row activity view is insufficient.
 
@@ -70,3 +71,17 @@ RevenueCat integration/store eligibility remains unresolved. The earlier monetiz
 Code release `b599a92`, deployed as `dpl_4fFoQLQkakMNahrJrDwe173Dw2gQ`. Twenty-eight agent/admin checks passed, plus the read-only production database gate and desktop/mobile rendering check. The live owner session loaded the dashboard and saved the existing $1/day, 10-actions/account settings with an audit entry. Billing remained off. A temporary ordinary account was denied admin-page/control access and deleted after live checks. One synthetic traffic view remains in the aggregate as verification traffic. The 7-day filter showed the new count. No live AI pause was performed; fail-closed enforcement is covered by automated tests.
 
 The initial 30-day owner view showed 27 retained completed searches, 10 without links, and four failing feed sources (Who What Wear, Hypebeast, GQ, Vogue). These are a snapshot of retained records, not a held-out quality benchmark. Investigate these source failures and direct retailer coverage next.
+
+## Parallel review: narrowed remaining work
+
+Three specialist reviews covered matching/photos, editorial sources, and release evidence. Safe fixes prepared in this review: same-product ImageObject/contentUrl and backup metadata images, verified GQ/Vogue RSS endpoints, a bounded 4 MB allowance only for Who What Wear, and operations checks covering every agent and the administrator's lowered daily cap. Automated regression checks do not establish production matching accuracy or alert delivery.
+
+Work in this order:
+
+1. **Shopping resilience:** try bounded backup photos until three usable images are found; preserve qualified alternatives when optional visual review fails, with accurate usage accounting; re-resolve expired saved-photo metadata once through the existing safe owner-scoped path.
+2. **Retrieval quality:** connect an authorized image/catalog retrieval source within an agreed budget and evaluate held-out screenshots. Current retrieval is text-based; visual verification cannot find a candidate missing from search. Keep exact-label evidence strict.
+3. **Viral discovery:** acquire permitted timestamped social observations, then connect scoring. Editorial RSS repair is not proof of virality.
+4. **Operational acceptance:** acknowledge support/alert test messages, verify independent outage detection, rehearse current-schema application recovery, and complete physical iOS/Android journeys.
+5. **Submission evidence:** confirm competition/category, record permissioned demo assets, and resolve applicable store requirements while retaining billing off. Actual financial metrics require actual financial records.
+
+Owner-access regression checks found no new authorization defect. Existing production access remains the verified Google identity `jari57@gmail.com`; an alternate spelling must not silently grant access. Historical restore evidence is in `MVP_RELEASE_VERIFICATION.md`; physical-device gaps are in `PWA_VERIFICATION.md`. None of these checks constitute independent certification.

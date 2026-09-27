@@ -2,6 +2,8 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/browser',
   testMatch: [
+    'feed-sources.spec.ts',
+    'operations.spec.ts',
     'owner-access.spec.ts',
     'finance-metrics.spec.ts',
     'admin-analytics.spec.ts',
