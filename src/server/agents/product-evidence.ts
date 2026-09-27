@@ -3,6 +3,7 @@ import type { LookupAddress } from 'node:dns';
 import { request } from 'node:https';
 import { isIP } from 'node:net';
 import { safeShoppingUrl, shoppingPageKind, type ProductEvidence } from '@/lib/discovery';
+import { canonicalProductUrl } from '@/lib/shopping-quality';
 
 // IPv4 only: pin the validated address while preserving TLS hostname verification.
 export function publicAddress(ip: string) {
@@ -117,7 +118,7 @@ function samePage(value: unknown, page: string) {
     return (
       a.origin === b.origin &&
       a.pathname.replace(/\/$/, '') === b.pathname.replace(/\/$/, '') &&
-      a.search === b.search
+      new URL(canonicalProductUrl(a.href)).search === new URL(canonicalProductUrl(b.href)).search
     );
   } catch {
     return false;
@@ -269,7 +270,12 @@ export function parseProductEvidence(
     /^\d{4}-\d{2}-\d{2}$/.test(offer.priceValidUntil) &&
     offer.priceValidUntil < checkedAt.slice(0, 10)
   )
-    return { ...unknown, note: 'The retailer’s offer metadata has expired.' };
+    return {
+      ...unknown,
+      productName: product.name.slice(0, 200),
+      ...identity,
+      note: 'The retailer’s offer metadata has expired.',
+    };
   const availability = ['https://schema.org/InStock', 'http://schema.org/InStock'].includes(
     offer.availability,
   )

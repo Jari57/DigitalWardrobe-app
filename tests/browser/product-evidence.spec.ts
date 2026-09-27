@@ -25,6 +25,28 @@ const product = {
 const html = (value: unknown) =>
   `<script type="application/ld+json">${JSON.stringify(value)}</script>`;
 
+test('tracking links and expired prices do not discard same-product photos; variant query differences still fail', () => {
+  const value = { ...product, image: 'https://cdn.example.com/shirt.jpg' };
+  expect(parseProductEvidence(html(value), url + '?utm_source=test', checked).imageUrl).toBe(
+    value.image,
+  );
+  const expired = parseProductEvidence(
+    html({ ...value, offers: { ...product.offers, priceValidUntil: '2025-01-01' } }),
+    url,
+    checked,
+  );
+  expect(expired.imageUrl).toBe(value.image);
+  expect(expired.price).toBeUndefined();
+  expect(expired.availability).toBe('unknown');
+  expect(
+    parseProductEvidence(
+      html({ ...value, url: url + '?variant=blue' }),
+      url + '?variant=red',
+      checked,
+    ).imageUrl,
+  ).toBeUndefined();
+});
+
 test('retailer evidence records source/time and does not conflate variants, expired offers or unrelated products', () => {
   expect(parseProductEvidence(html(product), url, checked)).toMatchObject({
     availability: 'in-stock',
