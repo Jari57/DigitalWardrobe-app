@@ -62,6 +62,8 @@ Once negative-case support is implemented and reviewed, run the unchanged baseli
 
 ## Report the evidence separately
 
+Use `node scripts/compare-retrieval-reports.mjs app-report.json pilot-report.json NEW-comparison.json` for offline comparison. Reports must share raw fixture hashes, country and preregistered target URLs. New app runs record that provenance before requests; legacy reports cannot be repaired by guessing from normalized image hashes. Missing or differing provenance blocks a paired comparison. Failed/unrun cases remain in the denominator. The tool distinguishes raw provider retrieval from application-validated output and does not establish superiority. Seven comparison/provenance tests and five pilot tests pass offline.
+
 - Expected-product and preregistered-URL recall at ranks 1 and 5 across the twelve known cases. Record new valid retailers separately; never silently replace the original targets.
 - Exact-label precision among results actually labeled exact, with sample counts; do not calculate precision when there are no exact labels. Review wrong colorways and lookalikes explicitly.
 - Reviewer-accepted alternative rate and empty-result rate, separating intentional negative rejection from failed retrieval.

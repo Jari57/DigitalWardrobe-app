@@ -1,9 +1,27 @@
 import { createHash } from 'node:crypto';
-import { XMLParser } from 'fast-xml-parser';
+import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { db } from './db';
 import { classifyFashion } from '@/lib/for-you';
 import { feedSources, feedImageHosts, balancePublishers } from '@/lib/feed-sources';
 export { feedSources } from '@/lib/feed-sources';
+type FeedFailureReason =
+  | 'timeout'
+  | 'network'
+  | 'http'
+  | 'body_limit'
+  | 'unsafe_redirect'
+  | 'invalid_redirect'
+  | 'invalid_xml'
+  | 'no_relevant_coverage';
+class FeedFailure extends Error {
+  constructor(
+    readonly reason: FeedFailureReason,
+    message: string,
+    readonly httpStatus?: number,
+  ) {
+    super(message);
+  }
+}
 export function safeFeedImage(value: unknown) {
   if (typeof value !== 'string' || value.length > 2000) return null;
   try {
@@ -24,13 +42,12 @@ export function parseFashionFeed(
   source: (typeof feedSources)[number],
   now = new Date(),
 ) {
-  if (
-    Buffer.byteLength(xml, 'utf8') > (source.maxBytes ?? 1_000_000) ||
-    /<!DOCTYPE|<!ENTITY/i.test(xml)
-  )
-    throw new Error('Unsupported feed');
+  if (Buffer.byteLength(xml, 'utf8') > (source.maxBytes ?? 1_000_000))
+    throw new FeedFailure('body_limit', 'Unsupported feed');
+  if (/<!DOCTYPE|<!ENTITY/i.test(xml)) throw new FeedFailure('invalid_xml', 'Unsupported feed');
+  if (XMLValidator.validate(xml) !== true) throw new FeedFailure('invalid_xml', 'Invalid feed');
   const parsed = new XMLParser({ ignoreAttributes: false, processEntities: false }).parse(xml);
-  if (!parsed.rss?.channel && !parsed.feed) throw new Error('Invalid feed');
+  if (!parsed.rss?.channel && !parsed.feed) throw new FeedFailure('invalid_xml', 'Invalid feed');
   const entries = parsed.rss?.channel?.item ?? parsed.feed?.entry;
   const textValue = (value: unknown): string | undefined =>
     typeof value === 'string'
@@ -132,49 +149,91 @@ async function readFeed(url: string, maxBytes = 1_000_000) {
   const signal = AbortSignal.timeout(10000);
   let current = original;
   let response: Response | undefined;
-  for (let hop = 0; hop <= 3; hop++) {
-    response = await fetch(current, {
-      redirect: 'manual',
-      signal,
-      cache: 'no-store',
-      headers: { Accept: 'application/rss+xml, application/xml, text/xml' },
-    });
-    if (![301, 302, 303, 307, 308].includes(response.status)) break;
-    const location = response.headers.get('location');
-    await response.body?.cancel();
-    if (!location || hop === 3) throw new Error('Invalid feed redirect');
-    const next = new URL(location, current);
-    if (
-      next.protocol !== 'https:' ||
-      next.username ||
-      next.password ||
-      next.port ||
-      next.hostname.replace(/^www\./, '') !== original.hostname.replace(/^www\./, '')
-    )
-      throw new Error('Unsafe feed redirect');
-    current = next;
-  }
-  if (!response) throw new Error('Feed unavailable');
-  if (!response.ok || !response.body) throw new Error('Feed unavailable');
-  const reader = response.body.getReader(),
-    parts: Uint8Array[] = [];
-  let size = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.length;
-    if (size > maxBytes) {
-      await reader.cancel();
-      throw new Error('Feed too large');
+  try {
+    for (let hop = 0; hop <= 3; hop++) {
+      response = await fetch(current, {
+        redirect: 'manual',
+        signal,
+        cache: 'no-store',
+        headers: { Accept: 'application/rss+xml, application/xml, text/xml' },
+      });
+      if (![301, 302, 303, 307, 308].includes(response.status)) break;
+      const location = response.headers.get('location');
+      await response.body?.cancel();
+      if (!location || hop === 3)
+        throw new FeedFailure('invalid_redirect', 'Invalid feed redirect', response.status);
+      let next: URL;
+      try {
+        next = new URL(location, current);
+      } catch {
+        throw new FeedFailure('invalid_redirect', 'Invalid feed redirect', response.status);
+      }
+      if (
+        next.protocol !== 'https:' ||
+        next.username ||
+        next.password ||
+        next.port ||
+        next.hostname.replace(/^www\./, '') !== original.hostname.replace(/^www\./, '')
+      )
+        throw new FeedFailure('unsafe_redirect', 'Unsafe feed redirect', response.status);
+      current = next;
     }
-    parts.push(value);
+    if (!response) throw new FeedFailure('network', 'Feed unavailable');
+    if (!response.ok) {
+      await response.body?.cancel();
+      throw new FeedFailure('http', 'Feed unavailable', response.status);
+    }
+    if (!response.body) throw new FeedFailure('invalid_xml', 'Feed unavailable', response.status);
+    const reader = response.body.getReader(),
+      parts: Uint8Array[] = [];
+    let size = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.length;
+      if (size > maxBytes) {
+        await reader.cancel();
+        throw new FeedFailure('body_limit', 'Feed too large', response.status);
+      }
+      parts.push(value);
+    }
+    return Buffer.concat(parts).toString('utf8');
+  } catch (error) {
+    if (error instanceof FeedFailure) throw error;
+    throw new FeedFailure(
+      signal.aborted ||
+      (error instanceof Error && ['TimeoutError', 'AbortError'].includes(error.name))
+        ? 'timeout'
+        : 'network',
+      'Feed unavailable',
+    );
   }
-  return Buffer.concat(parts).toString('utf8');
 }
 export async function fetchFashionSource(source: (typeof feedSources)[number], now: Date) {
-  const items = parseFashionFeed(await readFeed(source.url, source.maxBytes), source, now);
-  if (!items.length) throw new Error('No current fashion coverage');
-  return items;
+  const started = Date.now();
+  try {
+    const items = parseFashionFeed(await readFeed(source.url, source.maxBytes), source, now);
+    if (!items.length) throw new FeedFailure('no_relevant_coverage', 'No current fashion coverage');
+    return items;
+  } catch (error) {
+    // Never log publisher response content, URLs, raw exception text, or stacks.
+    const failure =
+      error instanceof FeedFailure ? error : new FeedFailure('invalid_xml', 'Invalid feed');
+    console.warn(
+      JSON.stringify({
+        event: 'fashion_feed_failed',
+        source:
+          feedSources.find((known) => known.name === source.name && known.url === source.url)
+            ?.name ?? 'unknown',
+        reason: failure.reason,
+        ...(failure.httpStatus && failure.httpStatus >= 100 && failure.httpStatus <= 599
+          ? { httpStatus: failure.httpStatus }
+          : {}),
+        elapsedMs: Math.max(0, Date.now() - started),
+      }),
+    );
+    throw failure;
+  }
 }
 export async function refreshTrends(force = false) {
   const now = new Date();

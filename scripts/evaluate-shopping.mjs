@@ -46,21 +46,38 @@ if (new Set(manifest.cases.map((c) => c.id)).size !== manifest.cases.length)
   throw new Error('Duplicate case IDs');
 // Decode all fixtures before creating an account or spending any allowance.
 const cases = await Promise.all(
-  manifest.cases.map(async (entry) => ({
-    ...entry,
-    bytes: await sharp(await readFile(resolve(dirname(manifestPath), entry.file)), {
-      limitInputPixels: 25_000_000,
-    })
-      .rotate()
-      .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 90 })
-      .toBuffer(),
-  })),
+  manifest.cases.map(async (entry) => {
+    const raw = await readFile(resolve(dirname(manifestPath), entry.file));
+    return {
+      ...entry,
+      fixtureSha256: createHash('sha256').update(raw).digest('hex'),
+      bytes: await sharp(raw, {
+        limitInputPixels: 25_000_000,
+      })
+        .rotate()
+        .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 90 })
+        .toBuffer(),
+    };
+  }),
 );
 const report = {
   startedAt: new Date().toISOString(),
   base,
-  results: [],
+  results: cases.map((entry) => ({
+    id: entry.id,
+    kind: entry.kind,
+    fixtureSha256: entry.fixtureSha256,
+    imageSha256: createHash('sha256').update(entry.bytes).digest('hex'),
+    ...(entry.kind === 'product'
+      ? {
+          country: entry.country,
+          expectedUrls: entry.expectedUrls,
+          source: entry.source,
+        }
+      : {}),
+    status: 'pending',
+  })),
   cleanup: 'not-created',
   limitations:
     'Small evaluation set, not population accuracy. Retrieval of a known URL is separate from a verified exact label. No retry or budget override.',
@@ -105,13 +122,7 @@ try {
   created = true;
   report.cleanup = 'pending';
   for (const entry of cases) {
-    const result = {
-      id: entry.id,
-      kind: entry.kind,
-      imageSha256: createHash('sha256').update(entry.bytes).digest('hex'),
-      status: 'pending',
-    };
-    report.results.push(result);
+    const result = report.results.find((result) => result.id === entry.id);
     const started = Date.now();
     try {
       const allowance = await call('/api/ai-allowance');
@@ -154,8 +165,6 @@ try {
             itemIndex: index,
             country: entry.country,
           });
-          result.expectedUrls = entry.expectedUrls;
-          result.source = entry.source;
           result.listings = shopping.listings.map(
             ({ title, url, identityEvidence, visualReview, evidence }) => ({
               title,
