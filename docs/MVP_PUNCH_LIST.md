@@ -2,7 +2,7 @@
 
 Priority updated September 27, 2026. Customer billing stays off. Do not connect purchases, create paid products or start charging as part of this list.
 
-## 1. Owner control room — implemented, release verification in progress
+## 1. Owner control room — deployed and verified
 
 - [x] Admin-only overview with 7/30/90-day ranges and manual refresh.
 - [x] Cookieless page views by UTC day, page, referral channel and device; signed-in status is aggregated, not a visitor identity.
@@ -12,7 +12,7 @@ Priority updated September 27, 2026. Customer billing stays off. Do not connect 
 - [x] Existing feature action counts, closet/outfit totals and feed refresh failures.
 - [x] Audited AI pause/resume and lower daily spending/action limits; deployment ceilings remain authoritative. No billing control is exposed.
 - [x] Cross-origin, non-admin, stale-version, overspend, privacy-signal and fail-closed tests.
-- [ ] Verify migrated production queries, owner page and mobile/desktop rendering after deployment.
+- [x] Verify migrated production queries, live owner page, date filtering, unchanged-limit save/audit, and ordinary-user access rejection. Desktop/mobile/dark layout also passed fixture rendering checks.
 
 Acceptance: the owner opens `/admin` through their verified Google administrator login, sees real data, and ordinary users cannot view or change it. An administrative pause blocks new generation requests; in-flight requests can finish. Reconciliation may still settle previously dispatched usage.
 
@@ -51,3 +51,9 @@ Acceptance: a refresh delivers eligible fresh items; every viral claim has obser
 - [ ] Review and submit the completed entry.
 
 RevenueCat integration/store eligibility remains unresolved. The earlier monetization recommendation is not authorization to enable billing; the latest product decision overrides it.
+
+## Release evidence
+
+Code release `b599a92`, deployed as `dpl_4fFoQLQkakMNahrJrDwe173Dw2gQ`. Twenty-eight agent/admin checks passed, plus the read-only production database gate and desktop/mobile rendering check. The live owner session loaded the dashboard and saved the existing $1/day, 10-actions/account settings with an audit entry. Billing remained off. A temporary ordinary account was denied admin-page/control access and deleted after live checks. One synthetic traffic view remains in the aggregate as verification traffic. The 7-day filter showed the new count. No live AI pause was performed; fail-closed enforcement is covered by automated tests.
+
+The initial 30-day owner view showed 27 retained completed searches, 10 without links, and four failing feed sources (Who What Wear, Hypebeast, GQ, Vogue). These are a snapshot of retained records, not a held-out quality benchmark. Investigate these source failures and direct retailer coverage next.
