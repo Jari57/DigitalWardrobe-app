@@ -35,15 +35,27 @@ export async function GET(request: Request) {
       : undefined;
     if (!listing || !safeShoppingUrl(listing.url)) throw new ApiError(404, 'Photo unavailable.');
     await rateLimit(`shopping-photo:${user.id}`, 120, 600);
-    // Resolve metadata for saved searches too; this does not spend an AI action.
-    const imageUrl = listing.evidence?.imageUrl ?? (await productEvidence(listing.url)).imageUrl;
-    if (!imageUrl) throw new ApiError(404, 'Photo unavailable.');
-    let photo;
-    try {
-      photo = await fetchProductPhoto(imageUrl);
-    } catch {
-      throw new ApiError(404, 'Photo unavailable.');
+    const storedImageUrl = listing.evidence?.imageUrl;
+    let photo: Awaited<ReturnType<typeof fetchProductPhoto>> | undefined;
+    if (storedImageUrl) {
+      try {
+        photo = await fetchProductPhoto(storedImageUrl);
+      } catch {
+        // A saved CDN URL can expire. Re-read only this owned listing's metadata below.
+      }
     }
+    if (!photo) {
+      try {
+        // One metadata lookup and, at most, one distinct replacement photo. No AI action.
+        const refreshedImageUrl = (await productEvidence(listing.url)).imageUrl;
+        if (refreshedImageUrl && refreshedImageUrl !== storedImageUrl) {
+          photo = await fetchProductPhoto(refreshedImageUrl);
+        }
+      } catch {
+        // Missing metadata or an unavailable replacement remains a normal empty-photo response.
+      }
+    }
+    if (!photo) throw new ApiError(404, 'Photo unavailable.');
     return new Response(new Uint8Array(photo.data), {
       headers: {
         'Content-Type': photo.mimeType,

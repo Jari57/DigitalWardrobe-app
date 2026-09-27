@@ -34,7 +34,7 @@ The original machine report is kept in the workspace at `outputs/shipaton-baseli
 ## Execute next
 
 1. Confirm event and existing store-account/release status. If this is the standard RevenueCat entry, prioritize a qualifying store release and RevenueCat entitlement flow over adding agents. Store review timing is outside our control.
-2. Choose the store/platform route, configure actual products and entitlement IDs, and test purchase, restore, cancellation and revoked access. Do not invent IDs or expose keys. Do not treat a web wrapper alone as a successful store release.
+2. Confirm a qualifying store/platform route compatible with the owner's billing-off decision. Any purchase or entitlement implementation requires a changed product decision; it is not authorized by this checklist. Do not invent IDs or treat a web wrapper alone as a successful store release.
 3. Improve retrieval with an authorized image-search/catalog source. Benchmark representative screenshots, lookalikes and supported countries. Require image-first results and usable local purchase links; distinguish identified product, verified exact label and purchase availability.
 4. Connect permitted, timestamped social observations before claiming live viral discovery. Current editorial feed and tested scorer are separate. Do not buy a provider subscription without an agreed spend ceiling.
 5. Run the complete demo on the intended physical device: sign up, upload, select garment, shop, save, build from closet, refresh, sign out/in, delete account. Check poor connectivity, denied photo permission and provider failure. Retest after fixes.

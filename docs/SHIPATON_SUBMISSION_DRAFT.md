@@ -20,20 +20,20 @@ Our next focus is improving direct-retailer and regional coverage with independe
 
 ## Demonstration storyboard (target 110 seconds)
 
-| Time    | Screen and action                                                     | Narration purpose                                              |
-| ------- | --------------------------------------------------------------------- | -------------------------------------------------------------- |
-| 0–12s   | Open the actual app on the intended device                            | Explain the screenshot-to-outfit problem                       |
-| 12–35s  | Upload a permissioned outfit image; select one garment                | Show detection and the selected item                           |
-| 35–58s  | Show actual photo results and follow one retailer link                | Demonstrate the result; use the actual match/alternative label |
-| 58–80s  | Open a prepared, consented closet; build an outfit                    | Connect inspiration to clothes already owned                   |
-| 80–95s  | Change discovery audience, refresh and save a look                    | Show visible state changes and persistence                     |
-| 95–110s | Demonstrate the real RevenueCat entitlement feature, once implemented | Explain exactly what the paid tier adds                        |
+| Time    | Screen and action                                      | Narration purpose                                              |
+| ------- | ------------------------------------------------------ | -------------------------------------------------------------- |
+| 0–12s   | Open the actual app on the intended device             | Explain the screenshot-to-outfit problem                       |
+| 12–35s  | Upload a permissioned outfit image; select one garment | Show detection and the selected item                           |
+| 35–58s  | Show actual photo results and follow one retailer link | Demonstrate the result; use the actual match/alternative label |
+| 58–80s  | Open a prepared, consented closet; build an outfit     | Connect inspiration to clothes already owned                   |
+| 80–95s  | Change discovery audience, refresh and save a look     | Show visible state changes and persistence                     |
+| 95–110s | Reopen the saved outfit and show the owned pieces      | Prove the useful result persists                               |
 
-Rehearse first, but record real responses. Do not replace a failed search with fabricated cards, invent an exact match or label editorial stories viral. Disclose edited waiting time. Use owned/permissioned reference and wardrobe images, not the private evaluation photo by default. The final monetization segment is blocked until implementation and testing.
+Rehearse first, but record real responses. Do not replace a failed search with fabricated cards, invent an exact match or label editorial stories viral. Disclose edited waiting time. Use owned/permissioned reference and wardrobe images, not the private evaluation photo by default. Billing remains off. Do not add a purchase segment without a changed product decision.
 
 ## Submission checklist
 
-Following the [official submission guide](https://www.revenuecat.com/blog/engineering/how-to-submit-your-app-for-shipaton):
+If RevenueCat Shipaton is confirmed, reconcile its requirements with billing staying off before following the [official submission guide](https://www.revenuecat.com/blog/engineering/how-to-submit-your-app-for-shipaton):
 
 - [ ] Confirm category and team details.
 - [ ] Supply the qualifying public store listing and RevenueCat project ID.

@@ -78,7 +78,7 @@ Three specialist reviews covered matching/photos, editorial sources, and release
 
 Work in this order:
 
-1. **Shopping resilience:** try bounded backup photos until three usable images are found; preserve qualified alternatives when optional visual review fails, with accurate usage accounting; re-resolve expired saved-photo metadata once through the existing safe owner-scoped path.
+1. **Shopping resilience implemented:** try up to eight backup photos until three usable images are found; preserve qualified unverified alternatives when optional visual review fails, retaining an unknown-cost budget hold; re-resolve expired saved-photo metadata once through the existing safe owner-scoped path. Regression coverage includes failed photos, invalid provider output, failed replacement and ownership rejection.
 2. **Retrieval quality:** connect an authorized image/catalog retrieval source within an agreed budget and evaluate held-out screenshots. Current retrieval is text-based; visual verification cannot find a candidate missing from search. Keep exact-label evidence strict.
 3. **Viral discovery:** acquire permitted timestamped social observations, then connect scoring. Editorial RSS repair is not proof of virality.
 4. **Operational acceptance:** acknowledge support/alert test messages, verify independent outage detection, rehearse current-schema application recovery, and complete physical iOS/Android journeys.
@@ -87,3 +87,9 @@ Work in this order:
 Owner-access regression checks found no new authorization defect. Existing production access remains the verified Google identity `jari57@gmail.com`; an alternate spelling must not silently grant access. Historical restore evidence is in `MVP_RELEASE_VERIFICATION.md`; physical-device gaps are in `PWA_VERIFICATION.md`. None of these checks constitute independent certification.
 
 Release `4d107c8` was promoted as `dpl_AYQgU2ocDazcm3j9ubfTk739a8pN`. All 36 regression checks, TypeScript, production build and production database query gate passed. The live feed interaction test passed refresh, audience selection, likes, saves and hide/undo, then deleted its temporary account. Public health confirmed database ready and billing off. Post-release public feed reported GQ and Vogue available, with five and four returned items respectively; Who What Wear and Hypebeast still reported unavailable in the production refresh despite successful local source checks. Their production fetch reliability remains open; do not mark all source failures resolved.
+
+## Demo-focused execution
+
+The landing upload action now opens the file picker directly; selection stays local until explicit identification. A detected-piece shortcut starts only that piece's search. Owned garments can be reviewed, saved and opened in styling with one submit and one wardrobe refresh; no styling generation runs automatically. Failed refresh never repeats an already committed save. The submission storyboard ends with saved-outfit persistence, not an unauthorized purchase flow.
+
+Validation: 41 agent/security checks, 20 browser UX checks, TypeScript and optimized production build passed. Browser checks cover guest-photo retention through sign-in, privacy cleanup on sign-out, one-piece search isolation, visual shopping results, save-and-style locking and no automatic AI generation. These checks are not a new matching benchmark. Next matching work still requires an authorized image/catalog source, broader permissioned reference fixtures and actual held-out outcomes. Event/category confirmation and physical-device acceptance remain open.

@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   BarChart3,
   Camera,
@@ -57,6 +57,7 @@ export default function WardrobeApp({
   const [creatorOutfit, setCreatorOutfit] = useState<Outfit | null>(null);
   const [spotterSession, setSpotterSession] = useState(0);
   const [feedPhoto, setFeedPhoto] = useState<File | null>(null);
+  const screenshotInput = useRef<HTMLInputElement>(null);
   const [creatorAesthetic, setCreatorAesthetic] = useState('Minimal');
   const [styleLock, setStyleLock] = useState<string>();
   const [feedMode, setFeedMode] = useState('for-you');
@@ -197,11 +198,12 @@ export default function WardrobeApp({
                     setAccount(true);
                   }
                 }}
-                onStalk={() =>
+                onStalk={() => {
+                  screenshotInput.current?.click();
                   document
                     .getElementById('stalk-fit')
-                    ?.scrollIntoView({ behavior: 'auto', block: 'start' })
-                }
+                    ?.scrollIntoView({ behavior: 'auto', block: 'start' });
+                }}
               />
             )}
             {['For You', 'Closet'].includes(tab) && (
@@ -391,6 +393,7 @@ export default function WardrobeApp({
             )}
             <div id="stalk-fit" hidden={tab !== 'Spotter'}>
               <Spotter
+                screenshotInput={screenshotInput}
                 key={spotterSession}
                 onStyleSaved={(id) => {
                   setStyleLock(id);

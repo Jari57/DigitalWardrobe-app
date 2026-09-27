@@ -484,7 +484,7 @@ html[data-theme='dark'] .scan-steps [aria-current='step'] {
   flex-wrap: wrap;
   gap: 8px;
 }
-.piece-shortcuts a {
+.piece-shortcuts button {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
@@ -495,7 +495,7 @@ html[data-theme='dark'] .scan-steps [aria-current='step'] {
   text-decoration: none;
   font-size: 13px;
 }
-.piece-shortcuts a:hover {
+.piece-shortcuts button:hover {
   background: var(--action-bg);
   color: var(--action-text);
 }

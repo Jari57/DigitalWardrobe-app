@@ -2,6 +2,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/browser',
   testMatch: [
+    'mvp-discovery.spec.ts',
     'daily-ux.spec.ts',
     'screenshot-entry.spec.ts',
     'canvas-layout.spec.ts',

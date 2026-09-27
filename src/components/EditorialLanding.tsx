@@ -45,7 +45,7 @@ export default function EditorialLanding({
           <div className="editorial-actions">
             <button className="editorial-primary" onClick={onStalk}>
               <span>
-                Stalk a fit<small>Find a look or shop its pieces</small>
+                Upload screenshot<small>Find the pieces that caught your eye</small>
               </span>
               <ArrowUpRight size={20} />
             </button>

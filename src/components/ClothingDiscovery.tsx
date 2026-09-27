@@ -1,7 +1,7 @@
 'use client';
 import { matchVerdict } from '@/lib/match-verifier';
 import AgentFeedback from './AgentFeedback';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { ScanLine } from 'lucide-react';
 import ShoppingResults from './ShoppingResults';
 import type { Detection, DetectedItem, ShoppingResult, SearchPreferences } from '@/lib/discovery';
@@ -18,6 +18,7 @@ export default function ClothingDiscovery({
   onPhotoReceived,
   onOpenCloset,
   onStyleSaved,
+  screenshotInput,
 }: {
   authenticated: boolean;
   onAuth: () => void;
@@ -27,9 +28,11 @@ export default function ClothingDiscovery({
   onPhotoReceived?: () => void;
   onOpenCloset?: () => void;
   onStyleSaved?: (id: string) => void;
+  screenshotInput?: RefObject<HTMLInputElement | null>;
 }) {
   const [recent, setRecent] = useState<Detection[]>([]);
-  const fileInput = useRef<HTMLInputElement>(null);
+  const localInput = useRef<HTMLInputElement>(null);
+  const fileInput = screenshotInput ?? localInput;
   const [detection, setDetection] = useState<Detection | null>(null);
   const [shopping, setShopping] = useState<Record<string, ShoppingResult>>({});
   const [descriptions, setDescriptions] = useState<Record<string, string>>({});
@@ -446,9 +449,18 @@ export default function ClothingDiscovery({
               <p>Explore similar shopping options, or save a piece you already own.</p>
               <nav className="piece-shortcuts" aria-label="Detected pieces">
                 {detection.items.map((item, index) => (
-                  <a key={index} href={`#detected-piece-${index}`}>
-                    {item.name}
-                  </a>
+                  <button
+                    key={index}
+                    disabled={!!busy}
+                    onClick={() => {
+                      const target = document.getElementById(`detected-piece-${index}`);
+                      target?.focus({ preventScroll: true });
+                      target?.scrollIntoView({ behavior: 'auto', block: 'start' });
+                      void search(index);
+                    }}
+                  >
+                    Shop {item.name}
+                  </button>
                 ))}
               </nav>
             </div>
@@ -596,6 +608,8 @@ export default function ClothingDiscovery({
             onSubmit={async (event) => {
               event.preventDefault();
               const form = new FormData(event.currentTarget);
+              const styleAfterSave =
+                (event.nativeEvent as SubmitEvent).submitter?.getAttribute('value') === 'style';
               setBusy('Saving piece…');
               setError('');
               try {
@@ -612,6 +626,7 @@ export default function ClothingDiscovery({
                 setEdit(null);
                 try {
                   await onRefresh();
+                  if (styleAfterSave && response.garment?.id) onStyleSaved?.(response.garment.id);
                 } catch {
                   setSaved(
                     'Piece saved to your closet. Reload to refresh your closet; you don’t need to save it again.',
@@ -652,9 +667,14 @@ export default function ClothingDiscovery({
                 {error}
               </p>
             )}
-            <button className="primary" disabled={!!busy}>
+            <button className={onStyleSaved ? undefined : 'primary'} disabled={!!busy}>
               {busy ? 'Saving…' : 'Save piece'}
             </button>
+            {onStyleSaved && (
+              <button className="primary" type="submit" value="style" disabled={!!busy}>
+                Save &amp; style
+              </button>
+            )}
           </form>
         </Modal>
       )}

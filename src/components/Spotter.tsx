@@ -1,7 +1,7 @@
 'use client';
 import ClothingDiscovery from './ClothingDiscovery';
 import ReferenceMatcher from './ReferenceMatcher';
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import type { Garment, Reference, Piece } from '@/lib/types';
 import { api, Empty, Modal, upload } from './ui';
@@ -16,6 +16,7 @@ export default function Spotter({
   onPhotoReceived,
   onOpenCloset,
   onStyleSaved,
+  screenshotInput,
 }: {
   garments: Garment[];
   references: Reference[];
@@ -27,6 +28,7 @@ export default function Spotter({
   onPhotoReceived?: () => void;
   onOpenCloset?: () => void;
   onStyleSaved?: (id: string) => void;
+  screenshotInput?: RefObject<HTMLInputElement | null>;
 }) {
   const [matching, setMatching] = useState<Reference | null>(null),
     [inspirationImage, setInspirationImage] = useState<{ url: string; key: number }>();
@@ -36,6 +38,7 @@ export default function Spotter({
   return (
     <div className="stack">
       <ClothingDiscovery
+        screenshotInput={screenshotInput}
         initialPhoto={initialPhoto}
         onPhotoReceived={onPhotoReceived}
         key={inspirationImage?.key}

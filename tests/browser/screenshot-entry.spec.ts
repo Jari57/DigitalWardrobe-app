@@ -87,7 +87,9 @@ test('screenshot onboarding leads to upload preview and explicit sign-in without
   await page.goto('/');
   const start = page.getByRole('region', { name: 'Clothing discovery' });
   await expect(start).toBeVisible();
-  await page.getByRole('button', { name: /Stalk a fit Find a look/ }).click();
+  const heroChooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: /Upload screenshot Find the pieces/ }).click();
+  await heroChooser;
   await expect(start.getByRole('button', { name: 'Upload screenshot' })).toBeInViewport();
   await page.screenshot({ path: '../screenshot-home-light.png' });
   await page.emulateMedia({ colorScheme: 'dark' });
