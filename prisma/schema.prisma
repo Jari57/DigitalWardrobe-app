@@ -25,6 +25,7 @@ model User {
   trendFeedback TrendFeedback[]
   experience UserExperience?
   journeyMetrics JourneyMetric[]
+  adminAudits AdminAudit[]
 }
 
 model Session {
@@ -250,4 +251,31 @@ model JourneyMetric {
   count Int @default(1)
   @@id([userId, day, event])
   @@index([day, event])
+}
+
+model TrafficDaily {
+  day String
+  page String
+  channel String
+  device String
+  signedIn Boolean
+  views Int @default(1)
+  @@id([day, page, channel, device, signedIn])
+}
+model ServiceControl {
+  id String @id @default("global")
+  aiPaused Boolean @default(false)
+  dailyCapMicros Int?
+  requestsPerUser Int?
+  version Int @default(0)
+  updatedAt DateTime @default(now())
+}
+model AdminAudit {
+  id String @id
+  actorId String?
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action String
+  details Json
+  createdAt DateTime @default(now())
+  @@index([createdAt])
 }

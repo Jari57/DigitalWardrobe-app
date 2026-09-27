@@ -1,3 +1,4 @@
+import { controlledAgentBudget, serviceControl } from '@/server/service-control';
 import { loadAgentMemory } from '@/server/agents/memory';
 import { loadClothingPreference } from '@/server/agents/clothing-preference';
 import { withAgentUsage } from '@/server/agents/usage';
@@ -10,7 +11,7 @@ import type { Prisma } from '@prisma/client';
 import { requireUser, rateLimit } from '@/server/auth';
 import { db } from '@/server/db';
 import { ApiError, checkOrigin, handleError, json, readJson } from '@/server/http';
-import { AgentLedger, configuredAgentBudget } from '@/server/agents/ledger';
+import { AgentLedger } from '@/server/agents/ledger';
 import { detectClothes, findClothes } from '@/server/agents/discovery';
 import {
   captureSummary,
@@ -55,7 +56,7 @@ export async function GET() {
         })
       : [];
     return json({
-      enabled: process.env.AI_ENABLED === 'true',
+      enabled: process.env.AI_ENABLED === 'true' && !(await serviceControl()).aiPaused,
       searches: searches.map((record) =>
         reviewShoppingResult({
           ...(record.result as Prisma.JsonObject),
@@ -122,7 +123,7 @@ export async function POST(request: Request) {
       ? await db.image.findFirst({ where: { id: photoId, userId: user.id } })
       : null;
     const key = discoveryRequestKey(input, undefined, memory.version, clothingPreference);
-    const ledger = new AgentLedger(db, configuredAgentBudget());
+    const ledger = new AgentLedger(db, await controlledAgentBudget());
     let reservation;
     try {
       reservation = await ledger.reserve(user.id, key, input);

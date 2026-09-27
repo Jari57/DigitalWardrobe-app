@@ -2,12 +2,13 @@ import { createHash } from 'node:crypto';
 import { requireUser } from '@/server/auth';
 import { db } from '@/server/db';
 import { json, handleError } from '@/server/http';
-import { configuredAgentBudget } from '@/server/agents/ledger';
+import { controlledAgentBudget, serviceControl } from '@/server/service-control';
 export async function GET() {
   try {
     const user = await requireUser();
-    if (process.env.AI_ENABLED !== 'true') return json({ enabled: false });
-    const policy = configuredAgentBudget(),
+    if (process.env.AI_ENABLED !== 'true' || (await serviceControl()).aiPaused)
+      return json({ enabled: false });
+    const policy = await controlledAgentBudget(),
       now = new Date(),
       day = now.toISOString().slice(0, 10);
     const scope = 'agents-v1:user:' + createHash('sha256').update(user.id).digest('hex');

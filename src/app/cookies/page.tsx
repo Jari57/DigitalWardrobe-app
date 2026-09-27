@@ -10,10 +10,11 @@ export default function CookiesPage() {
     <main className="legal-page">
       <a href="/">← Back to FitStalker</a>
       <h1>Cookies and device storage</h1>
-      <p>Updated September 13, 2026</p>
+      <p>Updated September 27, 2026</p>
       <p>
         FitStalker uses a sign-in cookie and device storage for your selected theme and installed
-        app. We do not currently run advertising cookies or analytics trackers in the app.
+        app. We do not use advertising cookies or third-party analytics trackers. Cookieless
+        first-party page-view counts help us understand site use.
       </p>
       <h2>Sign-in</h2>
       <p>
@@ -51,8 +52,11 @@ export default function CookiesPage() {
         want.
       </p>
       <p>
-        There are no optional advertising or analytics categories to enable in the current app. We
-        will update these choices before introducing optional tracking.
+        Our cookieless page-view counter stores only the UTC day, page category, broad referral
+        channel, device category and sign-in status. It creates no visitor identifier and uses no
+        analytics cookies or device storage. It respects Do Not Track and Global Privacy Control.
+        Counts older than 90 days are removed on subsequent traffic collection. Blocked scripts are
+        not counted.
       </p>
     </main>
   );

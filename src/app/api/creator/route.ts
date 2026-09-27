@@ -1,3 +1,4 @@
+import { controlledAgentBudget } from '@/server/service-control';
 import { loadAgentMemory } from '@/server/agents/memory';
 import { withAgentUsage } from '@/server/agents/usage';
 import { createHash } from 'node:crypto';
@@ -5,7 +6,7 @@ import { requireUser, rateLimit } from '@/server/auth';
 import { db } from '@/server/db';
 import { ApiError, checkOrigin, handleError, json, readJson } from '@/server/http';
 import { agentRequestSchema } from '@/server/agents/contracts';
-import { AgentLedger, configuredAgentBudget } from '@/server/agents/ledger';
+import { AgentLedger } from '@/server/agents/ledger';
 import { createOutfitContent, creatorVersion } from '@/server/agents/creator';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
         }),
       )
       .digest('hex');
-    const ledger = new AgentLedger(db, configuredAgentBudget());
+    const ledger = new AgentLedger(db, await controlledAgentBudget());
     const { request: record } = await ledger.reserve(user.id, key, input).catch(() => {
       throw new ApiError(
         429,

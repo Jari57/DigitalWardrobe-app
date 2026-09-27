@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import '@fontsource-variable/plus-jakarta-sans';
+import TrafficSignal from '@/components/TrafficSignal';
 import InstallApp from '@/components/InstallApp';
 import LegalLinks from '@/components/LegalLinks';
 import './globals.css';
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         {children}
+        <TrafficSignal />
         <InstallApp />
         <LegalLinks />
       </body>
