@@ -18,7 +18,20 @@ Acceptance: the owner opens `/admin` through their verified Google administrator
 
 Measurement boundaries: no historical anonymous traffic can be reconstructed. Page views are not unique visitors. Referral/device categories are approximate and client-reported; DNT/GPC and blocked scripts reduce coverage. Account daily action counters are currently pruned after 30 days, so a 90-day selection does not restore older counters. Agent records disappear with deleted accounts; the global spending ledger remains. No raw IPs, referrer URLs, browser fingerprints or search content are stored by the new traffic collector. Hosting logs are separate. Aggregate traffic is pruned after 90 days when collection next runs.
 
-## 2. Shopping quality — next product priority
+## 2. Finance and investor evidence
+
+- [x] Separate observed activity from financial assumptions at `/admin/investors`.
+- [x] Show in-app MRR/ARR as zero while billing is off; label CAC, LTV, runway and revenue CAGR as unestablished without their required records.
+- [x] Compare retained signups across completed 30-day windows; never annualize a short history into a revenue CAGR.
+- [x] Provide a blank-input scenario calculator for MRR/ARR, CAC, gross-profit LTV, payback and runway. Inputs stay in page memory and never enable billing.
+- [x] Provide an administrator-only dated JSON evidence export with definitions, sources and limitations; exclude usernames, images, prompts and scenario inputs.
+- [ ] Reconcile complete marketing, hosting, tools, labor, cash and revenue records before claiming actual burn, runway, margins or CAC.
+- [ ] Classify internal/test accounts and add acquisition attribution plus matured D7/D30 cohorts before treating account counts as external-customer traction.
+- [ ] Establish paid-cohort retention and recurring-contract evidence if monetization is later authorized. Billing remains off now.
+
+Definitions and evidence requirements: [recurring revenue](https://stripe.com/resources/more/how-to-use-monthly-recurring-revenue-mrr-and-annual-recurring-revenue-arr-to-guide-growth), [SaaS metrics](https://stripe.com/resources/more/essential-saas-metrics). Current exports are operational snapshots, not audited financial statements. Cost per signup is not paid-customer CAC, repeat-day activity is not cohort retention, and a hypothetical ARR is not actual ARR.
+
+## 3. Shopping quality
 
 - [ ] Expand the permissioned known-item benchmark across garment types, screenshots, lookalikes and supported countries.
 - [ ] Improve direct retailer retrieval; distinguish a product-identification page from a local purchasable listing.
@@ -27,7 +40,7 @@ Measurement boundaries: no historical anonymous traffic can be reconstructed. Pa
 
 Acceptance: frozen evaluation inputs, useful photo results and local links, no unsupported exact claims, failures retained in the report. Current two-case baseline and runner are in `SHIPATON_READINESS.md`.
 
-## 3. Discovery freshness
+## 4. Discovery freshness
 
 - [ ] Select a permitted social-data source and define coverage/cost.
 - [ ] Store timestamped observations and connect the existing rising-fit scorer.
@@ -35,14 +48,14 @@ Acceptance: frozen evaluation inputs, useful photo results and local links, no u
 
 Acceptance: a refresh delivers eligible fresh items; every viral claim has observed source evidence. Current feed is editorial, not a connected social trend monitor.
 
-## 4. Reliability and usability
+## 5. Reliability and usability
 
 - [ ] Verify critical journeys on physical iOS and Android devices, plus desktop; include poor connectivity and upload failures.
 - [ ] Connect and test operational alert delivery and run a documented backup restore drill.
 - [ ] Add source-specific monitoring and agent latency instrumentation if current outcome/cost signals show problems.
 - [ ] Improve admin account search/pagination when the first 50-row activity view is insufficient.
 
-## 5. Submission package
+## 6. Submission package
 
 - [x] Draft pitch, demo storyboard and eligibility checklist.
 - [ ] Confirm the actual competition/category and its compatibility with billing staying off.

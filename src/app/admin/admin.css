@@ -318,3 +318,10 @@ html[data-theme='dark'] .admin-room {
 .admin-controls button:hover {
   background: #405137;
 }
+.finance-stat strong {
+  font-size: clamp(18px, 2vw, 28px);
+  overflow-wrap: anywhere;
+}
+.finance-results {
+  margin: 24px 0;
+}

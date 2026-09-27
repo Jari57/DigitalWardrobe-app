@@ -2,6 +2,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/browser',
   testMatch: [
+    'finance-metrics.spec.ts',
     'admin-analytics.spec.ts',
     'agent-improvements.spec.ts',
     'agent-contracts.spec.ts',

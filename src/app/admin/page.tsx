@@ -62,6 +62,7 @@ export default async function Admin({
         </div>
       </header>
       <nav className="admin-nav" aria-label="Dashboard range">
+        <a href="/admin/investors">Finance &amp; evidence</a>
         {[7, 30, 90].map((range) => (
           <a
             key={range}
