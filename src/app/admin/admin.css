@@ -325,3 +325,149 @@ html[data-theme='dark'] .admin-room {
 .finance-results {
   margin: 24px 0;
 }
+/* Owner workspace: quiet surfaces, strong figures, readable data. */
+.admin-room {
+  --muted: #666b60;
+  --surface: #fffefa;
+}
+.admin-header {
+  padding-bottom: 28px;
+  border-bottom: 1px solid #8883;
+}
+.admin-stat,
+.admin-panel {
+  box-shadow: 0 6px 24px #20221d04;
+}
+.admin-stat {
+  border-top: 3px solid #899c60;
+}
+.admin-stat strong {
+  font-variant-numeric: tabular-nums;
+}
+.admin-nav {
+  align-items: center;
+}
+.admin-nav a {
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 650;
+}
+.admin-nav a:hover {
+  background: #8881;
+}
+.admin-nav a[aria-current]:hover {
+  background: #405137;
+}
+.admin-chart {
+  height: 210px;
+  border-bottom: 1px solid #8884;
+  background: repeating-linear-gradient(
+    to top,
+    transparent 0,
+    transparent calc(25% - 1px),
+    #8882 calc(25% - 1px),
+    #8882 25%
+  );
+  margin: 14px 0 24px;
+}
+.admin-chart i {
+  background: linear-gradient(to top, #566844, #a4b77a);
+  border-radius: 5px 5px 0 0;
+}
+.admin-chart-scale,
+.admin-bar-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.admin-chart-scale {
+  color: var(--muted);
+  font-size: 11px;
+}
+.admin-ranking li:has(.admin-meter) {
+  display: block;
+}
+.admin-bar-label {
+  margin-bottom: 9px;
+}
+.admin-bar-label small {
+  display: inline-block;
+  min-width: 40px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.admin-meter {
+  height: 5px;
+  border-radius: 10px;
+  background: #8882;
+  overflow: hidden;
+}
+.admin-meter i {
+  display: block;
+  height: 100%;
+  background: #82955d;
+  border-radius: inherit;
+}
+.admin-meter-warning i {
+  background: #b67945;
+}
+.admin-coverage {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.admin-coverage svg {
+  width: 150px;
+  flex-shrink: 0;
+}
+.admin-coverage circle {
+  fill: none;
+  stroke-width: 8;
+}
+.admin-ring-track {
+  stroke: #8882;
+}
+.admin-ring-value {
+  stroke: #82955d;
+}
+.admin-coverage text {
+  fill: currentColor;
+  font-size: 24px;
+  font-weight: 750;
+}
+.admin-budget-number {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+.admin-budget-number small {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+.admin-budget-meter {
+  height: 10px;
+}
+.admin-outcome-title {
+  font-size: 12px;
+  margin-top: 26px;
+}
+.admin-room thead {
+  background: #8881;
+}
+.admin-room tbody tr:hover {
+  background: #8881;
+}
+@media (max-width: 650px) {
+  .admin-coverage {
+    gap: 14px;
+  }
+  .admin-coverage svg {
+    width: 110px;
+  }
+  .admin-budget-number {
+    font-size: 24px;
+  }
+}

@@ -39,6 +39,13 @@ export default async function Admin({
     return { day, count: totals.get(day) ?? 0 };
   });
   const peak = Math.max(1, ...daily.map((row) => row.count));
+  const outcomeTotals = new Map<string, number>();
+  for (const row of data.agents)
+    outcomeTotals.set(row.state, (outcomeTotals.get(row.state) ?? 0) + row.count);
+  const coverage = data.shopping.searches
+    ? Math.round((data.shopping.withResults / data.shopping.searches) * 100)
+    : null;
+  const budgetUsed = (data.budget?.spentMicros ?? 0) + (data.budget?.heldMicros ?? 0);
   const breakdown = (key: 'page' | 'channel' | 'device') => {
     const sums = new Map<string, number>();
     for (const row of data.traffic) sums.set(row[key], (sums.get(row[key]) ?? 0) + row.views);
@@ -107,6 +114,10 @@ export default async function Admin({
             {data.since} → {data.today} · UTC
           </span>
         </div>
+        <div className="admin-chart-scale" aria-hidden="true">
+          <span>{peak} views</span>
+          <span>Daily volume</span>
+        </div>
         <div
           className="admin-chart"
           role="img"
@@ -118,6 +129,10 @@ export default async function Admin({
               <small>{days <= 7 ? day.slice(5) : ''}</small>
             </div>
           ))}
+        </div>
+        <div className="admin-chart-scale" aria-hidden="true">
+          <span>{data.since}</span>
+          <span>{data.today}</span>
         </div>
         {!views && (
           <p className="admin-empty">
@@ -166,8 +181,16 @@ export default async function Admin({
               <ul className="admin-ranking">
                 {breakdown(key).map(([label, count]) => (
                   <li key={label}>
-                    <span>{label === 'direct' ? 'Direct / unknown' : label}</span>
-                    <strong>{count}</strong>
+                    <div className="admin-bar-label">
+                      <span>{label === 'direct' ? 'Direct / unknown' : label}</span>
+                      <strong>
+                        {count.toLocaleString()}{' '}
+                        <small>{views ? Math.round((count / views) * 100) : 0}%</small>
+                      </strong>
+                    </div>
+                    <div className="admin-meter" aria-hidden="true">
+                      <i style={{ width: `${views ? (count / views) * 100 : 0}%` }} />
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -176,6 +199,83 @@ export default async function Admin({
             )}
           </section>
         ))}
+      </div>
+      <div className="admin-grid admin-two">
+        <section className="admin-panel admin-feature-panel">
+          <p className="admin-eyebrow">SEARCH PERFORMANCE</p>
+          <h2>Results delivered</h2>
+          <div className="admin-coverage">
+            <svg
+              viewBox="0 0 120 120"
+              role="img"
+              aria-label={
+                coverage === null
+                  ? 'No completed searches'
+                  : `${coverage}% of completed searches returned links`
+              }
+            >
+              <circle className="admin-ring-track" cx="60" cy="60" r="48" />
+              <circle
+                className="admin-ring-value"
+                cx="60"
+                cy="60"
+                r="48"
+                pathLength="100"
+                strokeDasharray={`${coverage ?? 0} 100`}
+                transform="rotate(-90 60 60)"
+              />
+              <text x="60" y="65" textAnchor="middle">
+                {coverage === null ? '—' : `${coverage}%`}
+              </text>
+            </svg>
+            <div>
+              <strong>{data.shopping.withResults.toLocaleString()} searches with links</strong>
+              <p className="admin-note">
+                Of {data.shopping.searches.toLocaleString()} completed searches. Measures coverage,
+                not exact-match accuracy.
+              </p>
+            </div>
+          </div>
+        </section>
+        <section className="admin-panel">
+          <p className="admin-eyebrow">RESOURCE MONITOR</p>
+          <h2>Today’s AI budget</h2>
+          <p className="admin-budget-number">
+            {money(budgetUsed)} <small>/ {money(cap)}</small>
+          </p>
+          <div
+            className="admin-meter admin-budget-meter"
+            role="img"
+            aria-label={`${money(budgetUsed)} spent or reserved of ${money(cap)} daily cap`}
+          >
+            <i style={{ width: `${cap ? Math.min(100, (budgetUsed / cap) * 100) : 0}%` }} />
+          </div>
+          <p className="admin-note">
+            Recorded spend plus open reservations.{' '}
+            {cap
+              ? `${Math.round((budgetUsed / cap) * 100)}% of the daily cap allocated.`
+              : 'No active budget.'}{' '}
+            Reservations are not settled charges.
+          </p>
+          <h3 className="admin-outcome-title">Request outcomes · {days} days</h3>
+          <ul className="admin-ranking admin-outcomes">
+            {[...outcomeTotals].map(([state, count]) => (
+              <li key={state}>
+                <div className="admin-bar-label">
+                  <span>{state}</span>
+                  <strong>{count}</strong>
+                </div>
+                <div
+                  className={`admin-meter ${state === 'failed' || state === 'uncertain' ? 'admin-meter-warning' : ''}`}
+                  aria-hidden="true"
+                >
+                  <i style={{ width: `${requests ? (count / requests) * 100 : 0}%` }} />
+                </div>
+              </li>
+            ))}
+          </ul>
+          {!requests && <p className="admin-empty">No requests recorded in this period.</p>}
+        </section>
       </div>
       <div className="admin-grid admin-two">
         <section className="admin-panel">

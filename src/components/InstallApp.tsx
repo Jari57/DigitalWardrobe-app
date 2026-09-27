@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { ArrowDownToLine, X } from 'lucide-react';
 type InstallPrompt = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: string }>;
@@ -80,9 +81,20 @@ export default function InstallApp() {
         </div>
       )}
       {!installed && (
-        <>
+        <section className="install-card" aria-label="Install FitStalker">
+          <img
+            className="install-brand-icon"
+            src="/icons/icon-192.png"
+            width="48"
+            height="48"
+            alt=""
+          />
+          <div className="install-copy">
+            <strong>Your next fit. One tap away.</strong>
+            <p>Add FitStalker to your home screen.</p>
+          </div>
           <button
-            className="text-button"
+            className="install-action"
             onClick={async () => {
               if (prompt) {
                 try {
@@ -96,15 +108,31 @@ export default function InstallApp() {
               } else setHelp(!help);
             }}
           >
+            <ArrowDownToLine size={16} aria-hidden="true" />
             Install FitStalker
           </button>
           {help && (
-            <p className="note">
-              On iPhone or iPad, open in Safari and choose Share → Add to Home Screen. On Android or
-              desktop, use your browser’s Install app or Add to Home screen option when available.
-            </p>
+            <div className="install-help">
+              <div>
+                <strong>Make it a home-screen favorite</strong>
+                <p>
+                  <b>iPhone or iPad:</b> In Safari, tap Share, then Add to Home Screen.
+                </p>
+                <p>
+                  <b>Android or desktop:</b> Open the browser menu and choose Install app or Add to
+                  Home screen, when available.
+                </p>
+              </div>
+              <button
+                className="install-help-close"
+                aria-label="Close install instructions"
+                onClick={() => setHelp(false)}
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            </div>
           )}
-        </>
+        </section>
       )}
     </div>
   );
