@@ -2,6 +2,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/browser',
   testMatch: [
+    'validation-upgrade.spec.ts',
     'shopping-resilience.spec.ts',
     'feed-sources.spec.ts',
     'operations.spec.ts',

@@ -2,7 +2,7 @@ import { requireUser, rateLimit } from '@/server/auth';
 import { db } from '@/server/db';
 import { checkOrigin, handleError, json, readJson, ApiError } from '@/server/http';
 import { ownImage, serializeGarment } from '@/server/records';
-import { garmentSchema } from '@/server/validation';
+import { garmentUpdateSchema } from '@/server/validation';
 type Context = { params: Promise<{ id: string }> };
 export async function PATCH(request: Request, context: Context) {
   try {
@@ -10,7 +10,7 @@ export async function PATCH(request: Request, context: Context) {
     const user = await requireUser();
     await rateLimit(`garment-edit:${user.id}`, 200, 3600);
     const { id } = await context.params;
-    const { imageUrl, ...input } = await readJson(request, garmentSchema.partial());
+    const { imageUrl, ...input } = await readJson(request, garmentUpdateSchema);
     const garment = await db.$transaction(async (tx) => {
       if (!(await tx.garment.findFirst({ where: { id, userId: user.id } })))
         throw new ApiError(404, 'Garment not found.');

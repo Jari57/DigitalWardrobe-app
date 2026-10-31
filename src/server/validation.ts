@@ -22,6 +22,12 @@ export const garmentSchema = z
     imageUrl: imageUrlSchema,
   })
   .strict();
+// Zod 4 applies defaults inside optional fields. PATCH must not replace an
+// existing brand or price when the customer changes only another field.
+export const garmentUpdateSchema = garmentSchema.partial().extend({
+  brand: garmentSchema.shape.brand.removeDefault().optional(),
+  price: garmentSchema.shape.price.removeDefault().optional(),
+});
 export const pieceSchema = z
   .object({
     garmentId: z.string().min(1).max(80),
