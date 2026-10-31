@@ -1,3 +1,4 @@
+import { openStyleIdeas } from './simple-flow-helpers';
 import { test, expect } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
 
@@ -14,10 +15,7 @@ test('live feed controls persist likes, saves, hide undo and interests', async (
   expect(signup.status()).toBe(201);
   try {
     await page.goto('/');
-    await page
-      .getByRole('navigation', { name: 'Main navigation' })
-      .getByRole('button', { name: 'For You', exact: true })
-      .click();
+    await openStyleIdeas(page);
     await expect(page.locator('.feed-card').first()).toBeVisible();
     const title = await page.locator('.feed-card h3').first().innerText();
     const card = page
@@ -32,10 +30,7 @@ test('live feed controls persist likes, saves, hide undo and interests', async (
     await page.getByRole('button', { name: 'Saved', exact: true }).click();
     await expect(card).toBeVisible();
     await page.reload();
-    await page
-      .getByRole('navigation', { name: 'Main navigation' })
-      .getByRole('button', { name: 'For You', exact: true })
-      .click();
+    await openStyleIdeas(page);
     await page.getByRole('button', { name: 'Saved', exact: true }).click();
     await expect(card.getByRole('button', { name: 'Unsave idea' })).toBeVisible();
     await card.getByRole('button', { name: 'Unsave idea' }).click();

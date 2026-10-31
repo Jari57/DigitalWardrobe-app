@@ -14,9 +14,9 @@ test('closet add edit search filter and delete work through the UI', async ({ pa
     await page.goto('/');
     await page
       .getByRole('navigation', { name: 'Main navigation' })
-      .getByRole('button', { name: 'Closet', exact: true })
+      .getByRole('button', { name: 'My Closet', exact: true })
       .click();
-    await page.getByRole('button', { name: 'Add your first piece', exact: true }).click();
+    await page.getByRole('button', { name: 'Add your first item', exact: true }).click();
     const dialog = page.getByRole('dialog');
     const buffer = await sharp({
       create: { width: 100, height: 150, channels: 3, background: '#334455' },
@@ -29,6 +29,7 @@ test('closet add edit search filter and delete work through the UI', async ({ pa
     await dialog.getByLabel('Piece name', { exact: true }).fill('QA navy shirt');
     await dialog.getByRole('button', { name: 'Save piece' }).click();
     await expect(page.getByRole('button', { name: 'Edit QA navy shirt' })).toBeVisible();
+    await page.getByText('Search & filter items', { exact: true }).click();
     await page.getByLabel('Search closet').fill('not-in-closet');
     await expect(page.getByRole('heading', { name: 'No pieces found' })).toBeVisible();
     await page.getByRole('button', { name: 'Clear filters' }).click();
@@ -39,13 +40,13 @@ test('closet add edit search filter and delete work through the UI', async ({ pa
     await page.reload();
     await page
       .getByRole('navigation', { name: 'Main navigation' })
-      .getByRole('button', { name: 'Closet', exact: true })
+      .getByRole('button', { name: 'My Closet', exact: true })
       .click();
     await page.getByRole('button', { name: 'Edit QA evening shirt' }).click();
     page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Delete piece', exact: true }).click();
     await expect(
-      page.getByRole('button', { name: 'Add your first piece', exact: true }),
+      page.getByRole('button', { name: 'Add your first item', exact: true }),
     ).toBeVisible();
   } finally {
     expect(

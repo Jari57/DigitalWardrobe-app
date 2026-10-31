@@ -76,10 +76,7 @@ test('real inspiration matches owned pieces, saves editable pairings and hands o
       await stranger.close();
     }
     await page.goto('/');
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: 'Spotter', exact: true })
-      .click();
+    await page.getByRole('navigation').getByRole('button', { name: 'Find', exact: true }).click();
     await page.getByRole('button', { name: 'Recreate this look', exact: true }).click();
     const responsePromise = page.waitForResponse((r) => r.url().endsWith('/api/spotter'));
     await page.getByRole('button', { name: 'Match my closet with AI', exact: true }).click();
@@ -113,10 +110,7 @@ test('real inspiration matches owned pieces, saves editable pairings and hands o
         })
       ).status(),
     ).toBe(400);
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: 'Spotter', exact: true })
-      .click();
+    await page.getByRole('navigation').getByRole('button', { name: 'Find', exact: true }).click();
     await page.getByRole('button', { name: 'Recreate this look', exact: true }).click();
     // Explicit fixture exercises the no-match shopping handoff without another paid generation.
     await page.route('**/api/spotter', (route) =>

@@ -211,7 +211,7 @@ export default function ForYouFeed({
       <div className="row between">
         <div>
           <span className="eyebrow">YOUR NEXT STYLE OBSESSION</span>
-          <h2>For You</h2>
+          <h2>{mode === 'saved' ? 'Saved style ideas' : 'Style ideas'}</h2>
           <p>Fresh finds. Your kind of style.</p>
         </div>
         <button

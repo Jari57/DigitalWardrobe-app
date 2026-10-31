@@ -21,10 +21,11 @@ test('creator quick start is skippable and themes persist while system mode foll
     await expect(
       page.getByRole('heading', { name: 'Find clothes from a screenshot.' }),
     ).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: 'Upload screenshot', exact: true }),
-    ).toBeInViewport();
-    await page.getByRole('navigation').getByRole('button', { name: 'Closet', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Upload photo', exact: true })).toBeInViewport();
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: 'My Closet', exact: true })
+      .click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await expect(page.getByRole('region', { name: 'Creator quick start' })).toBeVisible();
     await page.getByRole('button', { name: 'Streetwear', exact: true }).click();
@@ -42,7 +43,10 @@ test('creator quick start is skippable and themes persist while system mode foll
     await page.getByRole('button', { name: 'Theme: system. Switch to light', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     await page.reload();
-    await page.getByRole('navigation').getByRole('button', { name: 'Closet', exact: true }).click();
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: 'My Closet', exact: true })
+      .click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     await expect(page.getByRole('region', { name: 'Creator quick start' })).toBeVisible();
     await page.screenshot({ path: '../onboarding-light.png', fullPage: true });

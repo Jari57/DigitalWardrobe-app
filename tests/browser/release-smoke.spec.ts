@@ -30,7 +30,7 @@ for (const width of [390, 1440]) {
     });
     page.on('pageerror', (error) => errors.push(error.name));
     await page.goto('/');
-    const upload = page.getByRole('button', { name: /Upload screenshot Find the pieces/ });
+    const upload = page.getByRole('button', { name: 'Upload photo', exact: true });
     await expect(upload).toBeVisible();
     const chooser = page.waitForEvent('filechooser');
     await upload.click();

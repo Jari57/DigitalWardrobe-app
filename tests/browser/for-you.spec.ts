@@ -1,3 +1,4 @@
+import { openStyleIdeas } from './simple-flow-helpers';
 import { test, expect } from '@playwright/test';
 import { randomBytes } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
@@ -128,10 +129,7 @@ test('visual feed saves private preferences, likes and bookmarks, with hide and 
   });
   try {
     await page.goto('/');
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: 'For You', exact: true })
-      .click();
+    await openStyleIdeas(page);
     await page.getByRole('button', { name: 'Edit interests' }).click();
     await page.getByRole('button', { name: 'shoes', exact: true }).click();
     await page.getByRole('button', { name: 'classic', exact: true }).click();
@@ -144,10 +142,7 @@ test('visual feed saves private preferences, likes and bookmarks, with hide and 
     await card.getByRole('button', { name: 'Like idea', exact: true }).click();
     await expect(card.getByRole('button', { name: 'Unlike idea', exact: true })).toBeVisible();
     await page.reload();
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: 'For You', exact: true })
-      .click();
+    await openStyleIdeas(page);
     await page.getByRole('button', { name: 'Saved', exact: true }).click();
     await expect(page.getByRole('article')).toHaveCount(1);
     expect(
@@ -191,7 +186,7 @@ test('live feed photographs load in light and dark mobile layouts', async ({ pag
   test.skip(process.env.LIVE_TREND_REFRESH !== 'true', 'Opt-in publisher image check.');
   await page.emulateMedia({ colorScheme: 'light' });
   await page.goto('/');
-  await page.getByRole('navigation').getByRole('button', { name: 'For You', exact: true }).click();
+  await openStyleIdeas(page);
   const photo = page.locator('img.feed-photo').first();
   await expect(photo).toBeVisible();
   await expect

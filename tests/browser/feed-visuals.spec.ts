@@ -1,3 +1,4 @@
+import { openStyleIdeas } from './simple-flow-helpers';
 import { test, expect } from '@playwright/test';
 import { safeFeedImage } from '../../src/server/trend-feed';
 
@@ -67,7 +68,7 @@ test('audience switches visibly before saving completes and failed photos do not
     });
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'For You', exact: true }).click();
+  await openStyleIdeas(page);
   const feed = page.getByRole('region', { name: 'For You feed' });
   await expect(feed.getByRole('heading', { name: women.title })).toBeVisible();
   await feed.getByRole('heading', { name: broken.title }).scrollIntoViewIfNeeded();

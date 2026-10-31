@@ -101,7 +101,7 @@ export default function BlindFit({
 
   return (
     <Modal
-      title="Put a fit together"
+      title="Style my clothes"
       dark
       onClose={() => {
         if (!busy) onClose();
@@ -118,7 +118,7 @@ export default function BlindFit({
             <p>Add a few pieces so your recommendations come from your own closet.</p>
             {onAdd && (
               <button className="primary" onClick={onAdd}>
-                Add a piece
+                Add an item
               </button>
             )}
           </div>
@@ -339,7 +339,7 @@ export default function BlindFit({
                     }
                   }}
                 >
-                  {saved ? 'Saved to My fits' : 'Save this fit'}
+                  {saved ? 'Saved to Saved outfits' : 'Save this fit'}
                 </button>
                 <button disabled={busy} onClick={() => onUse(arrange(chosen))}>
                   Edit on canvas

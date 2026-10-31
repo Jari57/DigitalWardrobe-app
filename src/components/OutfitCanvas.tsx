@@ -170,7 +170,7 @@ export default function OutfitCanvas({
             onClick={() =>
               run(async () => {
                 await onSaveDraft();
-                setMessage('Draft layout saved. Resume it from Spotter on any device.');
+                setMessage('Draft layout saved. Resume it from Find on any device.');
               })
             }
           >

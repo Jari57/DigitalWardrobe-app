@@ -1,3 +1,4 @@
+import { openStyleIdeas } from './simple-flow-helpers';
 import { test, expect } from '@playwright/test';
 test('desktop uses wide navigation and a responsive multi-column feed', async ({ page }) => {
   await page.route('**/api/**', (route) => {
@@ -27,31 +28,18 @@ test('desktop uses wide navigation and a responsive multi-column feed', async ({
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
   const nav = page.getByRole('navigation', { name: 'Main navigation' });
-  await expect(page.getByRole('button', { name: /Put a fit together From/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Style my clothes', exact: true })).toBeVisible();
   expect((await page.locator('.app-shell').boundingBox())!.width).toBeGreaterThan(1200);
   expect((await nav.boundingBox())!.y).toBeLessThan(200);
-  const heroImage = page.getByRole('img', { name: /Two people in relaxed street style/ });
-  await expect(heroImage).toBeVisible();
-  await expect
-    .poll(() => heroImage.evaluate((img: HTMLImageElement) => img.naturalWidth))
-    .toBeGreaterThan(0);
+  await expect(page.getByRole('button', { name: 'Upload photo', exact: true })).toBeInViewport();
   await page.screenshot({ path: 'test-results/desktop-spotter.png', fullPage: true });
-  await page.getByText('See how it works', { exact: false }).click();
-  await expect(page.getByRole('heading', { name: 'See a look you love.' })).toBeVisible();
-  await page.getByRole('button', { name: 'Next step', exact: true }).click();
-  await expect(page.getByText('Brown blazer', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Next step', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Make it your own.' })).toBeVisible();
-  await page.getByRole('button', { name: 'Try your own screenshot' }).click();
-  await expect(
-    page.getByRole('button', { name: 'Upload screenshot', exact: true }),
-  ).toBeInViewport();
+  await expect(page.getByRole('button', { name: 'Upload photo', exact: true })).toBeInViewport();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => window.scrollTo(0, 0));
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: 'test-results/editorial-mobile.png', fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await nav.getByRole('button', { name: 'For You', exact: true }).click();
+  await openStyleIdeas(page);
   await expect(page.getByRole('article')).toHaveCount(6);
   const cards = page.getByRole('article');
   const first = (await cards.nth(0).boundingBox())!;
@@ -300,12 +288,12 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
   });
   await page.goto('/');
   await expect(
-    page.getByRole('region', { name: 'Your style shortcuts' }).getByRole('button'),
+    page.getByRole('region', { name: 'More ways to use FitStalker' }).getByRole('button'),
   ).toHaveCount(2);
   await expect(
     page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button'),
-  ).toHaveCount(4);
-  await page.getByRole('button', { name: /Put a fit together From your closet/ }).click();
+  ).toHaveCount(3);
+  await page.getByRole('button', { name: 'Style my clothes', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Occasion').fill('Client meeting, then dinner. Comfortable shoes.');
   await dialog.getByLabel('Anything to plan around?').fill('Lots of walking; cool evening');
@@ -314,18 +302,18 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
   await dialog.getByText('Swap a piece from my closet', { exact: true }).click();
   await expect(dialog.getByLabel('Swap White shirt', { exact: true })).toBeEnabled();
   await dialog.getByRole('button', { name: 'Save this fit', exact: true }).click();
-  await expect(dialog.getByRole('button', { name: 'Saved to My fits' })).toBeDisabled();
+  await expect(dialog.getByRole('button', { name: 'Saved to Saved outfits' })).toBeDisabled();
   await dialog.getByLabel('Swap White shirt', { exact: true }).selectOption('blue-shirt');
   await expect(dialog.getByRole('button', { name: 'Save this fit', exact: true })).toBeEnabled();
   await dialog.getByRole('button', { name: 'Blue shirt Blue shirt', exact: true }).click();
   await expect(dialog.getByLabel('Swap Blue shirt', { exact: true })).toBeDisabled();
   expect(stylistCalls).toBe(1);
   await page.keyboard.press('Escape');
-  await page.getByRole('navigation').getByRole('button', { name: 'My fits' }).click();
+  await page.getByRole('navigation').getByRole('button', { name: 'Saved' }).click();
   await expect(
     page.getByRole('heading', { name: 'Client meeting, then dinner. Comfortable shoes. fit' }),
   ).toBeVisible();
-  await page.getByRole('navigation').getByRole('button', { name: 'For You' }).click();
+  await openStyleIdeas(page);
   await expect(page.getByRole('heading', { name: 'Classic white shirts' })).toBeVisible();
   await page.getByRole('button', { name: 'Menswear', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Menswear', exact: true })).toHaveAttribute(
@@ -346,10 +334,11 @@ test('daily styling takes plans through to a saved fit without canvas; feed refr
     true,
   );
   await page.screenshot({ path: 'test-results/daily-ux.png', fullPage: true });
-  await page.getByRole('button', { name: 'Stalk a fit', exact: true }).click();
-  await expect(
-    page.getByRole('navigation').getByRole('button', { name: 'Spotter' }),
-  ).toHaveAttribute('aria-current', 'page');
+  await page.getByRole('navigation').getByRole('button', { name: 'Find', exact: true }).click();
+  await expect(page.getByRole('navigation').getByRole('button', { name: 'Find' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
   expect(stylistCalls).toBe(1);
 });
 
@@ -463,21 +452,15 @@ test('guide explains all four sections and remains readable on mobile', async ({
   await page.screenshot({ path: 'test-results/how-it-works-desktop.png', fullPage: true });
   await page.route('**/api/**', (route) => route.fulfill({ json: { user: null } }));
   await page.getByRole('link', { name: 'Open FitStalker' }).click();
-  await expect(page.getByRole('link', { name: 'How Spotter works' })).toHaveAttribute(
-    'href',
-    '/how-it-works#spotter',
-  );
   await page
     .getByRole('navigation', { name: 'Main navigation' })
-    .getByRole('button', { name: 'Closet', exact: true })
+    .getByRole('button', { name: 'My Closet', exact: true })
     .click();
-  await expect(page.getByRole('link', { name: 'How Closet works' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'How My Closet works' })).toHaveAttribute(
     'target',
     '_blank',
   );
-  await expect(
-    page.getByText('Start with a clear photo of one item you own.', { exact: false }),
-  ).toBeVisible();
+  await expect(page.getByText('Start with one item you love.', { exact: true })).toBeVisible();
 });
 
 import { refreshedSelection } from '../../src/lib/feed-refresh';
@@ -538,10 +521,7 @@ test('refresh handles a cooldown and retries the failed action', async ({ page }
     });
   });
   await page.goto('/');
-  await page
-    .getByRole('navigation', { name: 'Main navigation' })
-    .getByRole('button', { name: 'For You', exact: true })
-    .click();
+  await openStyleIdeas(page);
   await expect(page.locator('.feed-card h3').first()).toHaveText('Idea 0');
   await page.getByRole('button', { name: 'Refresh feed' }).click();
   await expect(page.locator('.feed-card h3').first()).toHaveText('Idea 6');

@@ -5,9 +5,13 @@ import { googleIdentityToken } from '@/lib/google-signin';
 export default function AccountDialog({
   onClose,
   onAuthenticated,
+  intent,
+  onDismiss,
 }: {
   onClose: () => void;
   onAuthenticated: () => Promise<void>;
+  intent?: string;
+  onDismiss?: () => void;
 }) {
   const [mode, setMode] = useState<'signin' | 'signup' | 'recover'>('signin'),
     [busy, setBusy] = useState(false),
@@ -26,7 +30,10 @@ export default function AccountDialog({
               : 'Recover your account'
       }
       onClose={() => {
-        if (!busy && !code) onClose();
+        if (!busy && !code) {
+          onDismiss?.();
+          onClose();
+        }
       }}
     >
       {code ? (
@@ -89,7 +96,7 @@ export default function AccountDialog({
             }
           }}
         >
-          <p>Your photos, pieces and saved looks stay in your private account.</p>
+          <p>{intent || 'Your photos, pieces and saved looks stay in your private account.'}</p>
           {mode !== 'recover' && (
             <>
               <button

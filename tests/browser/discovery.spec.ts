@@ -131,7 +131,7 @@ test('discovery UI reviews sourced results, saves to the real closet, and shows 
       });
     });
     await page.goto('/');
-    await page.getByRole('button', { name: 'Spotter', exact: true }).click();
+    await page.getByRole('button', { name: 'Find', exact: true }).click();
     await page
       .getByLabel('Clothing or outfit photo', { exact: true })
       .setInputFiles({ name: 'fixture.png', mimeType: 'image/png', buffer: photo });
@@ -163,7 +163,7 @@ test('discovery UI reviews sourced results, saves to the real closet, and shows 
       'Reviewed blue shirt',
     );
     await page.reload();
-    await page.getByRole('button', { name: 'Spotter', exact: true }).click();
+    await page.getByRole('button', { name: 'Find', exact: true }).click();
     await page.getByLabel('Recent scans').selectOption('fixture-scan');
     limited = true;
     await page.getByRole('button', { name: 'Find where to buy', exact: true }).click();
@@ -251,7 +251,7 @@ test('real photo → real detection → sourced shopping links → saved closet 
   expect(signup.status()).toBe(201);
   try {
     await page.goto('/');
-    await page.getByRole('button', { name: 'Spotter', exact: true }).click();
+    await page.getByRole('button', { name: 'Find', exact: true }).click();
     await page
       .getByLabel('Clothing or outfit photo', { exact: true })
       .setInputFiles(process.env.LIVE_DISCOVERY_PHOTO!);
@@ -330,7 +330,7 @@ test('real photo → real detection → sourced shopping links → saved closet 
     await page.getByRole('dialog').getByRole('button', { name: 'Save piece', exact: true }).click();
     await expect(page.getByText('Piece saved to your closet.', { exact: true })).toBeVisible();
     await page.reload();
-    await page.getByRole('button', { name: 'Spotter', exact: true }).click();
+    await page.getByRole('button', { name: 'Find', exact: true }).click();
     await page.getByLabel('Recent scans').selectOption(detected.id);
     await expect(page.locator('.discovery-item')).toHaveCount(detected.items.length);
     const wardrobe = await context.request.get('/api/wardrobe');

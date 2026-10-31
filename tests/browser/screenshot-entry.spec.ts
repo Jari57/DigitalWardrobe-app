@@ -69,7 +69,7 @@ test('guest screenshot survives sign-in and private scan state clears on sign-ou
   await expect(page.getByRole('heading', { name: 'Private silk shirt' })).toBeVisible();
   await page.getByRole('button', { name: 'Account settings', exact: true }).click();
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Upload screenshot', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Upload photo', exact: true })).toBeVisible();
   await expect(page.getByLabel('Recent scans')).toHaveCount(0);
   await expect(page.getByText('Owner-only clothing description')).toHaveCount(0);
   await expect(page.getByAltText('Your scanned clothing photo')).toHaveCount(0);
@@ -87,15 +87,12 @@ test('screenshot onboarding leads to upload preview and explicit sign-in without
   await page.goto('/');
   const start = page.getByRole('region', { name: 'Clothing discovery' });
   await expect(start).toBeVisible();
-  const heroChooser = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: /Upload screenshot Find the pieces/ }).click();
-  await heroChooser;
-  await expect(start.getByRole('button', { name: 'Upload screenshot' })).toBeInViewport();
-  await page.screenshot({ path: '../screenshot-home-light.png' });
+  await expect(start.getByRole('button', { name: 'Upload photo' })).toBeInViewport();
+  await page.screenshot({ path: 'test-results/screenshot-home-light.png' });
   await page.emulateMedia({ colorScheme: 'dark' });
-  await page.screenshot({ path: '../screenshot-home-dark.png' });
+  await page.screenshot({ path: 'test-results/screenshot-home-dark.png' });
   const chooser = page.waitForEvent('filechooser');
-  await start.getByRole('button', { name: 'Upload screenshot' }).click();
+  await start.getByRole('button', { name: 'Upload photo' }).click();
   await chooser;
   await expect(page.getByRole('button', { name: 'Identify clothes', exact: true })).toHaveCount(0);
   const buffer = await sharp({

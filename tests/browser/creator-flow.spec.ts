@@ -56,12 +56,16 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
     ).toBeVisible();
     await page.screenshot({ path: '../mvp-preferences-mobile.png', fullPage: true });
     await page.getByRole('button', { name: 'Close dialog' }).click();
-    await page.getByRole('navigation').getByRole('button', { name: 'Closet', exact: true }).click();
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: 'My Closet', exact: true })
+      .click();
+    await page.getByText('Search & filter items', { exact: true }).click();
     await expect(page.getByRole('button', { name: 'All (4)', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    await page.getByRole('button', { name: /Put a fit together From your closet/ }).click();
+    await page.getByRole('button', { name: 'Style my clothes', exact: true }).click();
     await page.getByRole('button', { name: 'Surprise me without AI' }).click();
     await expect(page.locator('.blind-grid button')).toHaveCount(3);
     const lockedName = await page.locator('.blind-grid button').first().innerText();
@@ -72,7 +76,7 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
     await expect(page.locator('.canvas-piece')).toHaveCount(3);
     await page.getByRole('button', { name: 'Save draft layout', exact: true }).click();
     await expect(
-      page.getByText('Draft layout saved. Resume it from Spotter on any device.'),
+      page.getByText('Draft layout saved. Resume it from Find on any device.'),
     ).toBeVisible();
     await page.reload();
     await page.getByRole('button', { name: 'Resume draft · 3 pieces', exact: true }).click();
@@ -137,17 +141,11 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
     await expect(page.getByRole('button', { name: 'Download PNG', exact: true })).toBeEnabled();
     await page.getByRole('button', { name: 'Close dialog' }).click();
     await page.reload();
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: 'My fits', exact: true })
-      .click();
+    await page.getByRole('navigation').getByRole('button', { name: 'Saved', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'QA creator look' })).toBeVisible();
     await page.getByRole('button', { name: 'Edit a copy' }).click();
     await expect(page.locator('.canvas-piece')).toHaveCount(3);
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: 'Spotter', exact: true })
-      .click();
+    await page.getByRole('navigation').getByRole('button', { name: 'Find', exact: true }).click();
     await page.getByText('Recreate a look with my closet', { exact: true }).click();
     await page.getByRole('button', { name: 'Add inspiration', exact: true }).click();
     await page.getByLabel('Name', { exact: true }).fill('QA inspiration');
@@ -158,10 +156,7 @@ test('mobile creator: Blind Fit locks, canvas export, saved look, and reference 
     await page.getByRole('button', { name: 'Save reference', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'QA inspiration' })).toBeVisible();
     await page.reload();
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: 'Spotter', exact: true })
-      .click();
+    await page.getByRole('navigation').getByRole('button', { name: 'Find', exact: true }).click();
     await page.getByText('Recreate a look with my closet', { exact: true }).click();
     await expect(page.getByRole('heading', { name: 'QA inspiration' })).toBeVisible();
     page.once('dialog', (dialog) => dialog.accept());

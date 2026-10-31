@@ -264,15 +264,18 @@ export default function ClothingDiscovery({
     <section className="discovery stack" aria-label="Clothing discovery">
       <div className="section-heading discovery-heading">
         <div>
-          <h2>
-            Find clothes from <span>a screenshot.</span>
+          <span className="eyebrow">FIND AN OUTFIT</span>
+          <h2 className="find-title">
+            See the fit.
+            <br />
+            <em>Find the pieces.</em>
           </h2>
-          <p>Spotted on TikTok, Google or anywhere else? Find similar pieces to buy.</p>
+          <p>Upload an outfit photo. Find similar pieces to buy.</p>
         </div>
         <ScanLine size={28} />
       </div>
       <ol className="scan-steps" aria-label="Your next step">
-        <li aria-current={!photo && !uploaded && !detection ? 'step' : undefined}>1 Upload</li>
+        <li aria-current={!photo && !uploaded && !detection ? 'step' : undefined}>1 Add photo</li>
         <li aria-current={(photo || uploaded) && !detection ? 'step' : undefined}>2 Identify</li>
         <li aria-current={detection ? 'step' : undefined}>3 Shop</li>
       </ol>
@@ -280,13 +283,13 @@ export default function ClothingDiscovery({
         <div className="scan-emblem" aria-hidden="true">
           <ScanLine size={32} />
         </div>
-        <span>Screenshot the outfit. We’ll help you find the pieces.</span>
+        <span>A screenshot or photo of one outfit works best.</span>
         <button
           className={photo || uploaded || detection ? 'compact' : 'primary screenshot-cta'}
           disabled={!!busy}
           onClick={() => fileInput.current?.click()}
         >
-          {photo || uploaded || detection ? 'Change screenshot' : 'Upload screenshot'}
+          {photo || uploaded || detection ? 'Change photo' : 'Upload photo'}
         </button>
         <input
           ref={fileInput}
@@ -304,10 +307,17 @@ export default function ClothingDiscovery({
         />
       </div>
       <small>
-        JPG, PNG or WebP · up to 4 MB. Scanning sends your photo to our AI provider. Shopping search
-        uses garment descriptions. Where retailer photos are available, AI may compare up to three
-        with your screenshot. For a crowded image, crop to one outfit before uploading.
+        JPG, PNG or WebP · up to 4 MB. Sign in to identify clothes; scanning sends your photo to our
+        AI provider.
       </small>
+      <details className="scan-help">
+        <summary>How photos and shopping work</summary>
+        <p>
+          Shopping search uses garment descriptions. Where retailer photos are available, AI may
+          compare up to three with your photo. Results are similar pieces, not guaranteed exact
+          matches or available stock.
+        </p>
+      </details>
       {uploaded && !photo && !detection && (
         <>
           <img className="discovery-photo" src={uploaded} alt="Selected inspiration for shopping" />
@@ -315,6 +325,9 @@ export default function ClothingDiscovery({
             Your inspiration is ready. Identify the clothes, then choose a missing piece to search.
           </p>
         </>
+      )}
+      {preview && !detection && (
+        <img className="discovery-photo" src={preview} alt="Your selected screenshot" />
       )}
       {(photo || uploaded) && !detection && (
         <button
@@ -326,18 +339,13 @@ export default function ClothingDiscovery({
           Identify clothes
         </button>
       )}
-      {preview && !detection && (
-        <img className="discovery-photo" src={preview} alt="Your selected screenshot" />
-      )}
       {!photo && !uploaded && !detection && (
         <details className="scan-help">
           <summary>How do I get a screenshot here?</summary>
-          <p>
-            Pause the video or open the outfit photo. Take a screenshot, then tap Upload screenshot.
-          </p>
+          <p>Pause the video or open the outfit photo. Take a screenshot, then tap Upload photo.</p>
           <p>
             Installed on a supported Android browser? Open the screenshot in Photos, tap Share and
-            choose FitStalker. If it isn’t listed, use Upload screenshot.
+            choose FitStalker. If it isn’t listed, use Upload photo.
           </p>
           <p>
             On iPhone, save the screenshot and upload it here. A TikTok or Instagram link alone does

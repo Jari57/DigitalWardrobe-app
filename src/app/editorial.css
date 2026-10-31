@@ -1,3 +1,65 @@
+/* The task comes first; editorial character lives in the type, not a tall intro. */
+.discovery-heading .find-title {
+  font-size: clamp(32px, 5vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  margin: 10px 0 12px;
+}
+.find-title em {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+}
+.find-next {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 24px 0;
+}
+.find-next button {
+  flex: 1 1 180px;
+  min-height: 48px;
+}
+.closet-start {
+  padding: 24px;
+  border: 1px solid var(--action-border);
+  border-radius: 20px;
+  margin: 20px 0;
+  line-height: 1.7;
+}
+.closet-start h3 {
+  font-size: 24px;
+  letter-spacing: -0.7px;
+}
+.closet-start p {
+  font-size: 14px;
+}
+.closet-start-steps {
+  padding-left: 22px;
+  font-size: 14px;
+}
+.closet-start-steps li {
+  padding: 5px 0;
+}
+.closet-tools,
+.closet-filters {
+  margin: 16px 0;
+}
+.closet-tools summary,
+.closet-filters summary {
+  min-height: 44px;
+  padding: 12px 0;
+  cursor: pointer;
+}
+.closet-filters .search-box {
+  margin: 12px 0;
+}
+.section-back {
+  margin-bottom: 16px;
+}
+.bottom-nav button {
+  font-size: 12px;
+}
+
 .editorial-hero {
   display: grid;
   gap: 28px;

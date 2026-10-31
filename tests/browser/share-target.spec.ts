@@ -45,7 +45,7 @@ test('installed-worker share handoff stays local and waits for explicit identifi
   });
   expect(stored.every((url) => url.startsWith('/icons/') || url === '/offline.html')).toBe(true);
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Upload screenshot', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Upload photo', exact: true })).toBeVisible();
   await page.evaluate(() => {
     const form = document.createElement('form');
     form.action = '/share-target';

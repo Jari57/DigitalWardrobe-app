@@ -1,3 +1,4 @@
+import { openStyleIdeas } from './simple-flow-helpers';
 import { test, expect } from '@playwright/test';
 import sharp from 'sharp';
 import { fetchFeedPhoto } from '../../src/server/feed-photo';
@@ -65,7 +66,7 @@ test('For You identifies the selected image in Spotter with no Google or automat
     return route.fulfill({ json: { detections: [], enabled: true } });
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'For You', exact: true }).click();
+  await openStyleIdeas(page);
   await expect(page.locator('a[href*="google.com/search"]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Identify this look', exact: true }).click();
   await expect(page.getByAltText('Your selected screenshot')).toBeVisible();

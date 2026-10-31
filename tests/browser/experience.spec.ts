@@ -155,7 +155,7 @@ test('preferences stay optional and a selected screenshot survives tab changes',
     .getByLabel('Clothing or outfit photo', { exact: true })
     .setInputFiles({ name: 'photo.png', mimeType: 'image/png', buffer });
   await expect(page.getByAltText('Your selected screenshot')).toBeVisible();
-  await page.getByRole('button', { name: 'Closet', exact: true }).click();
-  await page.getByRole('button', { name: 'Spotter', exact: true }).click();
+  await page.getByRole('button', { name: 'My Closet', exact: true }).click();
+  await page.getByRole('button', { name: 'Find', exact: true }).click();
   await expect(page.getByAltText('Your selected screenshot')).toBeVisible();
 });

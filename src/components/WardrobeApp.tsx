@@ -24,15 +24,13 @@ import ThemeToggle from './ThemeToggle';
 import Spotter from './Spotter';
 import ForYouFeed from './ForYouFeed';
 import StudioResume from './StudioResume';
-import EditorialLanding from './EditorialLanding';
 import SectionTip from './SectionTip';
 import { api, categories, Empty } from './ui';
 const blank: Wardrobe = { garments: [], outfits: [], references: [] };
 const tabs = [
-  { id: 'Spotter', icon: Camera },
-  { id: 'For You', icon: Sparkles },
-  { id: 'Closet', icon: Shirt },
-  { id: 'Looks', icon: Grid2X2 },
+  { id: 'Spotter', label: 'Find', icon: Camera },
+  { id: 'Closet', label: 'My Closet', icon: Shirt },
+  { id: 'Looks', label: 'Saved', icon: Grid2X2 },
 ] as const;
 export default function WardrobeApp({
   initialAccountOpen = false,
@@ -61,13 +59,14 @@ export default function WardrobeApp({
   const [creatorAesthetic, setCreatorAesthetic] = useState('Minimal');
   const [styleLock, setStyleLock] = useState<string>();
   const [feedMode, setFeedMode] = useState('for-you');
-  const [pendingStyle, setPendingStyle] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'add' | null>(null);
   useEffect(() => {
-    if (pendingStyle && user && !account) {
-      setPendingStyle(false);
-      setBlind(true);
+    if (pendingAction && user && !account) {
+      setPendingAction(null);
+      setTab('Closet');
+      setEditing(null);
     }
-  }, [pendingStyle, user, account]);
+  }, [pendingAction, user, account]);
   const refresh = useCallback(async () => {
     const wardrobe = await api<Wardrobe>('/api/wardrobe');
     setData(wardrobe);
@@ -95,9 +94,26 @@ export default function WardrobeApp({
   function add() {
     if (user) setEditing(null);
     else {
+      setPendingAction('add');
       setAccountMode('auth');
       setAccount(true);
     }
+  }
+  function styleMyClothes() {
+    setTab('Closet');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    if (user && data.garments.length) setBlind(true);
+  }
+  const activeTab = ['Canvas', 'Stats'].includes(tab)
+    ? 'Closet'
+    : tab === 'For You'
+      ? feedMode === 'saved'
+        ? 'Looks'
+        : 'Spotter'
+      : tab;
+  function navigate(next: string) {
+    setTab(next);
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }
   const visible = data.garments.filter(
     (g) =>
@@ -139,6 +155,7 @@ export default function WardrobeApp({
             className={user ? 'icon-button' : 'compact'}
             disabled={busy || loading}
             onClick={() => {
+              setPendingAction(null);
               setAccountMode(user ? 'settings' : 'auth');
               setAccount(true);
             }}
@@ -149,14 +166,14 @@ export default function WardrobeApp({
         </div>
       </header>
       <nav className="bottom-nav" aria-label="Main navigation">
-        {tabs.map(({ id, icon: Icon }) => (
+        {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
-            aria-current={tab === id ? 'page' : undefined}
-            onClick={() => setTab(id)}
+            aria-current={activeTab === id ? 'page' : undefined}
+            onClick={() => navigate(id)}
           >
-            <Icon size={21} strokeWidth={tab === id ? 2.4 : 1.7} />
-            <span>{id === 'Looks' ? 'My fits' : id}</span>
+            <Icon size={21} strokeWidth={activeTab === id ? 2.4 : 1.7} />
+            <span>{label}</span>
           </button>
         ))}
       </nav>
@@ -187,129 +204,115 @@ export default function WardrobeApp({
           </div>
         ) : (
           <>
-            <SectionTip tab={tab} />
-            {tab === 'Spotter' && (
-              <EditorialLanding
-                onStyle={() => {
-                  if (user) setBlind(true);
-                  else {
-                    setPendingStyle(true);
-                    setAccountMode('auth');
-                    setAccount(true);
-                  }
-                }}
-                onStalk={() => {
-                  screenshotInput.current?.click();
-                  document
-                    .getElementById('stalk-fit')
-                    ?.scrollIntoView({ behavior: 'auto', block: 'start' });
-                }}
-              />
-            )}
-            {['For You', 'Closet'].includes(tab) && (
-              <section
-                className={`daily-style${tab === 'For You' ? ' compact-intents' : ''}`}
-                aria-label="Your style shortcuts"
-              >
-                <div>
-                  <span className="eyebrow">MAKE GETTING DRESSED EASIER</span>
-                  <h2>Make a fit. Or stalk one.</h2>
-                  <p>Use what you own, or find the look you want.</p>
-                </div>
-                <div className="daily-actions">
-                  <button
-                    className="primary"
-                    onClick={() => {
-                      if (user) setBlind(true);
-                      else {
-                        setPendingStyle(true);
-                        setAccountMode('auth');
-                        setAccount(true);
-                      }
-                    }}
-                  >
-                    <Sparkles size={18} />
-                    <span>
-                      Put a fit together<small>From your closet, for your plans</small>
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setTab('Spotter');
-                      requestAnimationFrame(() =>
-                        document
-                          .getElementById('stalk-fit')
-                          ?.scrollIntoView({ behavior: 'auto', block: 'start' }),
-                      );
-                    }}
-                  >
-                    <Search size={18} />
-                    <span>
-                      Stalk a fit<small>Find a look or shop its pieces</small>
-                    </span>
-                  </button>
-                </div>
-              </section>
+            {tab !== 'Spotter' && <SectionTip tab={tab} />}
+            {['Canvas', 'Stats', 'For You'].includes(tab) && (
+              <button className="text-button section-back" onClick={() => navigate(activeTab)}>
+                ← Back to {tabs.find((entry) => entry.id === activeTab)?.label}
+              </button>
             )}
             {tab === 'Closet' && (
               <>
-                <div className="row wrap">
-                  <button className="primary" onClick={add}>
-                    <Plus size={16} />
-                    Add a piece
-                  </button>
-                  <button onClick={() => setTab('Canvas')}>
-                    <Layers size={16} />
-                    Outfit canvas
-                  </button>
-                  <button onClick={() => setTab('Stats')}>
-                    <BarChart3 size={16} />
-                    Closet stats
-                  </button>
+                <div className="section-heading">
+                  <div>
+                    <span className="eyebrow">STYLE WHAT YOU OWN</span>
+                    <h2>My closet</h2>
+                    <p>Add your clothes. Tell us your plans. Get an outfit.</p>
+                  </div>
                 </div>
-                <div className="search-box">
-                  <Search size={17} />
-                  <input
-                    aria-label="Search closet"
-                    placeholder="Search brand, category, color…"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                  />
-                </div>
-                <div className="category-pills">
-                  <button aria-pressed={category === 'all'} onClick={() => setCategory('all')}>
-                    All ({data.garments.length})
-                  </button>
-                  {categories.map((c) => (
-                    <button key={c} aria-pressed={category === c} onClick={() => setCategory(c)}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
-                <div className="palette">
-                  <label htmlFor="palette">PALETTE</label>
-                  <select id="palette" value={color} onChange={(e) => setColor(e.target.value)}>
-                    <option value="all">Any color</option>
-                    {Array.from(new Set(data.garments.map((g) => g.color)))
-                      .sort()
-                      .map((c) => (
-                        <option key={c}>{c}</option>
-                      ))}
-                  </select>
-                </div>
-                {!data.garments.length ? (
-                  <Empty
-                    title="Great fits start with your closet"
-                    action={
-                      <button className="primary" onClick={add}>
-                        <Plus size={17} />
-                        {user ? 'Add your first piece' : 'Start your wardrobe'}
+                {data.garments.length > 0 && (
+                  <>
+                    <div className="row wrap">
+                      <button className="primary" onClick={styleMyClothes}>
+                        <Sparkles size={16} />
+                        Style my clothes
                       </button>
-                    }
-                  >
-                    Start with a clear photo of one item you own. Add a top, bottoms and shoes to
-                    put your first fit together.
-                  </Empty>
+                      <button onClick={add}>
+                        <Plus size={16} />
+                        Add an item
+                      </button>
+                    </div>
+                    <details className="closet-tools">
+                      <summary>More closet tools</summary>
+                      <div className="row wrap">
+                        <button onClick={() => setTab('Canvas')}>
+                          <Layers size={16} />
+                          Outfit canvas
+                        </button>
+                        <button onClick={() => setTab('Stats')}>
+                          <BarChart3 size={16} />
+                          Closet stats
+                        </button>
+                      </div>
+                    </details>
+                    <details className="closet-filters">
+                      <summary>Search &amp; filter items</summary>
+                      <div className="search-box">
+                        <Search size={17} />
+                        <input
+                          aria-label="Search closet"
+                          placeholder="Search brand, category, color…"
+                          value={query}
+                          onChange={(e) => setQuery(e.target.value)}
+                        />
+                      </div>
+                      <div className="category-pills">
+                        <button
+                          aria-pressed={category === 'all'}
+                          onClick={() => setCategory('all')}
+                        >
+                          All ({data.garments.length})
+                        </button>
+                        {categories.map((c) => (
+                          <button
+                            key={c}
+                            aria-pressed={category === c}
+                            onClick={() => setCategory(c)}
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="palette">
+                        <label htmlFor="palette">PALETTE</label>
+                        <select
+                          id="palette"
+                          value={color}
+                          onChange={(e) => setColor(e.target.value)}
+                        >
+                          <option value="all">Any color</option>
+                          {Array.from(new Set(data.garments.map((g) => g.color)))
+                            .sort()
+                            .map((c) => (
+                              <option key={c}>{c}</option>
+                            ))}
+                        </select>
+                      </div>
+                    </details>
+                  </>
+                )}
+                {!data.garments.length ? (
+                  <section className="closet-start stack" aria-label="Start your closet">
+                    <Shirt size={32} aria-hidden="true" />
+                    <h3>Start with one item you love.</h3>
+                    <p>
+                      Photograph a top, bottoms or shoes. Add a few items to start creating outfits.
+                    </p>
+                    <ol className="closet-start-steps">
+                      <li>Add a photo of one item.</li>
+                      <li>Check its details and save.</li>
+                      <li>Choose “Style my clothes” and tell us your plans.</li>
+                    </ol>
+                    {!user && (
+                      <p>
+                        Sign in when you add an item to keep your closet private. We’ll bring you
+                        straight back.
+                      </p>
+                    )}
+                    <button className="primary" onClick={add}>
+                      <Plus size={17} />
+                      Add your first item
+                    </button>
+                  </section>
                 ) : !visible.length ? (
                   <Empty
                     title="No pieces found"
@@ -387,7 +390,7 @@ export default function WardrobeApp({
                 }}
                 onStyle={(aesthetic) => {
                   setCreatorAesthetic(aesthetic);
-                  setBlind(true);
+                  styleMyClothes();
                 }}
               />
             )}
@@ -418,6 +421,21 @@ export default function WardrobeApp({
                 }}
                 authenticated={!!user}
               />
+              <section className="find-next" aria-label="More ways to use FitStalker">
+                <button onClick={styleMyClothes}>
+                  <Shirt size={18} />
+                  Style my clothes
+                </button>
+                <button
+                  onClick={() => {
+                    setFeedMode('for-you');
+                    navigate('For You');
+                  }}
+                >
+                  <Sparkles size={18} />
+                  Browse style ideas
+                </button>
+              </section>
               {user && (
                 <StudioResume
                   key={user.id}
@@ -450,7 +468,7 @@ export default function WardrobeApp({
                   title="A blank canvas. Endless possibilities."
                   action={
                     <button className="primary" onClick={add}>
-                      Add your first piece
+                      Add your first item
                     </button>
                   }
                 >
@@ -461,21 +479,30 @@ export default function WardrobeApp({
               <div className="stack">
                 <div className="section-heading">
                   <div>
-                    <h2>Your fit rotation</h2>
-                    <p>Good looks deserve a repeat.</p>
+                    <h2>Saved outfits</h2>
+                    <p>Your favorite outfits, ready to wear again.</p>
                   </div>
                   <span className="count-badge">{data.outfits.length}</span>
                 </div>
+                <button
+                  className="text-button"
+                  onClick={() => {
+                    setFeedMode('saved');
+                    navigate('For You');
+                  }}
+                >
+                  View saved style ideas
+                </button>
                 {!data.outfits.length ? (
                   <Empty
-                    title="Meet your future favorites"
+                    title="Your outfits will appear here"
                     action={
-                      <button onClick={() => (user ? setBlind(true) : add())}>
-                        Put a fit together
+                      <button className="primary" onClick={styleMyClothes}>
+                        Style my clothes
                       </button>
                     }
                   >
-                    Put a fit together and save it here, ready for your next day out.
+                    Create an outfit from your closet, then save it for next time.
                   </Empty>
                 ) : (
                   data.outfits.map((o) => (
@@ -611,6 +638,7 @@ export default function WardrobeApp({
               setBlind(false);
               setCreatorOutfit(null);
               setEditing(undefined);
+              setPendingAction(null);
               setAccount(false);
               setUser(null);
               setData(blank);
@@ -624,7 +652,16 @@ export default function WardrobeApp({
             }}
           />
         ) : (
-          <AccountDialog onClose={() => setAccount(false)} onAuthenticated={session} />
+          <AccountDialog
+            intent={
+              pendingAction === 'add'
+                ? 'Sign in to save your first item. Your closet stays private, and the add-item form opens next.'
+                : undefined
+            }
+            onDismiss={() => setPendingAction(null)}
+            onClose={() => setAccount(false)}
+            onAuthenticated={session}
+          />
         ))}
       {editing !== undefined && (
         <GarmentDialog

@@ -184,7 +184,7 @@ test('corrected results reopen in their region without a POST and saved pieces l
   await page.getByRole('button', { name: 'I own this · save' }).click();
   await page.getByRole('button', { name: 'Save piece', exact: true }).click();
   await page.getByRole('button', { name: 'Open my closet' }).click();
-  await expect(page.getByRole('button', { name: 'Closet', exact: true })).toHaveAttribute(
+  await expect(page.getByRole('button', { name: 'My Closet', exact: true })).toHaveAttribute(
     'aria-current',
     'page',
   );

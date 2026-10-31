@@ -186,7 +186,7 @@ test('save and style refreshes once, locks the owned piece and does not generate
   await page.getByRole('button', { name: /Continue your latest scan/ }).click();
   await page.getByRole('button', { name: /I own this/ }).click();
   await page.getByRole('button', { name: 'Save & style', exact: true }).click();
-  const studio = page.getByRole('dialog', { name: 'Put a fit together' });
+  const studio = page.getByRole('dialog', { name: 'Style my clothes' });
   await expect(studio).toBeVisible();
   await expect(studio.getByRole('button', { name: /Blue shirt/ })).toHaveAttribute(
     'aria-pressed',
