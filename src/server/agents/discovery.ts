@@ -93,6 +93,7 @@ export async function findClothes(
   preferences?: import('@/lib/discovery').SearchPreferences,
   context: { photo?: AgentPhoto; memory?: AgentMemory; clothingPreference?: StyleAudience } = {},
 ) {
+  const startedAt = performance.now();
   const searchAgent = new ToolLoopAgent({
     ...settings,
     maxOutputTokens: 500,
@@ -120,6 +121,7 @@ export async function findClothes(
     }),
     abortSignal: AbortSignal.timeout(45_000),
   });
+  const searchedAt = performance.now();
   // Save stage-one evidence before ranking, which can independently fail.
   const searchCost = await generationCost(search);
   if (
@@ -178,6 +180,7 @@ export async function findClothes(
     }),
     abortSignal: AbortSignal.timeout(45_000),
   });
+  const rankedAt = performance.now();
   const rankingCost = await generationCost(ranked);
   const ranking = normalizeRanking(ranked.output);
   ranking.note = conciseText(ranked.output.note, 400);
@@ -194,6 +197,7 @@ export async function findClothes(
   const enriched = await Promise.all(
     listings.map(async (listing) => ({ ...listing, evidence: await productEvidence(listing.url) })),
   );
+  const enrichedAt = performance.now();
   const qualified = qualityShoppingListings(
     enriched,
     country,
@@ -210,6 +214,10 @@ export async function findClothes(
     qualified: qualified.length,
     photosAvailable: qualified.filter((listing) => listing.evidence?.imageUrl).length,
     returned: verified.length,
+    searchMs: Math.round(searchedAt - startedAt),
+    rankMs: Math.round(rankedAt - searchedAt),
+    retailerMs: Math.round(enrichedAt - rankedAt),
+    validationMs: Math.round(performance.now() - enrichedAt),
   });
   const costs = [searchCost, rankingCost, visual.cost];
   return {

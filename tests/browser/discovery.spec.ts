@@ -135,7 +135,6 @@ test('discovery UI reviews sourced results, saves to the real closet, and shows 
     await page
       .getByLabel('Clothing or outfit photo', { exact: true })
       .setInputFiles({ name: 'fixture.png', mimeType: 'image/png', buffer: photo });
-    await page.getByRole('button', { name: 'Identify clothes', exact: true }).click();
     await expect(
       page.getByRole('heading', { name: 'Blue denim shirt', exact: true }),
     ).toBeVisible();
@@ -252,14 +251,13 @@ test('real photo → real detection → sourced shopping links → saved closet 
   try {
     await page.goto('/');
     await page.getByRole('button', { name: 'Find', exact: true }).click();
-    await page
-      .getByLabel('Clothing or outfit photo', { exact: true })
-      .setInputFiles(process.env.LIVE_DISCOVERY_PHOTO!);
     const scanResponse = page.waitForResponse(
       (response) =>
         response.url().endsWith('/api/discovery') && response.request().method() === 'POST',
     );
-    await page.getByRole('button', { name: 'Identify clothes', exact: true }).click();
+    await page
+      .getByLabel('Clothing or outfit photo', { exact: true })
+      .setInputFiles(process.env.LIVE_DISCOVERY_PHOTO!);
     const scan = await scanResponse;
     expect(scan.status(), await scan.text()).toBe(200);
     const detected = await scan.json();
