@@ -4,6 +4,7 @@
 - **Subtitle** Your closet, from a photo
 - **Category** Lifestyle
 - **Support** support@fitstalker.com
+- **Support URL** https://fitstalker.com/support
 - **Privacy policy** https://fitstalker.com/privacy
 
 ## Store description
@@ -20,4 +21,4 @@ Optional AI tools request permission before sending photo content through Vercel
 
 Use the shared FitStalker scheme in Xcode 26 or newer. Confirm the proposed bundle ID `com.fitstalker.app` in App Store Connect and select the Apple Developer team before archiving. The GitHub workflow compiles the iPhone target without signing.
 
-Archive a signed build, upload to TestFlight, and use a physical iPhone to verify fresh sign-up, password recovery, camera and library access, upload and reopen, AI if enabled, sign-out, and account deletion. Capture the required iPhone screenshots from that build. Complete App Privacy, age rating, export compliance, support and reviewer details in App Store Connect. Verify the privacy label against the iOS binary and active backend services before submission.
+Deploy and verify the public support URL. Archive a signed build, upload to TestFlight, and use a physical iPhone to verify fresh sign-up, password recovery, camera and library access, upload and reopen, AI if enabled, sign-out, and account deletion. Capture the required iPhone screenshots from that build. Complete App Privacy, age rating, export compliance, support and reviewer details in App Store Connect. Verify the privacy label against the iOS binary and active backend services before submission.
