@@ -17,15 +17,38 @@ export const maxDuration = 100;
 
 const previewSchema = z.object({ imageUrl: imageUrlSchema });
 
+function tryOnConfigured() {
+  return (
+    process.env.NEXT_PUBLIC_FITSTALKER_TRY_ON_ENABLED === 'true' &&
+    process.env.AI_ENABLED === 'true'
+  );
+}
+
+function approvedTryOnCost(policy: Awaited<ReturnType<typeof controlledAgentBudget>>) {
+  const cost = Number(process.env.FITSTALKER_TRY_ON_MAX_COST_MICROS);
+  return Number.isSafeInteger(cost) &&
+    cost > 0 &&
+    cost <= Math.min(policy.maxRequestMicros, policy.dailyCapMicros)
+    ? cost
+    : null;
+}
+
+export async function GET() {
+  try {
+    await requireUser();
+    if (!tryOnConfigured()) return json({ enabled: false });
+    const policy = await controlledAgentBudget().catch(() => null);
+    return json({ enabled: policy !== null && approvedTryOnCost(policy) !== null });
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
 export async function POST(request: Request) {
   let dispatched: { ledger: AgentLedger; userId: string; id: string } | undefined;
   try {
     checkOrigin(request);
-    if (
-      process.env.NEXT_PUBLIC_FITSTALKER_TRY_ON_ENABLED !== 'true' ||
-      process.env.AI_ENABLED !== 'true'
-    )
-      throw new ApiError(503, 'Try-on is currently unavailable.');
+    if (!tryOnConfigured()) throw new ApiError(503, 'Try-on is currently unavailable.');
 
     const { id: userId } = await requireUser();
     const input = await readJson(request, tryOnRequestSchema);
@@ -40,13 +63,8 @@ export async function POST(request: Request) {
     ]);
     if (!photo || garments.length !== input.garmentIds.length)
       throw new ApiError(404, 'Your photo or a selected closet piece is unavailable.');
-    const approvedCost = Number(process.env.FITSTALKER_TRY_ON_MAX_COST_MICROS);
-    if (
-      !Number.isSafeInteger(approvedCost) ||
-      approvedCost <= 0 ||
-      approvedCost > Math.min(policy.maxRequestMicros, policy.dailyCapMicros)
-    )
-      throw new ApiError(503, 'Try-on is currently unavailable.');
+    const approvedCost = approvedTryOnCost(policy);
+    if (approvedCost === null) throw new ApiError(503, 'Try-on is currently unavailable.');
 
     const imagesByGarment = new Map(garments.map(({ id, image }) => [id, image]));
     const ordered = input.garmentIds.flatMap((id) => imagesByGarment.get(id) ?? []);

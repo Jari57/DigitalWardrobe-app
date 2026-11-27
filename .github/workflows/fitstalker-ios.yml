@@ -1,0 +1,23 @@
+name: FitStalker iOS
+
+on:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/fitstalker-ios.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Compile the iPhone release target
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          xcodebuild -project ios/FitStalker.xcodeproj -scheme FitStalker -configuration Release -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/fitstalker" CODE_SIGNING_ALLOWED=NO build
