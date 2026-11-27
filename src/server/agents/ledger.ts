@@ -183,7 +183,7 @@ export class AgentLedger {
         id,
         userId,
         state: 'uncertain',
-        agent: { in: ['detect', 'capture', 'spotter', 'stylist', 'creator'] },
+        agent: { in: ['detect', 'capture', 'spotter', 'stylist', 'creator', 'try-on'] },
         result: { equals: Prisma.DbNull },
       },
       include: { generations: true },

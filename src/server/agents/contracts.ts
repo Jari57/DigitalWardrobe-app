@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { shoppingRequestSchema } from '@/lib/discovery';
+import { imageUrlSchema } from '@/server/validation';
 
 /** Product contracts only; provider calls and budget enforcement are separate launch work. */
 export const agentPolicy = Object.freeze({
@@ -19,7 +20,17 @@ const uniqueIds = z
   .max(agentPolicy.maxCandidates)
   .refine((values) => new Set(values).size === values.length, 'Garment IDs must be unique.');
 
+export const tryOnRequestSchema = z
+  .object({
+    agent: z.literal('try-on'),
+    photoUrl: imageUrlSchema,
+    garmentIds: uniqueIds.refine((ids) => ids.length >= 1 && ids.length <= 4),
+    consent: z.literal(true),
+  })
+  .strict();
+
 export const agentRequestSchema = z.discriminatedUnion('agent', [
+  tryOnRequestSchema,
   z.object({ agent: z.literal('detect'), imageId: id }).strict(),
   shoppingRequestSchema,
   z.object({ agent: z.literal('capture'), imageId: id }).strict(),

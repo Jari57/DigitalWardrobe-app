@@ -222,6 +222,28 @@ html[data-theme='dark'] .canvas-piece {
   background: transparent;
   border-color: transparent;
 }
+html[data-theme='dark'] .try-on-entry {
+  background: linear-gradient(125deg, #32273b, #2c2334);
+  color: #fbf4fc;
+  border-color: #5d476a;
+}
+html[data-theme='dark'] :is(.try-on-items li, .try-on-comparison figure, .try-on-icon) {
+  background: #392b43;
+  color: #eee2f7;
+  border-color: #5d476a;
+}
+html[data-theme='dark'] .try-on-upload {
+  background: #302436;
+  color: #eee2f7;
+  border-color: #a383b8;
+}
+html[data-theme='dark'] .try-on-action {
+  background: #e4c7f4;
+  color: #32213d;
+}
+html[data-theme='dark'] .try-on-action:hover {
+  background: #f0d9fc;
+}
 html[data-theme='dark'] .canvas-piece.selected {
   border-color: #b91765;
 }
