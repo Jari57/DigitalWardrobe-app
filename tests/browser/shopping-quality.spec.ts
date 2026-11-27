@@ -6,8 +6,51 @@ import {
   type ShoppingResult,
 } from '../../src/lib/discovery';
 import { parseProductEvidence } from '../../src/server/agents/product-evidence';
-import { qualityShoppingListings, storefrontRegion } from '../../src/lib/shopping-quality';
-import { matchVerdict } from '../../src/lib/match-verifier';
+import {
+  matchesGarmentKind,
+  qualityShoppingListings,
+  storefrontRegion,
+} from '../../src/lib/shopping-quality';
+import { matchVerdict, verifiedListings } from '../../src/lib/match-verifier';
+
+test('shopping favors close photo matches and rejects clearly different garment subtypes', () => {
+  const item = {
+    name: 'Green suede loafers',
+    category: 'shoes' as const,
+    description: 'Dark green slip-on loafers',
+    color: '#284437',
+    visibleBrand: null,
+    uncertainty: '',
+  };
+  const product = (
+    title: string,
+    status?: 'consistent' | 'similar' | 'different',
+  ): ShoppingResult['listings'][number] => ({
+    title,
+    url: 'https://shop.example/products/' + encodeURIComponent(title),
+    retailer: 'shop.example',
+    match: 'similar',
+    reason: 'Shopping lead',
+    ...(status ? { visualReview: { status, note: 'Retailer photo examined' } } : {}),
+  });
+  const trainers = product('Green suede trainers', 'similar');
+  const lead = product('Olive loafers');
+  const alternative = product('Green tassel loafers', 'similar');
+  const closest = product('Green suede penny loafers', 'consistent');
+  const conflicting = product('Purple loafers', 'different');
+
+  const candidates = [trainers, lead, alternative, conflicting, closest].filter((listing) =>
+    matchesGarmentKind(item, listing),
+  );
+  expect(candidates).not.toContain(trainers);
+  expect(verifiedListings(item, candidates).map((listing) => listing.title)).toEqual([
+    closest.title,
+    alternative.title,
+    lead.title,
+  ]);
+  expect(matchVerdict(item, closest).label).toBe('Close visual match');
+  expect(matchVerdict(item, lead).label).toContain('needs checking');
+});
 
 test('retailer underscore locales cannot slip into another shopping region', () => {
   expect(storefrontRegion('https://www2.hm.com/en_in/productpage.1293067003.html', 'US')).toBe(

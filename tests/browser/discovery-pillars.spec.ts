@@ -67,6 +67,17 @@ test('garment crops isolate target pixels and safely fall back for old or invali
   expect(data[2]).toBeGreaterThan(240);
   expect(data[0]).toBeLessThan(10);
   expect((await sharp(await garmentReference(image, null)).metadata()).width).toBe(200);
+  expect(await garmentReference(image, null, { requireCrop: true })).toBeNull();
+  expect(
+    await garmentReference(image, { left: 0, top: 0, right: 1, bottom: 1 }, { requireCrop: true }),
+  ).toBeNull();
+  const closetCrop = await garmentReference(
+    image,
+    { left: 0.6, top: 0, right: 1, bottom: 1 },
+    { requireCrop: true },
+  );
+  expect(closetCrop).not.toBeNull();
+  expect((await sharp(closetCrop!).metadata()).width).toBeLessThan(100);
   for (const bounds of [
     { left: 0.8, top: 0, right: 0.1, bottom: 1 },
     { left: NaN, top: 0, right: 1, bottom: 1 },

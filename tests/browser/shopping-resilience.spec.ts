@@ -46,6 +46,7 @@ const fixture = async () => ({
     .toBuffer(),
   mimeType: 'image/jpeg',
 });
+const traitsMatch = { type: 'match', color: 'match', cut: 'match', details: 'match' } as const;
 
 test.afterEach(() => mock.restoreAll());
 
@@ -73,9 +74,13 @@ test('broken retailer photos use bounded backups and preserve original source in
         totalUsage: { inputTokens: 50, outputTokens: 12 },
         output: {
           reviews: [
-            { sourceIndex: 3, status: 'consistent', note: 'Color agrees' },
-            { sourceIndex: 4, status: 'different', note: 'Wrong cut' },
-            { sourceIndex: 5, status: 'similar', note: 'Similar cut' },
+            { sourceIndex: 3, comparison: traitsMatch, note: 'Color agrees' },
+            { sourceIndex: 4, comparison: { ...traitsMatch, cut: 'conflict' }, note: 'Wrong cut' },
+            {
+              sourceIndex: 5,
+              comparison: { ...traitsMatch, cut: 'unknown' },
+              note: 'Cut is obscured',
+            },
           ],
         },
       };
@@ -87,6 +92,9 @@ test('broken retailer photos use bounded backups and preserve original source in
   expect(result.listings.some((listing) => listing.title === 'Shirt 4')).toBe(false);
   expect(result.listings.find((listing) => listing.title === 'Shirt 3')?.visualReview?.status).toBe(
     'consistent',
+  );
+  expect(result.listings.find((listing) => listing.title === 'Shirt 5')?.visualReview?.status).toBe(
+    'unclear',
   );
   expect(result.listings.every((listing) => listing.identityEvidence === 'unverified')).toBe(true);
   expect(result).toMatchObject({
@@ -167,7 +175,9 @@ test('invalid visual output preserves its receipt for reconciliation without gra
         providerMetadata,
         totalUsage: { inputTokens: 8, outputTokens: 8 },
         output: {
-          reviews: [{ sourceIndex: 7, status: 'consistent', note: 'Unsupported unseen candidate' }],
+          reviews: [
+            { sourceIndex: 7, comparison: traitsMatch, note: 'Unsupported unseen candidate' },
+          ],
         },
       };
     },

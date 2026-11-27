@@ -15,7 +15,7 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
   const data = await response.json().catch(() => ({}));
   if (
     method === 'POST' &&
-    ['/api/creator', '/api/stylist', '/api/spotter', '/api/discovery'].includes(path)
+    ['/api/creator', '/api/stylist', '/api/spotter', '/api/discovery', '/api/try-on'].includes(path)
   )
     window.dispatchEvent(new Event('wardrobe-ai-used'));
   if (!response.ok)

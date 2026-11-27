@@ -1,6 +1,7 @@
 import {
   safeShoppingUrl,
   shoppingPageKind,
+  type DetectedItem,
   type SearchPreferences,
   type ShoppingResult,
 } from './discovery';
@@ -142,6 +143,38 @@ export function conciseText(value: string, limit: number) {
   const cut = text.slice(0, limit - 1);
   const boundary = cut.lastIndexOf(' ');
   return cut.slice(0, boundary > limit / 2 ? boundary : cut.length).trimEnd() + '…';
+}
+
+const garmentKinds = [
+  ['blazer', /\b(?:blazers?|sport coats?)\b/i],
+  ['trench', /\btrench(?:coat| coats?)?\b/i],
+  ['puffer', /\bpuffers?\b/i],
+  ['hoodie', /\b(?:hoodies?|hooded sweatshirts?)\b/i],
+  ['cardigan', /\bcardigans?\b/i],
+  ['tee', /\b(?:t[ -]?shirts?|tees?)\b/i],
+  ['jeans', /\bjeans\b/i],
+  ['leggings', /\bleggings\b/i],
+  ['skirt', /\bskirts?\b/i],
+  ['shorts', /\bshorts\b/i],
+  ['sneakers', /\b(?:sneakers?|trainers?)\b/i],
+  ['boots', /\bboots?\b/i],
+  ['sandals', /\bsandals?\b/i],
+  ['loafers', /\bloafers?\b/i],
+] as const;
+
+function garmentKind(description: string) {
+  const found = garmentKinds.filter(([, pattern]) => pattern.test(description));
+  return found.length === 1 ? found[0][0] : undefined;
+}
+
+// Explicit product subtypes can rule out a lookalike before spending a visual-review slot.
+export function matchesGarmentKind(
+  item: DetectedItem,
+  listing: ShoppingResult['listings'][number],
+) {
+  const target = garmentKind(item.name) ?? garmentKind(item.description);
+  const product = garmentKind(listing.evidence?.productName ?? listing.title);
+  return !target || !product || target === product;
 }
 
 export function reviewShoppingResult(result: ShoppingResult): ShoppingResult {

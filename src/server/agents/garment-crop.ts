@@ -20,11 +20,26 @@ export function garmentRegion(bounds: DetectedItem['bounds'], width: number, hei
   return { left: x, top: y, width: endX - x, height: endY - y };
 }
 
-export async function garmentReference(data: Uint8Array, bounds: DetectedItem['bounds']) {
+export function garmentReference(data: Uint8Array, bounds: DetectedItem['bounds']): Promise<Buffer>;
+export function garmentReference(
+  data: Uint8Array,
+  bounds: DetectedItem['bounds'],
+  options: { requireCrop: true },
+): Promise<Buffer | null>;
+export async function garmentReference(
+  data: Uint8Array,
+  bounds: DetectedItem['bounds'],
+  { requireCrop = false } = {},
+): Promise<Buffer | null> {
   // The stored upload is already EXIF-oriented; coordinates refer to those pixels.
   const input = sharp(data);
   const metadata = await input.metadata();
   const region = garmentRegion(bounds, metadata.width ?? 0, metadata.height ?? 0);
+  if (
+    requireCrop &&
+    (!region || (region.width === metadata.width && region.height === metadata.height))
+  )
+    return null;
   const image = region ? input.extract(region) : input;
   return image
     .resize({ width: 1024, height: 1024, fit: 'inside', withoutEnlargement: true })

@@ -410,7 +410,7 @@ test('shopping shows photo cards and opens editing when no alternatives remain',
     'href',
     'https://shop.example/products/blue-shirt',
   );
-  await expect(results).toContainText('Alternative');
+  await expect(results).toContainText('Search lead');
   const productPhoto = results.getByRole('img', { name: 'Cotton blue shirt' });
   await expect(productPhoto).toBeVisible();
   await expect

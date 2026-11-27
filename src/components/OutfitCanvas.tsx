@@ -4,6 +4,7 @@ import { Layers, Plus, Save, Trash2 } from 'lucide-react';
 import type { Garment, Piece } from '@/lib/types';
 import { api } from './ui';
 import ExportActions from './ExportActions';
+import TryOnPreview from './TryOnPreview';
 export const arrange = (garments: Garment[]): Piece[] =>
   garments.slice(0, 12).map((g, i) =>
     garments.length > 6
@@ -163,6 +164,13 @@ export default function OutfitCanvas({
         selected={selected}
         onSelect={setSelected}
       />
+      {process.env.NEXT_PUBLIC_FITSTALKER_TRY_ON_ENABLED === 'true' && (
+        <TryOnPreview
+          garments={[...pieces]
+            .sort((a, b) => a.zIndex - b.zIndex)
+            .flatMap(({ garmentId }) => garments.find((g) => g.id === garmentId) ?? [])}
+        />
+      )}
       {onSaveDraft && (
         <div className="row wrap">
           <button

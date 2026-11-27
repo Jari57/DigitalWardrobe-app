@@ -1,6 +1,88 @@
 import { test, expect } from '@playwright/test';
 import sharp from 'sharp';
 
+test('adding a signed-in screenshot scans once, shows progress and saves the selected garment', async ({
+  page,
+}) => {
+  let scans = 0;
+  let searches = 0;
+  let savedPiece: unknown;
+  let finishSearch!: () => void;
+  const searchReady = new Promise<void>((resolve) => {
+    finishSearch = resolve;
+  });
+  const piece = {
+    name: 'Blue denim jacket',
+    category: 'outerwear',
+    color: '#34668C',
+    description: 'Blue denim jacket',
+    visibleBrand: null,
+    uncertainty: '',
+    bounds: { left: 0.24, top: 0.2, right: 0.8, bottom: 0.7 },
+  };
+  await page.route('**/api/**', async (route) => {
+    const request = route.request();
+    switch (new URL(request.url()).pathname) {
+      case '/api/session':
+        return route.fulfill({ json: { user: { id: 'fixture-owner', username: 'owner' } } });
+      case '/api/wardrobe':
+        return route.fulfill({ json: { garments: [], outfits: [], references: [] } });
+      case '/api/experience':
+        return route.fulfill({
+          json: { draft: [], recent: [], preferences: { region: 'US' } },
+        });
+      case '/api/uploads':
+        return route.fulfill({ json: { imageUrl: '/api/images/qa-screenshot' } });
+      case '/api/garments':
+        savedPiece = request.postDataJSON();
+        return route.fulfill({ status: 201, json: { garment: { id: 'cropped-piece' } } });
+      case '/api/discovery':
+        if (request.method() === 'GET')
+          return route.fulfill({ json: { detections: [], enabled: true } });
+        if (request.postDataJSON().agent === 'detect') {
+          scans++;
+          return route.fulfill({
+            json: { id: 'scan', imageUrl: '/api/images/qa-screenshot', items: [piece], note: '' },
+          });
+        }
+        searches++;
+        await searchReady;
+        return route.fulfill({ json: { id: 'result', listings: [], country: 'US', note: '' } });
+      default:
+        return route.fulfill({ json: {} });
+    }
+  });
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Account settings' })).toBeVisible();
+  await page.getByLabel('Clothing or outfit photo').setInputFiles({
+    name: 'screenshot.png',
+    mimeType: 'image/png',
+    buffer: await sharp({ create: { width: 200, height: 300, channels: 3, background: '#34668C' } })
+      .png()
+      .toBuffer(),
+  });
+  await expect(page.getByRole('heading', { name: piece.name })).toBeVisible();
+  expect(scans).toBe(1);
+  expect(searches).toBe(0);
+  await page.getByRole('button', { name: 'Shop ' + piece.name }).click();
+  try {
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Finding and checking retailer photos' }),
+    ).toBeInViewport();
+  } finally {
+    finishSearch();
+  }
+  await expect(page.getByText('Items not found. Please edit your search.')).toBeVisible();
+  expect(searches).toBe(1);
+  await page.getByRole('button', { name: 'I own this · save' }).click();
+  const pieceDialog = page.getByRole('dialog', { name: 'Review detected piece' });
+  await expect(pieceDialog.getByLabel('Replace with an item photo (optional)')).toBeVisible();
+  await pieceDialog.getByRole('button', { name: 'Save piece', exact: true }).click();
+  await expect(page.getByText('Piece saved to your closet.')).toBeVisible();
+  expect(savedPiece).toMatchObject({ name: piece.name, scan: { id: 'scan', itemIndex: 0 } });
+  expect(savedPiece).not.toHaveProperty('imageUrl');
+});
+
 test('guest screenshot survives sign-in and private scan state clears on sign-out', async ({
   page,
 }) => {

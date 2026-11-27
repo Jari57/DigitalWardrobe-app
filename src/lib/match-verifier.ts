@@ -3,11 +3,12 @@ type Listing = ShoppingResult['listings'][number];
 const code = (value?: string | null) => (value ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const brand = (value?: string | null) => (value ?? '').trim().toLowerCase();
 
-export function verifiedIdentityEvidence(item: DetectedItem, listing: Listing) {
+export function matchesObservedIdentity(item: DetectedItem, listing: Listing) {
   const observed = code(item.visibleModelCode);
-  return observed.length >= 5 &&
+  return (
+    observed.length >= 5 &&
     /[0-9]/.test(observed) &&
-    item.readableText?.some((text) =>
+    (item.readableText ?? []).some((text) =>
       text
         .toUpperCase()
         .split(/[^A-Z0-9-]+/)
@@ -15,8 +16,12 @@ export function verifiedIdentityEvidence(item: DetectedItem, listing: Listing) {
     ) &&
     observed === code(listing.evidence?.modelCode) &&
     !!brand(item.visibleBrand) &&
-    brand(item.visibleBrand) === brand(listing.evidence?.brand) &&
-    listing.visualReview?.status === 'consistent'
+    brand(item.visibleBrand) === brand(listing.evidence?.brand)
+  );
+}
+
+export function verifiedIdentityEvidence(item: DetectedItem, listing: Listing) {
+  return matchesObservedIdentity(item, listing) && listing.visualReview?.status === 'consistent'
     ? ('matching-code-and-visuals' as const)
     : ('unverified' as const);
 }
@@ -44,10 +49,11 @@ export function matchVerdict(item: DetectedItem, listing: Listing) {
       label: 'Alternative · different model',
       note: 'The retailer model code differs from the reference. This is not an exact match.',
     };
-  if (['consistent', 'similar'].includes(listing.visualReview?.status ?? ''))
+  const visualStatus = listing.visualReview?.status;
+  if (visualStatus === 'consistent' || visualStatus === 'similar')
     return {
-      tier: 2,
-      label: 'Visually similar',
+      tier: visualStatus === 'consistent' ? 2.5 : 2,
+      label: visualStatus === 'consistent' ? 'Close visual match' : 'Visually similar',
       note:
         listing.visualReview!.note ||
         'Visible details are similar; product identity is unconfirmed.',

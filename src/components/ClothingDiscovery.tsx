@@ -45,6 +45,7 @@ export default function ClothingDiscovery({
   const [country, setCountry] = useState('US');
   const countryChosen = useRef(false);
   const [busy, setBusy] = useState('');
+  const [activeSearchKey, setActiveSearchKey] = useState('');
   const [error, setError] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState('');
@@ -67,6 +68,7 @@ export default function ClothingDiscovery({
   }, [photo]);
   const [uploaded, setUploaded] = useState('');
   const [edit, setEdit] = useState<DetectedItem | null>(null);
+  const [piecePhoto, setPiecePhoto] = useState<File | null>(null);
   const [saved, setSaved] = useState('');
   const [savedGarmentId, setSavedGarmentId] = useState<string>();
   const [enabled, setEnabled] = useState<boolean | null>(null);
@@ -186,12 +188,14 @@ export default function ClothingDiscovery({
     };
   }, [authenticated]);
 
-  async function scan() {
+  async function scan(selectedPhoto?: File) {
     if (!authenticated) {
       onAuth();
       return;
     }
-    if (!photo && !uploaded) {
+    const sourcePhoto = selectedPhoto ?? photo;
+    const sourceUrl = selectedPhoto ? '' : uploaded;
+    if (!sourcePhoto && !sourceUrl) {
       setError('Choose a clothing or outfit photo first.');
       return;
     }
@@ -199,8 +203,10 @@ export default function ClothingDiscovery({
     setError('');
     setSaved('');
     try {
-      const imageUrl = uploaded || (await upload(photo!));
+      const imageUrl = sourceUrl || (sourcePhoto && (await upload(sourcePhoto)));
+      if (!imageUrl) return;
       setUploaded(imageUrl);
+      setBusy('Identifying clothes…');
       const result = await api<Detection>('/api/discovery', 'POST', {
         agent: 'detect',
         retry: true,
@@ -236,6 +242,7 @@ export default function ClothingDiscovery({
     setSearchSettings((previous) => ({ ...previous, [base]: preferences }));
     setDescriptions((previous) => ({ ...previous, [base]: query }));
     setBusy(`Finding ${detection.items[index].name.toLowerCase()}…`);
+    setActiveSearchKey(key);
     setError('');
     setSearchErrors((previous) => ({ ...previous, [key]: '' }));
     try {
@@ -257,6 +264,7 @@ export default function ClothingDiscovery({
       setSearchErrors((previous) => ({ ...previous, [key]: (e as Error).message }));
     } finally {
       setBusy('');
+      setActiveSearchKey('');
     }
   }
 
@@ -274,11 +282,6 @@ export default function ClothingDiscovery({
         </div>
         <ScanLine size={28} />
       </div>
-      <ol className="scan-steps" aria-label="Your next step">
-        <li aria-current={!photo && !uploaded && !detection ? 'step' : undefined}>1 Add photo</li>
-        <li aria-current={(photo || uploaded) && !detection ? 'step' : undefined}>2 Identify</li>
-        <li aria-current={detection ? 'step' : undefined}>3 Shop</li>
-      </ol>
       <div className="screenshot-upload">
         <div className="scan-emblem" aria-hidden="true">
           <ScanLine size={32} />
@@ -298,16 +301,20 @@ export default function ClothingDiscovery({
           accept="image/jpeg,image/png,image/webp"
           disabled={!!busy}
           onChange={(event) => {
-            setPhoto(event.target.files?.[0] ?? null);
+            const selected = event.currentTarget.files?.[0];
+            event.currentTarget.value = '';
+            if (!selected) return;
+            setPhoto(selected);
             setUploaded('');
             setDetection(null);
             setError('');
+            if (authenticated && enabled !== false) void scan(selected);
           }}
           aria-label="Clothing or outfit photo"
         />
       </div>
       <small>
-        JPG, PNG or WebP · up to 4 MB. Sign in to identify clothes; scanning sends your photo to our
+        JPG, PNG or WebP · up to 4 MB. If you're signed in, choosing a photo starts a scan with our
         AI provider.
       </small>
       <details className="scan-help">
@@ -329,14 +336,14 @@ export default function ClothingDiscovery({
       {preview && !detection && (
         <img className="discovery-photo" src={preview} alt="Your selected screenshot" />
       )}
-      {(photo || uploaded) && !detection && (
+      {(photo || uploaded) && !detection && !busy && (
         <button
           className="primary screenshot-cta"
           disabled={!!busy || enabled === false}
-          onClick={scan}
+          onClick={() => void scan()}
         >
           <ScanLine size={18} />
-          Identify clothes
+          {error && authenticated ? 'Retry scan' : 'Identify clothes'}
         </button>
       )}
       {!photo && !uploaded && !detection && (
@@ -359,7 +366,7 @@ export default function ClothingDiscovery({
           are available below.
         </p>
       )}
-      {busy && (
+      {busy && !activeSearchKey && (
         <p role="status" aria-live="polite">
           {busy}
         </p>
@@ -532,6 +539,11 @@ export default function ClothingDiscovery({
                 <div>
                   <h3>{item.name}</h3>
                 </div>
+                {activeSearchKey === key && (
+                  <p role="status">
+                    Finding and checking retailer photos for {item.name.toLowerCase()}…
+                  </p>
+                )}
                 {result && listings.length > 0 && (
                   <ShoppingResults item={item} result={result} listings={listings} />
                 )}
@@ -543,6 +555,7 @@ export default function ClothingDiscovery({
                     disabled={!!busy}
                     onClick={() => {
                       setEdit(item);
+                      setPiecePhoto(null);
                       setError('');
                     }}
                   >
@@ -621,13 +634,19 @@ export default function ClothingDiscovery({
               setBusy('Saving piece…');
               setError('');
               try {
+                const itemIndex = detection.items.indexOf(edit);
+                if (!piecePhoto && itemIndex < 0)
+                  throw new Error('Choose this piece from the scan again.');
+                const imageSource = piecePhoto
+                  ? { imageUrl: await upload(piecePhoto) }
+                  : { scan: { id: detection.id, itemIndex } };
                 const response = await api<{ garment?: { id: string } }>('/api/garments', 'POST', {
                   name: form.get('name'),
                   brand: form.get('brand'),
                   category: form.get('category'),
                   color: form.get('color'),
                   price: null,
-                  imageUrl: detection.imageUrl,
+                  ...imageSource,
                 });
                 setSavedGarmentId(response.garment?.id);
                 setSaved('Piece saved to your closet.');
@@ -648,8 +667,20 @@ export default function ClothingDiscovery({
             }}
           >
             <p>
-              Check the AI’s details before saving. The original photo will be used for this piece.
+              {edit.bounds
+                ? 'We’ll crop this piece from the scan. You can use a clearer item photo instead.'
+                : 'Upload a photo of just this piece so your closet shows the actual item.'}
             </p>
+            <label>
+              {edit.bounds ? 'Replace with an item photo (optional)' : 'Item photo'}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                required={!edit.bounds}
+                disabled={!!busy}
+                onChange={(event) => setPiecePhoto(event.currentTarget.files?.[0] ?? null)}
+              />
+            </label>
             <label>
               Piece name
               <input name="name" required maxLength={100} defaultValue={edit.name} />
