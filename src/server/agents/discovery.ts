@@ -22,6 +22,7 @@ import {
   storefrontRegion,
   shoppingRegions,
   conciseText,
+  matchesGarmentKind,
 } from '@/lib/shopping-quality';
 
 // Explicit, cost-conscious model choice; live-tested through Gateway.
@@ -198,7 +199,7 @@ export async function findClothes(
     country,
     preferences,
     item.name === 'User-described garment' ? undefined : item.category,
-  );
+  ).filter((listing) => matchesGarmentKind(item, listing));
   const visual = await reviewProductPhotos(item, qualified, context.photo);
   const verified = verifiedListings(item, visual.listings).slice(0, 5);
   // Counts only: no photos, garment descriptions, identities or retailer URLs in logs.
