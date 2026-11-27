@@ -59,10 +59,6 @@ struct FitHome: View {
                 }
             }
             .navigationTitle(user == nil ? "FitStalker" : "My Closet")
-            .task {
-                user = try? await api.account().user
-                ready = true
-            }
             .task(id: user?.username) { await loadCloset() }
             .confirmationDialog("Remove this closet piece?", isPresented: Binding(
                 get: { removing != nil },
@@ -87,6 +83,10 @@ struct FitHome: View {
                     account = false
                 }
             }
+        }
+        .task {
+            user = try? await api.account().user
+            ready = true
         }
     }
 
@@ -140,6 +140,11 @@ private struct FitLogin: View {
     @State private var result: FitAPI.Account?
     @State private var busy = false
     @State private var error = ""
+
+    init(api: FitAPI, onLogin: @escaping (FitAPI.User) -> Void) {
+        self.api = api
+        self.onLogin = onLogin
+    }
 
     var body: some View {
         Form {
@@ -207,6 +212,12 @@ private struct FitAccount: View {
     @State private var deleting = false
     @State private var busy = false
     @State private var error = ""
+
+    init(api: FitAPI, username: String, onSignOut: @escaping () -> Void) {
+        self.api = api
+        self.username = username
+        self.onSignOut = onSignOut
+    }
 
     var body: some View {
         NavigationStack {

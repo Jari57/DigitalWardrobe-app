@@ -1,10 +1,10 @@
 # FitStalker iPhone release
 
-**App name** FitStalker  
-**Subtitle** Your closet, from a photo  
-**Category** Lifestyle  
-**Support** support@fitstalker.com  
-**Privacy policy** https://fitstalker.com/privacy
+- **App name** FitStalker
+- **Subtitle** Your closet, from a photo
+- **Category** Lifestyle
+- **Support** support@fitstalker.com
+- **Privacy policy** https://fitstalker.com/privacy
 
 ## Store description
 

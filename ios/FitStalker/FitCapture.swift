@@ -26,6 +26,12 @@ struct FitCapture: View {
     @State private var progress = ""
     @State private var error = ""
 
+    init(api: FitAPI, garments: [FitAPI.Garment], scanEnabled: Bool) {
+        self.api = api
+        self.garments = garments
+        self.scanEnabled = scanEnabled
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -74,22 +80,24 @@ struct FitCapture: View {
                                 .disabled(!consent || selectedGarments.isEmpty)
                         }
                     } else {
-                        if scanEnabled { Section("Identify clothing") {
-                            Toggle("Allow Google to process this photo", isOn: $consent)
-                            Button("Scan photo") { run("Scanning photo", identify) }.disabled(!consent)
-                            if let scan {
-                                if scan.items.isEmpty { Text("No clothing identified. You can enter the details below.") }
-                                ForEach(scan.items.indices, id: \.self) { index in
-                                    Button {
-                                        selectedScanIndex = index
-                                        name = scan.items[index].name
-                                        category = scan.items[index].category
-                                    } label: {
-                                        Label(scan.items[index].name, systemImage: selectedScanIndex == index ? "checkmark.circle.fill" : "circle")
-                                    }.disabled(scan.items[index].bounds == nil)
+                        if scanEnabled {
+                            Section("Identify clothing") {
+                                Toggle("Allow Google to process this photo", isOn: $consent)
+                                Button("Scan photo") { run("Scanning photo", identify) }.disabled(!consent)
+                                if let scan {
+                                    if scan.items.isEmpty { Text("No clothing identified. You can enter the details below.") }
+                                    ForEach(scan.items.indices, id: \.self) { index in
+                                        Button {
+                                            selectedScanIndex = index
+                                            name = scan.items[index].name
+                                            category = scan.items[index].category
+                                        } label: {
+                                            Label(scan.items[index].name, systemImage: selectedScanIndex == index ? "checkmark.circle.fill" : "circle")
+                                        }.disabled(scan.items[index].bounds == nil)
+                                    }
                                 }
                             }
-                        } }
+                        }
                         Section("Save to closet") {
                             TextField("Item name", text: $name)
                             Picker("Category", selection: $category) {
