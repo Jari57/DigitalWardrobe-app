@@ -122,6 +122,10 @@ test('mobile try-on previews locally, requires consent and recovers after an int
   ).toHaveJSProperty('naturalWidth', 64);
   expect(uploads).toBe(1);
   expect(attempts).toBe(2);
+  await expect(dialog.getByRole('button', { name: 'Preview', exact: true })).toBeFocused();
+  await expect(dialog.getByAltText('Your original photo')).toHaveCount(0);
+  await dialog.getByRole('button', { name: 'Compare original' }).click();
+  await expect(dialog.getByAltText('Your original photo')).toBeVisible();
   await expect(dialog.getByRole('link', { name: 'Download preview' })).toHaveAttribute(
     'download',
     'fitstalker-try-on.webp',

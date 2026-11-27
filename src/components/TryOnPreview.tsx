@@ -73,10 +73,12 @@ function PreviewDialog({
   close: () => void;
 }) {
   const picker = useRef<HTMLInputElement>(null);
+  const previewChoice = useRef<HTMLButtonElement>(null);
   const [file, setFile] = useState<File>();
   const [photo, setPhoto] = useState('');
   const [uploaded, setUploaded] = useState('');
   const [preview, setPreview] = useState('');
+  const [compare, setCompare] = useState(false);
   const [consent, setConsent] = useState(false);
   const [stage, setStage] = useState<'photo' | 'upload' | 'render'>();
   const [error, setError] = useState('');
@@ -88,6 +90,9 @@ function PreviewDialog({
     setPhoto(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
+  useEffect(() => {
+    if (open && preview) previewChoice.current?.focus();
+  }, [open, preview]);
 
   async function choosePhoto(next: File) {
     setStage('photo');
@@ -96,6 +101,7 @@ function PreviewDialog({
       setFile(await preparePhoto(next));
       setUploaded('');
       setPreview('');
+      setCompare(false);
       setConsent(false);
     } catch (failure) {
       setError((failure as Error).message);
@@ -149,14 +155,37 @@ function PreviewDialog({
             if (selected) void choosePhoto(selected);
           }}
         />
+        {preview && (
+          <div className="try-on-view-switch" role="group" aria-label="Try-on view">
+            <button
+              ref={previewChoice}
+              type="button"
+              aria-pressed={!compare}
+              onClick={() => setCompare(false)}
+            >
+              Preview
+            </button>
+            <button type="button" aria-pressed={compare} onClick={() => setCompare(true)}>
+              Compare original
+            </button>
+          </div>
+        )}
         {photo ? (
-          <div className={preview ? 'try-on-comparison' : 'try-on-comparison is-single'}>
-            <figure>
-              <img src={photo} alt="Your original photo" />
-              <figcaption>Original</figcaption>
-            </figure>
-            {preview && (
+          <div
+            className={
+              compare
+                ? 'try-on-comparison'
+                : `try-on-comparison is-single${preview ? ' is-preview' : ''}`
+            }
+          >
+            {(!preview || compare) && (
               <figure>
+                <img src={photo} alt="Your original photo" />
+                <figcaption>Original</figcaption>
+              </figure>
+            )}
+            {preview && (
+              <figure className="try-on-result">
                 <img src={preview} alt="AI preview of you wearing the selected outfit" />
                 <figcaption>Try-on preview</figcaption>
               </figure>
@@ -228,7 +257,7 @@ function PreviewDialog({
         {preview && (
           <p className="try-on-note" role="status">
             <Check size={16} aria-hidden="true" />
-            Preview ready. AI previews show appearance only and can vary from the real fit.
+            Details such as necklines, patterns and fit may vary in AI previews.
           </p>
         )}
         <p className="try-on-note">

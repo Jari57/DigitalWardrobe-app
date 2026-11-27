@@ -244,6 +244,11 @@ html[data-theme='dark'] .try-on-action {
 html[data-theme='dark'] .try-on-action:hover {
   background: #f0d9fc;
 }
+html[data-theme='dark'] .try-on-view-switch button[aria-pressed='true'] {
+  background: #493453;
+  color: #ffedff;
+  border-color: #aa86bd;
+}
 html[data-theme='dark'] .canvas-piece.selected {
   border-color: #b91765;
 }
