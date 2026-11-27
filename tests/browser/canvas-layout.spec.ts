@@ -105,6 +105,13 @@ test('mobile try-on previews locally, requires consent and recovers after an int
     .click();
   await page.getByRole('button', { name: 'Open try-on' }).click();
   const dialog = page.getByRole('dialog', { name: 'Try it on me' });
+  await expect(dialog.getByRole('button', { name: /Choose a photo/ })).toBeVisible();
+  await expect(dialog.getByRole('list', { name: 'Pieces in this preview' })).toHaveCount(0);
+  await dialog.getByText('1 closet piece', { exact: true }).click();
+  await expect(dialog.getByRole('list', { name: 'Pieces in this preview' })).toContainText(
+    'Denim jacket',
+  );
+  await dialog.getByText('1 closet piece', { exact: true }).click();
   await dialog.locator('input[type=file]').setInputFiles({
     name: 'qa-photo.png',
     mimeType: 'image/png',
@@ -137,5 +144,6 @@ test('mobile try-on previews locally, requires consent and recovers after an int
   await page.evaluate(() => {
     document.documentElement.dataset.theme = 'dark';
   });
+  await page.setViewportSize({ width: 320, height: 680 });
   expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
 });

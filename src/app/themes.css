@@ -227,15 +227,24 @@ html[data-theme='dark'] .try-on-entry {
   color: #fbf4fc;
   border-color: #5d476a;
 }
-html[data-theme='dark'] :is(.try-on-items li, .try-on-comparison figure, .try-on-icon) {
+html[data-theme='dark'] :is(.try-on-comparison figure, .try-on-icon, .try-on-thumbnails img) {
   background: #392b43;
   color: #eee2f7;
   border-color: #5d476a;
 }
 html[data-theme='dark'] .try-on-upload {
-  background: #302436;
+  background: radial-gradient(ellipse at 50% 30%, #473251, #2d2432 74%);
   color: #eee2f7;
   border-color: #a383b8;
+}
+html[data-theme='dark'] .try-on-camera {
+  background: #5b4064;
+}
+html[data-theme='dark'] .try-on-closet {
+  border-color: #524359;
+}
+html[data-theme='dark'] .try-on-view-switch {
+  background: #28212c;
 }
 html[data-theme='dark'] .try-on-action {
   background: #e4c7f4;
