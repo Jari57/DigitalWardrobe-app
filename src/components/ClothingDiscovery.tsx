@@ -68,6 +68,7 @@ export default function ClothingDiscovery({
   }, [photo]);
   const [uploaded, setUploaded] = useState('');
   const [edit, setEdit] = useState<DetectedItem | null>(null);
+  const [piecePhoto, setPiecePhoto] = useState<File | null>(null);
   const [saved, setSaved] = useState('');
   const [savedGarmentId, setSavedGarmentId] = useState<string>();
   const [enabled, setEnabled] = useState<boolean | null>(null);
@@ -554,6 +555,7 @@ export default function ClothingDiscovery({
                     disabled={!!busy}
                     onClick={() => {
                       setEdit(item);
+                      setPiecePhoto(null);
                       setError('');
                     }}
                   >
@@ -632,13 +634,19 @@ export default function ClothingDiscovery({
               setBusy('Saving piece…');
               setError('');
               try {
+                const itemIndex = detection.items.indexOf(edit);
+                if (!piecePhoto && itemIndex < 0)
+                  throw new Error('Choose this piece from the scan again.');
+                const imageSource = piecePhoto
+                  ? { imageUrl: await upload(piecePhoto) }
+                  : { scan: { id: detection.id, itemIndex } };
                 const response = await api<{ garment?: { id: string } }>('/api/garments', 'POST', {
                   name: form.get('name'),
                   brand: form.get('brand'),
                   category: form.get('category'),
                   color: form.get('color'),
                   price: null,
-                  imageUrl: detection.imageUrl,
+                  ...imageSource,
                 });
                 setSavedGarmentId(response.garment?.id);
                 setSaved('Piece saved to your closet.');
@@ -659,8 +667,20 @@ export default function ClothingDiscovery({
             }}
           >
             <p>
-              Check the AI’s details before saving. The original photo will be used for this piece.
+              {edit.bounds
+                ? 'We’ll crop this piece from the scan. You can use a clearer item photo instead.'
+                : 'Upload a photo of just this piece so your closet shows the actual item.'}
             </p>
+            <label>
+              {edit.bounds ? 'Replace with an item photo (optional)' : 'Item photo'}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                required={!edit.bounds}
+                disabled={!!busy}
+                onChange={(event) => setPiecePhoto(event.currentTarget.files?.[0] ?? null)}
+              />
+            </label>
             <label>
               Piece name
               <input name="name" required maxLength={100} defaultValue={edit.name} />

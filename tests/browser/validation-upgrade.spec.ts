@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { garmentSchema, garmentUpdateSchema } from '../../src/server/validation';
+import {
+  garmentCreateSchema,
+  garmentSchema,
+  garmentUpdateSchema,
+} from '../../src/server/validation';
 import { detectionSchema } from '../../src/lib/discovery';
 import { agentRequestSchema } from '../../src/server/agents/contracts';
 
@@ -11,6 +15,18 @@ test('new pieces keep defaults while partial edits do not erase saved fields', (
     imageUrl: '/api/images/fixture',
   };
   expect(garmentSchema.parse(item)).toEqual({ ...item, brand: '', price: null });
+  const fields = { name: item.name, category: item.category, color: item.color };
+  const scan = { id: 'fixture-scan', itemIndex: 2 };
+  expect(garmentCreateSchema.parse({ ...fields, scan })).toEqual({
+    ...fields,
+    scan,
+    brand: '',
+    price: null,
+  });
+  expect(garmentCreateSchema.safeParse({ ...item, scan }).success).toBe(false);
+  expect(
+    garmentCreateSchema.safeParse({ ...fields, scan: { ...scan, itemIndex: 9 } }).success,
+  ).toBe(false);
   expect(garmentUpdateSchema.parse({ name: 'Updated shirt' })).toEqual({ name: 'Updated shirt' });
   expect(garmentUpdateSchema.parse({})).toEqual({});
   expect(garmentUpdateSchema.parse({ price: 0 })).toEqual({ price: 0 });

@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
 import sharp from 'sharp';
 
-test('adding a signed-in screenshot scans once and shows progress beside the selected piece', async ({
+test('adding a signed-in screenshot scans once, shows progress and saves the selected garment', async ({
   page,
 }) => {
   let scans = 0;
   let searches = 0;
+  let savedPiece: unknown;
   let finishSearch!: () => void;
   const searchReady = new Promise<void>((resolve) => {
     finishSearch = resolve;
@@ -17,6 +18,7 @@ test('adding a signed-in screenshot scans once and shows progress beside the sel
     description: 'Blue denim jacket',
     visibleBrand: null,
     uncertainty: '',
+    bounds: { left: 0.24, top: 0.2, right: 0.8, bottom: 0.7 },
   };
   await page.route('**/api/**', async (route) => {
     const request = route.request();
@@ -31,6 +33,9 @@ test('adding a signed-in screenshot scans once and shows progress beside the sel
         });
       case '/api/uploads':
         return route.fulfill({ json: { imageUrl: '/api/images/qa-screenshot' } });
+      case '/api/garments':
+        savedPiece = request.postDataJSON();
+        return route.fulfill({ status: 201, json: { garment: { id: 'cropped-piece' } } });
       case '/api/discovery':
         if (request.method() === 'GET')
           return route.fulfill({ json: { detections: [], enabled: true } });
@@ -69,6 +74,13 @@ test('adding a signed-in screenshot scans once and shows progress beside the sel
   }
   await expect(page.getByText('Items not found. Please edit your search.')).toBeVisible();
   expect(searches).toBe(1);
+  await page.getByRole('button', { name: 'I own this · save' }).click();
+  const pieceDialog = page.getByRole('dialog', { name: 'Review detected piece' });
+  await expect(pieceDialog.getByLabel('Replace with an item photo (optional)')).toBeVisible();
+  await pieceDialog.getByRole('button', { name: 'Save piece', exact: true }).click();
+  await expect(page.getByText('Piece saved to your closet.')).toBeVisible();
+  expect(savedPiece).toMatchObject({ name: piece.name, scan: { id: 'scan', itemIndex: 0 } });
+  expect(savedPiece).not.toHaveProperty('imageUrl');
 });
 
 test('guest screenshot survives sign-in and private scan state clears on sign-out', async ({
